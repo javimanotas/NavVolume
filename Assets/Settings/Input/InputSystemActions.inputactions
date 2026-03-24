@@ -1,5 +1,6 @@
 {
-    "name": "InputSystem_Actions",
+    "version": 1,
+    "name": "InputSystemActions",
     "maps": [
         {
             "name": "Player",
