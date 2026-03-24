@@ -13,13 +13,11 @@ CSharpier enforces formatting automatically — this guide covers naming, struct
 3. [Properties](#properties)
 4. [Methods](#methods)
 5. [Custom types](#custom-types)
-6. [Enums](#enums)
-7. [Lambdas and delegates](#lambdas-and-delegates)
-8. [Type inference](#type-inference)
-9. [Object instantiation](#object-instantiation)
-10. [Documentation comments](#documentation-comments)
-11. [Namespaces](#namespaces)
-12. [Unity-specific rules](#unity-specific-rules)
+6. [Events](#events)
+7. [Type inference](#type-inference)
+8. [Object instantiation](#object-instantiation)
+9. [Documentation comments](#documentation-comments)
+10. [Unity-specific rules](#unity-specific-rules)
 
 ---
 
@@ -159,7 +157,8 @@ public class PlayerController : MonoBehaviour, IDamageable { }
 
 ### Interface implementation visibility
 
-When implementing an interface, **prefer explicit interface implementation** instead of public methods or properties.
+Prefer explicit interface implementation when the member is only intended to be called through an interface reference.
+This keeps the implementing class's public surface clean and communicates that the method belongs to the contract, not the class itself.
 
 ```csharp
 // Bad
@@ -174,6 +173,8 @@ void IDamageable.TakeDamage(int amount)
     _health -= amount;
 }
 ```
+
+If the method also needs to be called directly on the concrete type (e.g. internally or by tightly coupled systems that already hold a typed reference), use a public method instead to avoid the awkward `((IDamageable)this).TakeDamage(...)` cast.
 
 ### Enum declarations
 
@@ -302,7 +303,7 @@ public int CurrentHealth
 
 ## Unity-specific rules
 
-**Never call `GetComponent` outside of `Awake` or `OnValidate`.** Cache references at initialization:
+**Avoid calling `GetComponent` outside of `Awake` or `OnValidate` on your own GameObject.** Cache references at initialization to avoid repeated allocations:
 
 ```csharp
 // Bad
@@ -317,8 +318,13 @@ void Awake() => _rb = GetComponent<Rigidbody>();
 void Update() => _rb.AddForce(Vector3.up);
 ```
 
-**Unsubscribe from events in `OnDisable` or `OnDestroy`** to prevent memory leaks.
-Store the handler in a field so the subscription and unsubscription reference the same delegate instance.
+This rule applies to components on `this` GameObject.
+Calling `GetComponent` on *other* objects is sometimes unavoidable and perfectly acceptable.
+
+**Subscriptions and unsubscriptions must be symmetric** to prevent memory leaks and duplicate subscriptions.
+Use `OnEnable`/`OnDisable` for components that may be toggled, and `Awake` or `Start`/`OnDestroy` for one-time lifetime subscriptions.
+
+Store the handler in a field so both sides reference the same delegate instance.
 Unsubscribing a lambda that was not stored will silently fail because each lambda expression
 creates a new delegate instance:
 
@@ -327,11 +333,9 @@ creates a new delegate instance:
 void OnEnable()  => _health.OnChanged += value => UpdateUI(value);
 void OnDisable() => _health.OnChanged -= value => UpdateUI(value);
 
-// Good — both lines reference the same stored delegate
-void OnEnable()  => _health.OnChanged += HandleHealthChanged;
-void OnDisable() => _health.OnChanged -= HandleHealthChanged;
-
-void HandleHealthChanged(int value) => UpdateUI(value);
+// Good — symmetric Awake / OnDestroy pair (for one-time subscriptions)
+void Awake()     => _health.OnChanged += HandleHealthChanged;
+void OnDestroy() => _health.OnChanged -= HandleHealthChanged;
 ```
 
 **Order Unity messages consistently** across all MonoBehaviours:
