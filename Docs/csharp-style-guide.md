@@ -167,7 +167,6 @@ Add `DisallowMultipleComponent` whenever it makes no sense to have duplicates.
 Each attribute goes on its own line:
 
 ```csharp
-// File: PlayerController.cs
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(Animator))]
 [DisallowMultipleComponent]
@@ -194,10 +193,6 @@ void IDamageable.TakeDamage(int amount)
 ```
 
 If the method also needs to be called directly on the concrete type (e.g. internally or by tightly coupled systems that already hold a typed reference), use a public method instead to avoid the awkward `((IDamageable)this).TakeDamage(...)` cast.
-
-### Enum declarations
-
-Declare enums in their own file when they are shared across multiple classes.
 
 ---
 
