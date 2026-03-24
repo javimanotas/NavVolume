@@ -9,10 +9,10 @@ CSharpier enforces formatting automatically — this guide covers naming, struct
 ## Table of contents
 
 1. [Naming conventions](#naming-conventions)
-2. [Variables and fields](#variables-and-fields)
+2. [Fields](#fields)
 3. [Properties](#properties)
 4. [Methods](#methods)
-5. [Classes, structs and interfaces](#classes-structs-and-interfaces)
+5. [Custom types](#custom-types)
 6. [Enums](#enums)
 7. [Lambdas and delegates](#lambdas-and-delegates)
 8. [Type inference](#type-inference)
@@ -36,7 +36,7 @@ CSharpier enforces formatting automatically — this guide covers naming, struct
 | Property | PascalCase | `CurrentHealth` |
 | Event | PascalCase prefixed with `On` | `OnHealthChanged` |
 | Non-private field | PascalCase | `MaxHealth` |
-| `[SerializeField]` field | PascalCase (see [Variables and fields](#variables-and-fields)) | `MoveSpeed` |
+| `[SerializeField]` field | PascalCase | `MoveSpeed` |
 | Private field | camelCase with `_` prefix | `_currentHealth` |
 | Local variable | camelCase | `damageAmount` |
 | Parameter | camelCase | `int damageAmount` |
@@ -46,9 +46,10 @@ CSharpier enforces formatting automatically — this guide covers naming, struct
 
 ---
 
-## Variables and fields
+## Fields
 
-Do not write the `private` modifier — it is the default access level and adding it is noise:
+Do not use the `private` modifier.
+It is the default access level and adding it results is noise:
 
 ```csharp
 // Bad
@@ -58,41 +59,20 @@ private Rigidbody _rb;
 // Good
 float _moveSpeed;
 Rigidbody _rb;
+
+// This applies to methods too.
 ```
 
-Private fields use a leading underscore:
-
-```csharp
-float _moveSpeed;
-Rigidbody _rb;
-bool _isGrounded;
-```
-
-`[SerializeField]` fields are private but use PascalCase to match how Unity displays them in the Inspector.
 Each attribute must be on its own line:
 
 ```csharp
 // Bad
-[SerializeField] float _moveSpeed = 5f;
-[SerializeField, Range(0f, 10f)] float _jumpForce = 8f;
+[SerializeField, Range(0f, 10f)] float JumpForce = 8f;
 
 // Good
 [SerializeField]
-float MoveSpeed = 5f;
-
-[SerializeField]
 [Range(0f, 10f)]
 float JumpForce = 8f;
-```
-
-Constants use SCREAMING_SNAKE_CASE. Private constants follow the same underscore prefix rule as private fields:
-
-```csharp
-const float MAX_SPEED = 10f;
-const int MAX_HEALTH = 100;
-
-const float _GRAVITY_MULTIPLIER = 2.5f;
-const string _GROUND_TAG = "Ground";
 ```
 
 Group fields by purpose, separated by a blank line:
@@ -119,11 +99,11 @@ Use properties to expose data instead of public fields.
 Prefer expression-bodied properties for simple cases:
 
 ```csharp
-// Read-only computed property
-public bool IsAlive => _health > 0;
-
 // Read-only backed property
 public int CurrentHealth => _health;
+
+// Read-only computed property
+public bool IsAlive => _health > 0;
 
 // Read/write with logic
 public int CurrentHealth
@@ -158,12 +138,15 @@ public float GetSpeedRatio() => _currentSpeed / _maxSpeed;
 
 ---
 
-## Classes, structs and interfaces
+## Custom types
 
-One type per file. The file name must match the type name exactly.
+Declare only one type per file.
+The file name must match the type name exactly.
 
-Always specify `RequireComponent` for any component your class depends on,
-and `DisallowMultipleComponent` whenever it makes no sense to have duplicates.
+### Classes that inherit from MonoBehaviour
+
+Always specify `RequireComponent` for any component your class depends on.
+Add `DisallowMultipleComponent` whenever it makes no sense to have duplicates.
 Each attribute goes on its own line:
 
 ```csharp
@@ -171,16 +154,8 @@ Each attribute goes on its own line:
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(Animator))]
 [DisallowMultipleComponent]
-public class PlayerController : MonoBehaviour, IDamageable
-{
-}
+public class PlayerController : MonoBehaviour, IDamageable { }
 ```
-
-`RequireComponent` prevents missing reference errors at edit time and documents dependencies explicitly.
-
-Apply `DisallowMultipleComponent` to every `MonoBehaviour` by default. Omit it only when the class is
-explicitly designed to coexist in multiples on the same `GameObject`, and document that intent with
-a comment directly above the class declaration.
 
 ### Interface implementation visibility
 
@@ -200,46 +175,15 @@ void IDamageable.TakeDamage(int amount)
 }
 ```
 
----
-
-## Enums
+### Enum declarations
 
 Declare enums in their own file when they are shared across multiple classes.
 
-Do not use a suffix or prefix on enum values:
-
-```csharp
-// Bad
-public enum Direction { Direction_Up, Direction_Down }
-
-// Good
-public enum Direction { Up, Down, Left, Right }
-```
-
 ---
 
-## Lambdas and delegates
+## Events
 
-Use expression-bodied lambdas when the body is a single statement:
-
-```csharp
-_enemies.ForEach(enemy => enemy.TakeDamage(10));
-
-var alive = _enemies.Where(enemy => enemy.IsAlive).ToList();
-```
-
-Use `Action` and `Func` for delegates instead of declaring custom delegate types:
-
-```csharp
-public event Action OnDeath;
-public event Action<int> OnHealthChanged;
-public event Func<bool> OnCanInteract;
-```
-
-### Event handler naming
-
-When subscribing to **C# events or UnityEvents** using a **named method** (not a lambda),
-the handler method **must start with `Handle`**.
+When subscribing to **C# events or UnityEvents** using a named method, the handler method **must start with `Handle`**.
 
 ```csharp
 // Bad
@@ -256,7 +200,6 @@ _button.onClick.AddListener(HandleButtonClicked);
 ## Type inference
 
 Use `var` for all local variable declarations. Do not use explicit types for locals.
-`var` does not apply to field declarations — fields must always use an explicit type.
 
 ```csharp
 // Bad
@@ -270,8 +213,7 @@ var enemies = new List<Enemy>();
 var rb = GetComponent<Rigidbody>();
 ```
 
-This applies to all local variable contexts: assignments, `foreach` loop variables,
-and `out` variables (e.g. `dict.TryGetValue(key, out var value)`).
+This applies to all local variable contexts: assignments, `foreach` loop variables, `out` variables (e.g. `dict.TryGetValue(key, out var value)`)...
 
 ---
 
@@ -313,10 +255,10 @@ SetDamageInfo(new() { Amount = 10, Type = DamageType.Fire });
 
 ## Documentation comments
 
-Use `///` XML documentation comments for all public types (classes, structs, interfaces, enums).
+Use `///` XML documentation comments for all public types.
 For methods and properties, XML documentation is only compulsory when required to explain non-obvious behaviour, edge cases, or constraints.
 Place each XML tag on its own line, separate from its content.
-Place one sentence per line inside `<summary>`.
+Place one sentence per line inside each tag.
 
 ```csharp
 // Bad
@@ -334,25 +276,7 @@ public void TakeDamage(int amount) { }
 public void TakeDamage(int amount) { }
 ```
 
-Document parameters and return values separately, but only when they are non-trivial or require further explanation. You do not need to document parameters or return values if their purpose is obvious from their name or type:
-
-```csharp
-/// <summary>
-/// Calculates the damage after applying resistance.
-/// Returns zero if the entity is invulnerable.
-/// </summary>
-/// <param name="rawDamage">
-/// The incoming damage before resistance is applied.
-/// </param>
-/// <param name="resistance">
-/// A value between 0 and 1 where 1 means full immunity.
-/// </param>
-/// <returns>
-/// The final damage value after resistance calculation.
-/// </returns>
-public int CalculateDamage(int rawDamage, float resistance) =>
-    Mathf.RoundToInt(rawDamage * (1f - resistance));
-```
+You do not need to document parameters or return values if their purpose is obvious from their name or type.
 
 Omit the summary comment when the member name alone fully describes what it does, what it
 returns, and any meaningful constraints — with nothing left that a comment could add.
@@ -376,15 +300,6 @@ public int CurrentHealth
 
 ---
 
-## Namespaces
-
-Always declare namespaces for your types. The namespace must match the full folder path starting from the root directory, using `Assets.Scripts` as the base. For instance, a script located at `Assets/Scripts/Player/ThirdPersonController.cs` must be placed in the `Assets.Scripts.Player` namespace.
-
-**Exception for Utilities:**
-Files located within the `Utils` directory (e.g., `Assets/Scripts/Utils/...`) should **not** declare a namespace. Omitting the namespace for utility classes, generic helpers, and extension methods ensures they are globally accessible across the entire project without requiring repetitive `using` directives in every file.
-
----
-
 ## Unity-specific rules
 
 **Never call `GetComponent` outside of `Awake` or `OnValidate`.** Cache references at initialization:
@@ -400,34 +315,6 @@ void Update()
 Rigidbody _rb;
 void Awake() => _rb = GetComponent<Rigidbody>();
 void Update() => _rb.AddForce(Vector3.up);
-```
-
-**Never use `Camera.main` in `Update`.** It does an internal `FindObjectWithTag` every call:
-
-```csharp
-// Bad
-void Update()
-{
-    var dir = Camera.main.transform.forward;
-}
-
-// Good
-Camera _camera;
-void Awake() => _camera = Camera.main;
-void Update()
-{
-    var dir = _camera.transform.forward;
-}
-```
-
-**Never use `new` to create a `MonoBehaviour`.** Always use `AddComponent` or `Instantiate`:
-
-```csharp
-// Bad
-var player = new PlayerController();
-
-// Good
-var player = gameObject.AddComponent<PlayerController>();
 ```
 
 **Unsubscribe from events in `OnDisable` or `OnDestroy`** to prevent memory leaks.
