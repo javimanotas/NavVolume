@@ -321,23 +321,6 @@ void Update() => _rb.AddForce(Vector3.up);
 This rule applies to components on `this` GameObject.
 Calling `GetComponent` on *other* objects is sometimes unavoidable and perfectly acceptable.
 
-**Subscriptions and unsubscriptions must be symmetric** to prevent memory leaks and duplicate subscriptions.
-Use `OnEnable`/`OnDisable` for components that may be toggled, and `Awake` or `Start`/`OnDestroy` for one-time lifetime subscriptions.
-
-Store the handler in a field so both sides reference the same delegate instance.
-Unsubscribing a lambda that was not stored will silently fail because each lambda expression
-creates a new delegate instance:
-
-```csharp
-// Bad — unsubscription silently fails; each lambda is a distinct instance
-void OnEnable()  => _health.OnChanged += value => UpdateUI(value);
-void OnDisable() => _health.OnChanged -= value => UpdateUI(value);
-
-// Good — symmetric Awake / OnDestroy pair (for one-time subscriptions)
-void Awake()     => _health.OnChanged += HandleHealthChanged;
-void OnDestroy() => _health.OnChanged -= HandleHealthChanged;
-```
-
 **Order Unity messages consistently** across all MonoBehaviours:
 
 ```csharp
@@ -353,3 +336,6 @@ void Update() { }
 void FixedUpdate() { }
 void LateUpdate() { }
 ```
+
+**Subscriptions and unsubscriptions of events must be symmetric** to prevent memory leaks and duplicate subscriptions.
+Use `OnEnable`/`OnDisable` for components that may be toggled, and `Awake` or `Start`/`OnDestroy` for one-time lifetime subscriptions.
