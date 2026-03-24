@@ -2,7 +2,26 @@
 
 This document defines the coding conventions for this project.
 All C# code under `Assets/` (excluding external plugins) must follow these rules.
-CSharpier enforces formatting automatically — this guide covers naming, structure, and patterns that CSharpier does not catch.
+ 
+## Formatting
+ 
+This project uses [CSharpier](https://csharpier.com) to enforce consistent formatting automatically.
+CSharpier runs on the CI pipeline and **will fail the build** if any file is not properly formatted.
+Always check or format your code before pushing.
+ 
+To check whether your code is correctly formatted (no files are modified):
+ 
+```bash
+csharpier check Assets
+```
+ 
+To automatically format all files:
+ 
+```bash
+csharpier format Assets
+```
+ 
+Everything else in this guide covers naming, structure, and patterns that CSharpier does not enforce.
 
 ---
 
