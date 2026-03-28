@@ -14,10 +14,10 @@
         /// </summary>
         static uint Interleave00(uint x)
         {
-            x = (x | (x << 16)) & 0x030000FF;
-            x = (x | (x << 8)) & 0x0300F00F;
-            x = (x | (x << 4)) & 0x030C30C3;
-            x = (x | (x << 2)) & 0x09249249;
+            x = (x ^ (x << 16)) & 0xFF0000FF;
+            x = (x ^ (x << 8)) & 0x0300F00F;
+            x = (x ^ (x << 4)) & 0x030C30C3;
+            x = (x ^ (x << 2)) & 0x09249249;
             return x;
         }
 
@@ -26,10 +26,11 @@
         /// </summary>
         static uint CompactBits(uint x)
         {
-            x = (x | (x >> 2)) & 0x030C30C3;
-            x = (x | (x >> 4)) & 0x0300F00F;
-            x = (x | (x >> 8)) & 0x030000FF;
-            x = (x | (x >> 16)) & 0x000003FF;
+            x &= 0x09249249;
+            x = (x ^ (x >> 2)) & 0x030C30C3;
+            x = (x ^ (x >> 4)) & 0x0300F00F;
+            x = (x ^ (x >> 8)) & 0xFF0000FF;
+            x = (x ^ (x >> 16)) & 0x000003FF;
             return x;
         }
 
@@ -64,5 +65,13 @@
                 (z << 1) | ((childIdx >> 2) & 1)
             );
         }
+
+        public static bool operator ==(MortonCode lhs, MortonCode rhs) => lhs._code == rhs._code;
+
+        public static bool operator !=(MortonCode lhs, MortonCode rhs) => lhs._code != rhs._code;
+
+        public override bool Equals(object obj) => this == (MortonCode)obj;
+
+        public override int GetHashCode() => _code.GetHashCode();
     }
 }
