@@ -55,5 +55,11 @@
         public readonly uint NodeIdx => (_link & _NODE_MASK) >> _NODE_SHIFT;
 
         public readonly uint SubnodeIdx => _link & _UNSHIFTED_SUBNODE_MASK;
+
+        public const uint MAX_LAYER_ALLOWED = _UNSHIFTED_LAYER_MASK;
+
+        public const uint MAX_NODE_ALLOWED = _UNSHIFTED_NODE_MASK;
+
+        public const uint MAX_SUBNODE_ALLOWED = _UNSHIFTED_SUBNODE_MASK;
     }
 }
