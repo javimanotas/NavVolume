@@ -1,9 +1,11 @@
-﻿namespace NavVolume.Runtime.Core
+﻿using System;
+
+namespace NavVolume.Runtime.Core
 {
     /// <summary>
     /// Encoding of a 3D grid position into a Z-order space filling curve.
     /// </summary>
-    internal readonly struct MortonCode
+    internal readonly struct MortonCode : IComparable<MortonCode>
     {
         readonly uint _code;
 
@@ -73,5 +75,7 @@
         public override bool Equals(object obj) => this == (MortonCode)obj;
 
         public override int GetHashCode() => _code.GetHashCode();
+
+        public int CompareTo(MortonCode other) => _code.CompareTo(other._code);
     }
 }

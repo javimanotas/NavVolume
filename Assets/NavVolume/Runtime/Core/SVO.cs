@@ -7,34 +7,51 @@ namespace NavVolume.Runtime.Core
     /// </summary>
     internal partial class SVO
     {
-        readonly SVONode[][] _layers;
-
         SVOLeaf[] _leafNodes;
+
+        public readonly List<SVONode>[] Layers;
+
+        public readonly Dictionary<MortonCode, int>[] MortonToIndex;
 
         public SVO(int numLayers)
         {
-            _layers = new SVONode[numLayers][];
+            Layers = new List<SVONode>[numLayers];
+            MortonToIndex = new Dictionary<MortonCode, int>[numLayers];
+
+            for (var i = 0; i < numLayers; i++)
+            {
+                Layers[i] = new();
+                MortonToIndex[i] = new();
+            }
         }
 
-        public int NumLayers => _layers.Length;
-
-        public IReadOnlyList<SVONode> NodesFromLayer(int layer) => _layers[layer];
-
-        public ref SVONode GetNodeRef(SVOLink link) => ref _layers[link.LayerIdx][link.NodeIdx];
-
-        public void AddLayer(uint layer, List<MortonCode> codes)
+        public SVONode GetNode(SVOLink link)
         {
-            _layers[layer] = new SVONode[codes.Count];
+            return Layers[link.LayerIdx][(int)link.NodeIdx];
+        }
 
-            for (var i = 0; i < _layers[layer].Length; i++)
+        public void SetNode(SVOLink link, in SVONode node)
+        {
+            Layers[link.LayerIdx][(int)link.NodeIdx] = node;
+        }
+
+        public bool TryGetLink(uint layer, MortonCode mortonCode, out SVOLink link)
+        {
+            if (MortonToIndex[layer].TryGetValue(mortonCode, out var idx))
             {
-                _layers[layer][i] = new(codes[i]);
+                link = new SVOLink(layer, (uint)idx);
+                return true;
             }
+
+            link = SVOLink.Invalid;
+            return false;
         }
 
         public void SetLeafNodes(SVOLeaf[] leafNodes)
         {
             _leafNodes = leafNodes;
         }
+
+        public Stats ComputeStats() => new();
     }
 }
