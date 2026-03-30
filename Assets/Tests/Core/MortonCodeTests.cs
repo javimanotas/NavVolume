@@ -11,12 +11,6 @@ namespace Assets.Tests.Core
         const uint _NUM_CHILDS = 8;
 
         [Test]
-        void ThisWillFail()
-        {
-            Assert.AreEqual(true, false);
-        }
-
-        [Test]
         public void DecodedAfterConstructionReturnsOriginalCoords(
             [Random(0u, _MAX_COORD, 2)] uint x,
             [Random(0u, _MAX_COORD, 2)] uint y,
