@@ -37,7 +37,7 @@ namespace NavVolume.Runtime.Builder
                 BuildUpperLayer(svo, layer);
             }
 
-            SVONeighborLinker.FillNeighborLinks(svo);
+            SVONeighborLinker.FillNeighborLinks(svo, _settings);
 
             return new(svo, stopWatch.ElapsedMilliseconds);
         }

@@ -13,10 +13,10 @@ namespace NavVolume.Runtime.Builder
         /// </summary>
         public static void FillNeighborLinks(SVO svo, BuildSettings settings)
         {
-            for (var layer = (uint)svo.Layers.Length - 1; layer >= 0; layer--)
+            for (var layer = svo.Layers.Length - 1; layer >= 0; layer--)
             {
                 var gridRes = Mathf.RoundToInt(
-                    settings.RootSize / settings.NodeSizeForLayer((int)layer)
+                    settings.RootSize / settings.NodeSizeForLayer(layer)
                 );
 
                 var nodes = svo.Layers[layer];
@@ -33,7 +33,7 @@ namespace NavVolume.Runtime.Builder
 
                         if (node.MortonCode.TryGetNeighborCode(dir, gridRes, out MortonCode nCode))
                         {
-                            if (svo.TryGetLink(layer, nCode, out SVOLink neighborLink))
+                            if (svo.TryGetLink((uint)layer, nCode, out SVOLink neighborLink))
                             {
                                 node.Neighbors[dir] = neighborLink;
                                 continue;
@@ -44,11 +44,10 @@ namespace NavVolume.Runtime.Builder
 
                         #region Inherit from parent
 
-                        // ── Case B: inherit from parent ───────────────
                         if (node.Parent.IsValid)
                         {
                             var inherited = svo.GetNode(node.Parent).Neighbors[dir];
-                            node.Neighbors[dir] = inherited; // may be Invalid at world boundary
+                            node.Neighbors[dir] = inherited;
                             continue;
                         }
 
