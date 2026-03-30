@@ -27,7 +27,7 @@ namespace NavVolume.Runtime.Builder
 
         public float NodeSizeForLayer(int layer) => VoxelSize * SVOLeaf.GRID_SIZE * (1 << layer);
 
-        private void OnValidate()
+        void OnValidate()
         {
             VoxelSize = RootSize;
 

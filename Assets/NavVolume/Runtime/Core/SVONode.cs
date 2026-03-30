@@ -14,11 +14,14 @@ namespace NavVolume.Runtime.Core
 
         public SVOLink Parent;
 
+        public NeighborSet Neighbors;
+
         public SVONode(MortonCode mortonCode)
         {
             MortonCode = mortonCode;
             Parent = SVOLink.Invalid;
             FirstChild = SVOLink.Invalid;
+            Neighbors = NeighborSet.AllInvalid;
         }
 
         public readonly bool HasChildren => FirstChild.IsValid;

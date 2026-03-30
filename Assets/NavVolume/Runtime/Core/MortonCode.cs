@@ -7,6 +7,8 @@ namespace NavVolume.Runtime.Core
     /// </summary>
     internal readonly struct MortonCode : IComparable<MortonCode>
     {
+        public static MortonCode Invalid => new(uint.MaxValue);
+
         readonly uint _code;
 
         #region Helper functions
@@ -38,6 +40,11 @@ namespace NavVolume.Runtime.Core
 
         #endregion
 
+        MortonCode(uint rawCode)
+        {
+            _code = rawCode;
+        }
+
         /// <summary>
         /// Creates the encoding of the given grid position.
         /// </summary>
@@ -66,6 +73,67 @@ namespace NavVolume.Runtime.Core
                 (y << 1) | ((childIdx >> 1) & 1),
                 (z << 1) | ((childIdx >> 2) & 1)
             );
+        }
+
+        /// <summary>
+        /// Compute the Morton code of the node adjacent in the given direction.
+        /// </summary>
+        /// <returns>
+        /// false when the neighbor would be outside the grid boundary
+        /// </returns>
+        public bool TryGetNeighborCode(
+            NeighborDirection dir,
+            int gridResolution,
+            out MortonCode neighborCode
+        )
+        {
+            var (x, y, z) = Decoded;
+
+            switch (dir)
+            {
+                case NeighborDirection.PosX:
+                    x++;
+                    break;
+                case NeighborDirection.NegX:
+                    if (x == 0)
+                    {
+                        goto invalid;
+                    }
+                    x--;
+                    break;
+                case NeighborDirection.PosY:
+                    y++;
+                    break;
+                case NeighborDirection.NegY:
+                    if (y == 0)
+                    {
+                        goto invalid;
+                    }
+                    y--;
+                    break;
+                case NeighborDirection.PosZ:
+                    z++;
+                    break;
+                case NeighborDirection.NegZ:
+                    if (z == 0)
+                    {
+                        goto invalid;
+                    }
+                    z--;
+                    break;
+            }
+
+            if (x > gridResolution || y > gridResolution || z > gridResolution)
+            {
+                goto invalid;
+            }
+
+            neighborCode = new(x, y, z);
+            return true;
+
+            invalid:
+            neighborCode = Invalid;
+            return false;
         }
 
         public static bool operator ==(MortonCode lhs, MortonCode rhs) => lhs._code == rhs._code;
