@@ -25,7 +25,7 @@ namespace NavVolume.Runtime.Builder
                 {
                     var node = nodes[nodeIdx];
 
-                    for (var d = 0U; d < 6; d++)
+                    for (var d = 0u; d < 6; d++)
                     {
                         var dir = (NeighborDirection)d;
 

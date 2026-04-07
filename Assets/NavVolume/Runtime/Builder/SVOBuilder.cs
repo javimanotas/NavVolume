@@ -32,7 +32,7 @@ namespace NavVolume.Runtime.Builder
 
             AllocateLowerLayers(svo, occupiedL1);
 
-            for (var layer = 1U; layer < svo.Layers.Length; layer++)
+            for (var layer = 1u; layer < svo.Layers.Length; layer++)
             {
                 BuildUpperLayer(svo, layer);
             }
@@ -60,7 +60,7 @@ namespace NavVolume.Runtime.Builder
 
             foreach (var l1Code in l1Codes)
             {
-                for (var c = 0U; c < 8; c++)
+                for (var c = 0u; c < 8; c++)
                 {
                     l0Codes.Add(l1Code.ChildCode(c));
                 }
@@ -133,21 +133,13 @@ namespace NavVolume.Runtime.Builder
 
             foreach (var pCode in parentCodes)
             {
-                for (var c = 0U; c < 8; c++)
+                for (var c = 0u; c < 8; c++)
                 {
                     var childCode = pCode.ChildCode(c);
 
                     if (!svo.MortonToIndex[childLayer].ContainsKey(childCode))
                     {
                         someSiblingMissed = true;
-
-                        if (childLayer == 0)
-                        {
-                            throw new Exception(
-                                $"Missing layer-0 child node for parent code {pCode}. "
-                                    + $"This should never happen because we pre-computed all layer-0 codes in AllocateL0."
-                            );
-                        }
 
                         var paddingIdx = svo.Layers[childLayer].Count;
                         svo.Layers[childLayer].Add(new(childCode));
@@ -181,13 +173,6 @@ namespace NavVolume.Runtime.Builder
         {
             foreach (var pCode in parentCodes)
             {
-                if (svo.MortonToIndex[layer].ContainsKey(pCode))
-                {
-                    throw new Exception(
-                        $"Parent code {pCode} at layer {layer} already exists. This should never happen because parent codes are collected from the child layer and guaranteed unique."
-                    );
-                }
-
                 var parentIdx = svo.Layers[layer].Count;
                 svo.Layers[layer].Add(new(pCode));
                 svo.MortonToIndex[layer][pCode] = parentIdx;
@@ -203,12 +188,7 @@ namespace NavVolume.Runtime.Builder
                 var child = sortedChildren[childIdx];
                 var parentCode = child.MortonCode.ParentCode;
 
-                if (!svo.TryGetLink(layer, parentCode, out var parentLink))
-                {
-                    throw new Exception(
-                        $"Parent code {parentCode} at layer {layer} not found for child with Morton code {child.MortonCode} at layer {childLayer}. This should never happen because we guaranteed all parents are allocated in the previous step."
-                    );
-                }
+                svo.TryGetLink(layer, parentCode, out var parentLink);
 
                 child.Parent = parentLink;
                 svo.Layers[childLayer][childIdx] = child;

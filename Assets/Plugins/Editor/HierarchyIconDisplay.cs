@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
@@ -118,4 +119,5 @@ public static class HierarchyIconDisplay
             EditorWindow.focusedWindow != null && EditorWindow.focusedWindow == HierarchyWindow;
     }
 }
+
 #endif

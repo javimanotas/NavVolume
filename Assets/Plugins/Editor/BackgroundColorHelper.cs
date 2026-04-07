@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+
 using UnityEngine;
 
 /// <summary>
@@ -34,4 +35,5 @@ public static class BackgroundColorHelper
         return Default;
     }
 }
+
 #endif
