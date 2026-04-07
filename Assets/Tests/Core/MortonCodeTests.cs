@@ -120,7 +120,6 @@ namespace Assets.Tests.Core
         }
 
         [Test]
-        [TestCaseSource(nameof(NeighborDirectionCases))]
         public void TryGetNeighborCode_Twice_ReturnsOriginalCode(
             [Random(0u, _RESOLUTION - 1, 3)] uint x,
             [Random(0u, _RESOLUTION - 1, 3)] uint y,
@@ -131,7 +130,17 @@ namespace Assets.Tests.Core
 
             for (var i = 0; i < PossibleNeighborDirections; i++)
             {
-                original.TryGetNeighborCode((NeighborDirection)i, _RESOLUTION, out var neighbor);
+                if (
+                    !original.TryGetNeighborCode(
+                        (NeighborDirection)i,
+                        _RESOLUTION,
+                        out var neighbor
+                    )
+                )
+                {
+                    continue; // skip invalid neighbors (e.g. at boundaries)
+                }
+
                 neighbor.TryGetNeighborCode(
                     Opposite((NeighborDirection)i),
                     _RESOLUTION,
