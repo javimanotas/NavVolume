@@ -129,7 +129,7 @@ namespace NavVolume.Runtime.Builder
 
         void AllocateMissingSiblings(SVO svo, uint childLayer, SortedSet<MortonCode> parentCodes)
         {
-            bool someSiblingMissed = false;
+            var someSiblingMissed = false;
 
             foreach (var pCode in parentCodes)
             {
@@ -216,7 +216,7 @@ namespace NavVolume.Runtime.Builder
                 var parentNode = svo.GetNode(parentLink);
                 if (!parentNode.HasChildren)
                 {
-                    parentNode.FirstChild = new SVOLink(childLayer, (uint)childIdx);
+                    parentNode.FirstChild = new(childLayer, (uint)childIdx);
                     svo.SetNode(parentLink, parentNode);
                 }
             }

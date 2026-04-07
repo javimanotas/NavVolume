@@ -56,7 +56,7 @@ namespace NavVolume.Runtime.Builder
                             )
                         )
                         {
-                            occupied.Add(new MortonCode(i, j, k));
+                            occupied.Add(new(i, j, k));
                         }
                     }
                 }

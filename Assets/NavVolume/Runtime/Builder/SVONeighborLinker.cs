@@ -31,9 +31,9 @@ namespace NavVolume.Runtime.Builder
 
                         #region Same layer neighbor
 
-                        if (node.MortonCode.TryGetNeighborCode(dir, gridRes, out MortonCode nCode))
+                        if (node.MortonCode.TryGetNeighborCode(dir, gridRes, out var nCode))
                         {
-                            if (svo.TryGetLink((uint)layer, nCode, out SVOLink neighborLink))
+                            if (svo.TryGetLink((uint)layer, nCode, out var neighborLink))
                             {
                                 node.Neighbors[dir] = neighborLink;
                                 continue;
