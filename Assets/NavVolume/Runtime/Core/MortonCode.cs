@@ -123,7 +123,7 @@ namespace NavVolume.Runtime.Core
                     break;
             }
 
-            if (x > gridResolution || y > gridResolution || z > gridResolution)
+            if (x >= gridResolution || y >= gridResolution || z >= gridResolution)
             {
                 goto invalid;
             }

@@ -6,15 +6,21 @@ namespace Assets.Tests.Core
     public class SVOLeafTests
     {
         [Test]
-        public void IsOccupied_AfterSetOccupied_ReturnsTrue(
-            [Random(0, SVOLeaf.GRID_SIZE - 1, 2)] int x,
-            [Random(0, SVOLeaf.GRID_SIZE - 1, 2)] int y,
-            [Random(0, SVOLeaf.GRID_SIZE - 1, 2)] int z
-        )
+        public void IsOccupied_AfterSetOccupied_ReturnsTrue()
         {
-            var leaf = SVOLeaf.Empty;
-            leaf.SetOccupied(x, y, z);
-            Assert.IsTrue(leaf.IsOccupied(x, y, z));
+            for (var x = 0; x < SVOLeaf.GRID_SIZE; x++)
+            {
+                for (var y = 0; y < SVOLeaf.GRID_SIZE; y++)
+                {
+                    for (var z = 0; z < SVOLeaf.GRID_SIZE; z++)
+                    {
+                        var leaf = SVOLeaf.Empty;
+                        leaf.SetOccupied(x, y, z);
+
+                        Assert.IsTrue(leaf.IsOccupied(x, y, z));
+                    }
+                }
+            }
         }
     }
 }
