@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -6,7 +7,8 @@ using UnityEditor.SceneManagement;
 /// <summary>
 /// Provides functionality to toggle the active state of GameObjects directly from the Unity Hierarchy window.
 /// </summary>
-/// <remarks>This class is initialized automatically when the Unity Editor loads.
+/// <remarks>
+/// This class is initialized automatically when the Unity Editor loads.
 /// Changing the toggle also marks the scene as dirty, enabling undo support.
 /// </remarks>
 [InitializeOnLoad]
@@ -14,10 +16,10 @@ public static class HierarchyToggle
 {
     static HierarchyToggle()
     {
-        EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyWindowItemOnGUI;
+        EditorApplication.hierarchyWindowItemOnGUI += HandleHierarchyWindowItemOnGUI;
     }
 
-    static void OnHierarchyWindowItemOnGUI(int instanceId, Rect selectionRect)
+    static void HandleHierarchyWindowItemOnGUI(int instanceId, Rect selectionRect)
     {
         var gameObject = EditorUtility.EntityIdToObject(instanceId) as GameObject;
 
@@ -38,4 +40,5 @@ public static class HierarchyToggle
         }
     }
 }
+
 #endif

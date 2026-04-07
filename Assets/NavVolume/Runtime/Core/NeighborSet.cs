@@ -5,22 +5,22 @@
     /// </summary>
     internal struct NeighborSet
     {
-        SVOLink PosX,
-            NegX,
-            PosY,
-            NegY,
-            PosZ,
-            NegZ;
+        SVOLink _posX,
+            _negX,
+            _posY,
+            _negY,
+            _posZ,
+            _negZ;
 
         public static NeighborSet AllInvalid =>
             new()
             {
-                PosX = SVOLink.Invalid,
-                NegX = SVOLink.Invalid,
-                PosY = SVOLink.Invalid,
-                NegY = SVOLink.Invalid,
-                PosZ = SVOLink.Invalid,
-                NegZ = SVOLink.Invalid,
+                _posX = SVOLink.Invalid,
+                _negX = SVOLink.Invalid,
+                _posY = SVOLink.Invalid,
+                _negY = SVOLink.Invalid,
+                _posZ = SVOLink.Invalid,
+                _negZ = SVOLink.Invalid,
             };
 
         public SVOLink this[NeighborDirection index]
@@ -28,12 +28,12 @@
             readonly get =>
                 index switch
                 {
-                    NeighborDirection.PosX => PosX,
-                    NeighborDirection.NegX => NegX,
-                    NeighborDirection.PosY => PosY,
-                    NeighborDirection.NegY => NegY,
-                    NeighborDirection.PosZ => PosZ,
-                    NeighborDirection.NegZ => NegZ,
+                    NeighborDirection.PosX => _posX,
+                    NeighborDirection.NegX => _negX,
+                    NeighborDirection.PosY => _posY,
+                    NeighborDirection.NegY => _negY,
+                    NeighborDirection.PosZ => _posZ,
+                    NeighborDirection.NegZ => _negZ,
                     _ => SVOLink.Invalid,
                 };
             set
@@ -41,22 +41,22 @@
                 switch (index)
                 {
                     case NeighborDirection.PosX:
-                        PosX = value;
+                        _posX = value;
                         break;
                     case NeighborDirection.NegX:
-                        NegX = value;
+                        _negX = value;
                         break;
                     case NeighborDirection.PosY:
-                        PosY = value;
+                        _posY = value;
                         break;
                     case NeighborDirection.NegY:
-                        NegY = value;
+                        _negY = value;
                         break;
                     case NeighborDirection.PosZ:
-                        PosZ = value;
+                        _posZ = value;
                         break;
                     case NeighborDirection.NegZ:
-                        NegZ = value;
+                        _negZ = value;
                         break;
                 }
             }

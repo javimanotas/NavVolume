@@ -78,7 +78,7 @@ namespace Assets.Tests.Core
         {
             var code = new MortonCode(x, y, z);
 
-            for (var i = 0U; i < _NUM_CHILDS; i++)
+            for (var i = 0u; i < _NUM_CHILDS; i++)
             {
                 Assert.AreEqual(code, code.ChildCode(i).ParentCode);
             }
@@ -94,7 +94,7 @@ namespace Assets.Tests.Core
             var code = new MortonCode(x, y, z);
             var children = new HashSet<MortonCode>();
 
-            for (var i = 0U; i < 8; i++)
+            for (var i = 0u; i < 8; i++)
             {
                 children.Add(code.ChildCode(i));
             }
@@ -190,7 +190,7 @@ namespace Assets.Tests.Core
                 return;
             }
 
-            var maxCoord = _RESOLUTION - 1U;
+            var maxCoord = _RESOLUTION - 1u;
             var x = axisIndex == 0 ? maxCoord : 1u;
             var y = axisIndex == 1 ? maxCoord : 1u;
             var z = axisIndex == 2 ? maxCoord : 1u;

@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
@@ -15,14 +16,14 @@ using System;
 [InitializeOnLoad]
 public static class HierarchyIconDisplay
 {
-    static bool _hierarchyHasFocus = false;
+    static bool HierarchyHasFocus = false;
 
-    static EditorWindow _hierarchyWindow;
+    static EditorWindow HierarchyWindow;
 
     static HierarchyIconDisplay()
     {
-        EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyWindowItemOnGUI;
-        EditorApplication.update += OnUpdate;
+        EditorApplication.hierarchyWindowItemOnGUI += HandleHierarchyWindowItemOnGUI;
+        EditorApplication.update += HandleEditorUpdate;
     }
 
     /// <summary>
@@ -74,7 +75,7 @@ public static class HierarchyIconDisplay
         return true;
     }
 
-    static void OnHierarchyWindowItemOnGUI(int instanceId, Rect selectionRect)
+    static void HandleHierarchyWindowItemOnGUI(int instanceId, Rect selectionRect)
     {
         var gameObject = EditorUtility.EntityIdToObject(instanceId) as GameObject;
 
@@ -96,7 +97,7 @@ public static class HierarchyIconDisplay
         var color = BackgroundColorHelper.Get(
             Selection.entityIds.Contains(instanceId),
             selectionRect.Contains(Event.current.mousePosition),
-            _hierarchyHasFocus
+            HierarchyHasFocus
         );
 
         var bgRect = selectionRect;
@@ -106,16 +107,17 @@ public static class HierarchyIconDisplay
         EditorGUI.LabelField(selectionRect, content);
     }
 
-    static void OnUpdate()
+    static void HandleEditorUpdate()
     {
-        if (_hierarchyWindow == null)
+        if (HierarchyWindow == null)
         {
             var type = Type.GetType("UnityEditor.SceneHierarchyWindow,UnityEditor");
-            _hierarchyWindow = EditorWindow.GetWindow(type);
+            HierarchyWindow = EditorWindow.GetWindow(type);
         }
 
-        _hierarchyHasFocus =
-            EditorWindow.focusedWindow != null && EditorWindow.focusedWindow == _hierarchyWindow;
+        HierarchyHasFocus =
+            EditorWindow.focusedWindow != null && EditorWindow.focusedWindow == HierarchyWindow;
     }
 }
+
 #endif

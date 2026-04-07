@@ -39,7 +39,7 @@ namespace NavVolume.Runtime.Core
         {
             if (MortonToIndex[layer].TryGetValue(mortonCode, out var idx))
             {
-                link = new SVOLink(layer, (uint)idx);
+                link = new(layer, (uint)idx);
                 return true;
             }
 

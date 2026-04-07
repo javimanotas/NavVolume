@@ -22,10 +22,10 @@ namespace NavVolume.Runtime.Core
 
         public void SetOccupied(int x, int y, int z)
         {
-            _occupiedSubnodes |= 1U << CoordsToIndex(x, y, z);
+            _occupiedSubnodes |= 1u << CoordsToIndex(x, y, z);
         }
 
         public readonly bool IsOccupied(int x, int y, int z) =>
-            (_occupiedSubnodes & (1U << CoordsToIndex(x, y, z))) != 0;
+            (_occupiedSubnodes & (1u << CoordsToIndex(x, y, z))) != 0;
     }
 }

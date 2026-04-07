@@ -25,15 +25,15 @@ namespace NavVolume.Runtime.Builder
                 {
                     var node = nodes[nodeIdx];
 
-                    for (var d = 0U; d < 6; d++)
+                    for (var d = 0u; d < 6; d++)
                     {
                         var dir = (NeighborDirection)d;
 
                         #region Same layer neighbor
 
-                        if (node.MortonCode.TryGetNeighborCode(dir, gridRes, out MortonCode nCode))
+                        if (node.MortonCode.TryGetNeighborCode(dir, gridRes, out var nCode))
                         {
-                            if (svo.TryGetLink((uint)layer, nCode, out SVOLink neighborLink))
+                            if (svo.TryGetLink((uint)layer, nCode, out var neighborLink))
                             {
                                 node.Neighbors[dir] = neighborLink;
                                 continue;

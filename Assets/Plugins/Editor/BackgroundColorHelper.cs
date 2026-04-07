@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+
 using UnityEngine;
 
 /// <summary>
@@ -6,13 +7,13 @@ using UnityEngine;
 /// </summary>
 public static class BackgroundColorHelper
 {
-    static readonly Color _default = new(0.2196f, 0.2196f, 0.2196f);
+    static readonly Color Default = new(0.2196f, 0.2196f, 0.2196f);
 
-    static readonly Color _selected = new(0.1725f, 0.3647f, 0.5294f);
+    static readonly Color Selected = new(0.1725f, 0.3647f, 0.5294f);
 
-    static readonly Color _selectedUnfocused = new(0.3f, 0.3f, 0.3f);
+    static readonly Color SelectedUnfocused = new(0.3f, 0.3f, 0.3f);
 
-    static readonly Color _hovered = new(0.2706f, 0.2706f, 0.2706f);
+    static readonly Color Hovered = new(0.2706f, 0.2706f, 0.2706f);
 
     public static Color Get(bool isSelected, bool isHovered, bool isWindowFocused)
     {
@@ -20,18 +21,19 @@ public static class BackgroundColorHelper
         {
             if (isWindowFocused)
             {
-                return _selected;
+                return Selected;
             }
 
-            return _selectedUnfocused;
+            return SelectedUnfocused;
         }
 
         if (isHovered)
         {
-            return _hovered;
+            return Hovered;
         }
 
-        return _default;
+        return Default;
     }
 }
+
 #endif

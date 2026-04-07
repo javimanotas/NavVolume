@@ -32,11 +32,11 @@ namespace NavVolume.Runtime.Builder
 
             var occupied = new HashSet<MortonCode>();
 
-            for (var i = 0U; i < gridSize; i++)
+            for (var i = 0u; i < gridSize; i++)
             {
-                for (var j = 0U; j < gridSize; j++)
+                for (var j = 0u; j < gridSize; j++)
                 {
-                    for (var k = 0U; k < gridSize; k++)
+                    for (var k = 0u; k < gridSize; k++)
                     {
                         var center =
                             settings.Origin
@@ -56,7 +56,7 @@ namespace NavVolume.Runtime.Builder
                             )
                         )
                         {
-                            occupied.Add(new MortonCode(i, j, k));
+                            occupied.Add(new(i, j, k));
                         }
                     }
                 }
