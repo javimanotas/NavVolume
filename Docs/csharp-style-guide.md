@@ -28,15 +28,16 @@ Everything else in this guide covers naming, structure, and patterns that CSharp
 ## Table of contents
 
 1. [Naming conventions](#naming-conventions)
-2. [Fields](#fields)
-3. [Properties](#properties)
-4. [Methods](#methods)
-5. [Custom types](#custom-types)
-6. [Events](#events)
-7. [Type inference](#type-inference)
-8. [Object instantiation](#object-instantiation)
-9. [Documentation comments](#documentation-comments)
-10. [Unity-specific rules](#unity-specific-rules)
+2. [Numeric literals](#numeric-literals)
+3. [Fields](#fields)
+4. [Properties](#properties)
+5. [Methods](#methods)
+6. [Custom types](#custom-types)
+7. [Events](#events)
+8. [Type inference](#type-inference)
+9. [Object instantiation](#object-instantiation)
+10. [Documentation comments](#documentation-comments)
+11. [Unity-specific rules](#unity-specific-rules)
 
 ---
 
@@ -60,6 +61,27 @@ Everything else in this guide covers naming, structure, and patterns that CSharp
 | Non-private constant | SCREAMING_SNAKE_CASE | `const float MAX_SPEED` |
 | Private constant | SCREAMING_SNAKE_CASE with `_` prefix | `const float _MAX_SPEED` |
 | Static field | PascalCase | `static int InstanceCount` |
+
+---
+
+## Numeric literals
+
+Write numeric suffixes and the `0x` hexadecimal prefix in lowercase.
+Hexadecimal digits `A`–`F` must be uppercase:
+
+```csharp
+// Bad
+var speed = 5F;
+var mask = 0XFF00A3u;
+var count = 10U;
+var big = 9999L;
+
+// Good
+var speed = 5f;
+var mask = 0xFF00A3u;
+var count = 10u;
+var big = 9999l;
+```
 
 ---
 
