@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using NavVolume.Runtime.Core;
+using NavVolume.Core;
 using UnityEngine;
 
-namespace NavVolume.Runtime.Builder
+namespace NavVolume.Builder
 {
     /// <summary>
     /// Builds an SVO and returns the tree with some stats.
@@ -18,7 +17,9 @@ namespace NavVolume.Runtime.Builder
             _settings = settings;
         }
 
-        public BuildResult Build()
+        // TODO: implement an async builder that can be cancelled and reports progress.
+
+        public NavVolume Build()
         {
             var stopWatch = Stopwatch.StartNew();
             var svo = new SVO(_settings.NumLayers);
@@ -39,8 +40,10 @@ namespace NavVolume.Runtime.Builder
 
             SVONeighborLinker.FillNeighborLinks(svo, _settings);
 
-            return new(svo, stopWatch.ElapsedMilliseconds);
+            return new(svo, _settings, stopWatch.ElapsedMilliseconds);
         }
+
+        #region Lower layers allocation
 
         void AllocateLowerLayers(SVO svo, List<MortonCode> l1Codes)
         {
@@ -49,10 +52,8 @@ namespace NavVolume.Runtime.Builder
             AllocateL0(svo, l0Codes);
 
             var leafNodes = CalculateLeafNodes(l0Codes);
-            svo.SetLeafNodes(leafNodes);
+            svo.LeafNodes = leafNodes;
         }
-
-        #region Lower layers allocation
 
         SortedSet<MortonCode> CalculateL0Codes(List<MortonCode> l1Codes)
         {
@@ -101,6 +102,8 @@ namespace NavVolume.Runtime.Builder
 
         #endregion
 
+        #region Upper layer build
+
         void BuildUpperLayer(SVO svo, uint layer)
         {
             var childLayer = layer - 1;
@@ -110,8 +113,6 @@ namespace NavVolume.Runtime.Builder
             AllocateParentNodes(svo, layer, parentCodes);
             LinkParentAndChildren(svo, layer, childLayer);
         }
-
-        #region Upper layer build
 
         SortedSet<MortonCode> CalculateParentCodes(SVO svo, uint childLayer)
         {

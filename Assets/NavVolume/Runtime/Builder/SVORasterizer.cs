@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using NavVolume.Runtime.Core;
+using NavVolume.Core;
 using UnityEngine;
 
-namespace NavVolume.Runtime.Builder
+namespace NavVolume.Builder
 {
     /// <summary>
     /// Gathers SVO voxel data by sampling geometry of the scene.
@@ -16,7 +16,7 @@ namespace NavVolume.Runtime.Builder
         /// <summary>
         /// Epsilon value used to avoid detecting overlaps on edges.
         /// </summary>
-        const float _OVERLAP_BOX_SHRINK = 0.001f;
+        const float _OVERLAP_BOX_SHRINK = 1e-3f;
 
         /// <summary>
         /// Sweeps the navigation volume with layer 1 resolution while checking for geometry.
@@ -30,6 +30,7 @@ namespace NavVolume.Runtime.Builder
             var gridSize = Mathf.RoundToInt(settings.RootSize / gridResolution);
             var halfExtents = Vector3.one * (gridSize * 0.5f - _OVERLAP_BOX_SHRINK);
 
+            // TODO: check if this can be optimized with a sortedset
             var occupied = new HashSet<MortonCode>();
 
             for (var i = 0u; i < gridSize; i++)

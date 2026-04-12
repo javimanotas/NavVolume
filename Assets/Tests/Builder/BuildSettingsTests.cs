@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
-using NavVolume.Runtime.Builder;
-using NavVolume.Runtime.Core;
+using NavVolume.Builder;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -10,51 +9,65 @@ namespace Assets.Tests.Builder
     {
         #region Auxiliary
 
-        const string _VOXEL_SIZE_FIELD = "<VoxelSize>k__BackingField";
+        // Fields are readonly, so reflection is needed to set them for testing.
+        const string _NUM_LAYERS_FIELD = "<NumLayers>k__BackingField";
+        const string _ROOT_SIZE_FIELD = "<RootSize>k__BackingField";
 
-        const float _EPSILON = 1e-5f;
+        const float _EPSILON = 1e-5f; // Used for floating-point comparisons.
 
         /// <summary>
-        /// Creates a BuildSettings instance and injects a VoxelSize value directly, bypassing OnValidate.
+        /// Creates a BuildSettings instance with the given parameters.
         /// </summary>
-        BuildSettings CreateSettings(float voxelSize)
+        BuildSettings CreateSettings(int numLayers, float rootSize)
         {
             var settings = ScriptableObject.CreateInstance<BuildSettings>();
-            var field = typeof(BuildSettings).GetField(
-                _VOXEL_SIZE_FIELD,
+
+            var numLayersField = typeof(BuildSettings).GetField(
+                _NUM_LAYERS_FIELD,
                 BindingFlags.Instance | BindingFlags.NonPublic
             );
+            Assert.IsNotNull(numLayersField, $"Backing field '{_NUM_LAYERS_FIELD}' not found.");
+            numLayersField.SetValue(settings, numLayers);
 
-            Assert.IsNotNull(field, $"Backing field '{_VOXEL_SIZE_FIELD}' not found.");
+            var rootSizeField = typeof(BuildSettings).GetField(
+                _ROOT_SIZE_FIELD,
+                BindingFlags.Instance | BindingFlags.NonPublic
+            );
+            Assert.IsNotNull(rootSizeField, $"Backing field '{_ROOT_SIZE_FIELD}' not found.");
+            rootSizeField.SetValue(settings, rootSize);
 
-            field.SetValue(settings, voxelSize);
+            settings.OnValidate();
+
             return settings;
         }
 
         #endregion
 
         [Test]
-        public void NodeSizeForLayer_ReturnsVoxelSizeTimesGridSize_ForLayerZero(
-            [Random(0.1f, 10f, 3)] float voxelSize
+        public void NodeSizeForLastLayer_ReturnsRootSize(
+            [Random(1, 10, 3)] int numLayers,
+            [Random(1f, 100f, 3)] float rootSize
         )
         {
-            var settings = CreateSettings(voxelSize);
-            var expected = voxelSize * SVOLeaf.GRID_SIZE;
-
-            Assert.AreEqual(expected, settings.NodeSizeForLayer(0), _EPSILON);
+            var settings = CreateSettings(numLayers, rootSize);
+            Assert.AreEqual(settings.RootSize, settings.NodeSizeForLayer(numLayers - 1), _EPSILON);
         }
 
         [Test]
         public void NodeSizeForLayer_EachSuccessiveLayer_DoublesThePrevious(
-            [Random(0.1f, 10f, 3)] float voxelSize,
-            [Random(1, 10, 3)] int layer
+            [Random(1, 10, 3)] int numLayers,
+            [Random(1f, 100f, 3)] float rootSize
         )
         {
-            var settings = CreateSettings(voxelSize);
-            var current = settings.NodeSizeForLayer(layer);
-            var next = settings.NodeSizeForLayer(layer + 1);
+            var settings = CreateSettings(numLayers, rootSize);
 
-            Assert.AreEqual(current * 2f, next, _EPSILON);
+            for (var layer = 0; layer < numLayers - 1; layer++)
+            {
+                var current = settings.NodeSizeForLayer(layer);
+                var next = settings.NodeSizeForLayer(layer + 1);
+
+                Assert.AreEqual(current * 2f, next, _EPSILON);
+            }
         }
     }
 }
