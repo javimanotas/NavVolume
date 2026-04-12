@@ -7,6 +7,7 @@ namespace NavVolume
     /// A simple flying agent that uses <see cref="Pathfinding.NavVolumeSpace"/> to navigate between a start and goal position in 3D space.
     /// </summary>
     [AddComponentMenu("NavVolume/NavVolume Agent")]
+    [DisallowMultipleComponent]
     public class NavVolumeAgent : MonoBehaviour
     {
         [Tooltip("Navigation component to query.")]

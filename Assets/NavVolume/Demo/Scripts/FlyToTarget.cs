@@ -9,6 +9,7 @@ namespace NavVolume.Demo
     /// The position of the target can be changed at runtime, and the NavVolumeAgent will update its path accordingly.
     /// </remarks>
     [RequireComponent(typeof(NavVolumeAgent))]
+    [DisallowMultipleComponent]
     public class FlyToTarget : MonoBehaviour
     {
         [SerializeField]

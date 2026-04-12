@@ -9,6 +9,7 @@ namespace NavVolume
     /// MonoBehaviour that owns a Navigation Volume and exposes 3D flight pathfinding to agents.
     /// </summary>
     [AddComponentMenu("NavVolume/NavVolume Space")]
+    [DisallowMultipleComponent]
     public class NavVolumeSpace : MonoBehaviour
     {
         [SerializeField]

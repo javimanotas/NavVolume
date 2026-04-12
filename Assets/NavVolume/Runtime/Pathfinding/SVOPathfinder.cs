@@ -101,7 +101,7 @@ namespace NavVolume.Pathfinding
         {
             CalculateNeighbors(navCtx.Svo, current.Link, _expandBuffer);
 
-            foreach (SVOLink neighbor in _expandBuffer)
+            foreach (var neighbor in _expandBuffer)
             {
                 if (
                     !neighbor.IsValid
