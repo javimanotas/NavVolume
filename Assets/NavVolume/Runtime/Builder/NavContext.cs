@@ -4,7 +4,7 @@ using UnityEngine;
 namespace NavVolume.Builder
 {
     /// <summary>
-    /// Wrapper for the already built SVO with more information like the world position, physical size...
+    /// Wrapper for the already built SVO with more information about the build process.
     /// </summary>
     internal readonly struct NavContext
     {
@@ -12,14 +12,11 @@ namespace NavVolume.Builder
 
         public readonly BuildSettings BuildSettings;
 
-        readonly double _buildTimeMs;
-
         public NavContext(SVO svo, BuildSettings settings, double buildTimeMs)
         {
             Svo = svo;
-            Svo.CalculateStats();
+            Svo.CalculateStats(buildTimeMs);
             BuildSettings = settings;
-            _buildTimeMs = buildTimeMs;
         }
 
         /// <summary>
@@ -138,6 +135,6 @@ namespace NavVolume.Builder
             return SVOLink.Invalid;
         }
 
-        public override string ToString() => $"SVO built in {_buildTimeMs:F1} ms\n{Svo}";
+        public override string ToString() => Svo.ToString();
     }
 }

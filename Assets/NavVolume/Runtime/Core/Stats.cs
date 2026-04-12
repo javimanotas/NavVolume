@@ -8,14 +8,16 @@
             // consider if the best approach is to be defined inside the SVO to access private data.
             // consider if this struct should be tottaly private or if should be exposed in some way for displaying data in the editor or for debugging purposes (not using .ToString()).
 
-            public override readonly string ToString() => "SVO stats not implemented yet";
+            public double BuildTimeMs;
+
+            public override readonly string ToString() => $"SVO built in {BuildTimeMs} ms";
         }
 
         Stats? _stats;
 
-        public void CalculateStats()
+        public void CalculateStats(double buildTimeMs)
         {
-            _stats = new() { };
+            _stats = new() { BuildTimeMs = buildTimeMs };
         }
 
         public override string ToString() => _stats?.ToString() ?? "SVO stats not calculated yet";
