@@ -19,7 +19,7 @@ namespace NavVolume.Builder
 
         // TODO: implement an async builder that can be cancelled and reports progress.
 
-        public NavVolume Build()
+        public NavContext Build()
         {
             var stopWatch = Stopwatch.StartNew();
             var svo = new SVO(_settings.NumLayers);

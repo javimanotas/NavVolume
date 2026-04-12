@@ -6,7 +6,7 @@ namespace NavVolume.Builder
     /// <summary>
     /// Wrapper for the already built SVO with more information like the world position, physical size...
     /// </summary>
-    internal readonly struct NavVolume
+    internal readonly struct NavContext
     {
         public readonly SVO Svo;
 
@@ -14,7 +14,7 @@ namespace NavVolume.Builder
 
         readonly double _buildTimeMs;
 
-        public NavVolume(SVO svo, BuildSettings settings, double buildTimeMs)
+        public NavContext(SVO svo, BuildSettings settings, double buildTimeMs)
         {
             Svo = svo;
             Svo.CalculateStats();
