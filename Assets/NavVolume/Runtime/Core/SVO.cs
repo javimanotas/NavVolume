@@ -1,14 +1,19 @@
 ﻿using System.Collections.Generic;
 
-namespace NavVolume.Runtime.Core
+namespace NavVolume.Core
 {
     /// <summary>
     /// Sparse Voxel Octree
     /// </summary>
     internal partial class SVO
     {
-        SVOLeaf[] _leafNodes;
+        // TODO: consider encapsulating all fields
 
+        public SVOLeaf[] LeafNodes;
+
+        /// <summary>
+        /// Lower layers of the octree are the ones containing higher resolution data.
+        /// </summary>
         public readonly List<SVONode>[] Layers;
 
         public readonly Dictionary<MortonCode, int>[] MortonToIndex;
@@ -25,6 +30,7 @@ namespace NavVolume.Runtime.Core
             }
         }
 
+        // TODO: consider getting a ref instead of a copy. this would allow to remove SetNode
         public SVONode GetNode(SVOLink link)
         {
             return Layers[link.LayerIdx][(int)link.NodeIdx];
@@ -46,12 +52,5 @@ namespace NavVolume.Runtime.Core
             link = SVOLink.Invalid;
             return false;
         }
-
-        public void SetLeafNodes(SVOLeaf[] leafNodes)
-        {
-            _leafNodes = leafNodes;
-        }
-
-        public Stats ComputeStats() => new();
     }
 }

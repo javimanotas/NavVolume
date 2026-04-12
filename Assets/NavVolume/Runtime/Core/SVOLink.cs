@@ -1,4 +1,4 @@
-﻿namespace NavVolume.Runtime.Core
+﻿namespace NavVolume.Core
 {
     /// <summary>
     /// Pointer to an arbitrary node or subnode in the SVO.
@@ -9,15 +9,25 @@
         // This is just the easiest representation.
         public static readonly SVOLink Invalid = new(uint.MaxValue);
 
-        // Bit data representation:
-        //   [31..28] -> layer index   |  4 bits | range: [0, 15]
-        //   [27..6 ] -> node index    | 22 bits | range: [0, 4_194_303]
-        //   [ 5..0 ] -> subnode index |  6 bits | range: [0, 63]        | only if its a leaf
         /// <summary>
         /// The whole data is packed into this 32 bit integer.
         /// </summary>
         /// <remarks>
-        /// See <see cref="SVOLeaf"/> for more information about subnodes.
+        ///   <para>
+        ///   Bit data representation:
+        ///   </para>
+        ///   <br>
+        ///   [31..28] -> layer index   |  4 bits | range: [0, 15]
+        ///   </br>
+        ///   <br>
+        ///   [27..6 ] -> node index    | 22 bits | range: [0, 4_194_303]
+        ///   </br>
+        ///   <br>
+        ///   [ 5..0 ] -> subnode index |  6 bits | range: [0, 63]        (only if its a leaf)
+        ///   </br>
+        ///   <para>
+        ///   See <see cref="SVOLeaf"/> for more information about subnodes.
+        ///   </para>
         /// </remarks>
         readonly uint _link;
 
@@ -42,6 +52,8 @@
 
         public SVOLink(uint layer, uint nodeIndex, uint subnode = 0)
         {
+            // TODO: add defensive assertions to check that values are in range
+
             _link =
                 ((layer & _UNSHIFTED_LAYER_MASK) << _LAYER_SHIFT)
                 | ((nodeIndex & _UNSHIFTED_NODE_MASK) << _NODE_SHIFT)
@@ -61,5 +73,25 @@
         public const uint MAX_NODE_ALLOWED = _UNSHIFTED_NODE_MASK;
 
         public const uint MAX_SUBNODE_ALLOWED = _UNSHIFTED_SUBNODE_MASK;
+
+        // TODO: consider if l0 nodes should have a different layer than leaf nodes
+        // right now is impossible to distinguish between a leaf node and a layer 0 node, but maybe it would be useful to be able to do so.
+
+        public SVOLink WithSubnode(uint subnode) =>
+            new(_link & ~_UNSHIFTED_SUBNODE_MASK | subnode & _UNSHIFTED_SUBNODE_MASK);
+
+        public SVOLink WithoutSubnode() => new(_link & ~_UNSHIFTED_SUBNODE_MASK);
+
+        #region Operators and overrides
+
+        public static bool operator ==(SVOLink lhs, SVOLink rhs) => lhs._link == rhs._link;
+
+        public static bool operator !=(SVOLink lhs, SVOLink rhs) => lhs._link != rhs._link;
+
+        public override bool Equals(object obj) => this == (SVOLink)obj;
+
+        public override int GetHashCode() => _link.GetHashCode();
+
+        #endregion
     }
 }
