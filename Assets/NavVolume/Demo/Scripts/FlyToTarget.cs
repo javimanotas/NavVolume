@@ -1,33 +1,35 @@
-using NavVolume;
 using UnityEngine;
 
-/// <summary>
-/// Very simple demo script that makes the NavVolumeAgent fly towards a target Transform.
-/// </summary>
-/// <remarks>
-/// The position of the target can be changed at runtime, and the NavVolumeAgent will update its path accordingly.
-/// </remarks>
-[RequireComponent(typeof(NavVolumeAgent))]
-public class FlyToTarget : MonoBehaviour
+namespace NavVolume.Demo
 {
-    [SerializeField]
-    Transform Target;
-
-    Vector3 _targetedPosition = Vector3.positiveInfinity;
-
-    NavVolumeAgent _agent;
-
-    void Awake()
+    /// <summary>
+    /// Very simple demo script that makes the NavVolumeAgent fly towards a target Transform.
+    /// </summary>
+    /// <remarks>
+    /// The position of the target can be changed at runtime, and the NavVolumeAgent will update its path accordingly.
+    /// </remarks>
+    [RequireComponent(typeof(NavVolumeAgent))]
+    public class FlyToTarget : MonoBehaviour
     {
-        _agent = GetComponent<NavVolumeAgent>();
-    }
+        [SerializeField]
+        Transform Target;
 
-    void Update()
-    {
-        if (_targetedPosition != Target.position)
+        Vector3 _targetedPosition = Vector3.positiveInfinity;
+
+        NavVolumeAgent _agent;
+
+        void Awake()
         {
-            _targetedPosition = Target.position;
-            _agent.MoveTo(Target.position);
+            _agent = GetComponent<NavVolumeAgent>();
+        }
+
+        void Update()
+        {
+            if (_targetedPosition != Target.position)
+            {
+                _targetedPosition = Target.position;
+                _agent.MoveTo(Target.position);
+            }
         }
     }
 }
