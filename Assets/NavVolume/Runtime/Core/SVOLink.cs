@@ -82,6 +82,12 @@
 
         public SVOLink WithoutSubnode() => new(_link & ~_UNSHIFTED_SUBNODE_MASK);
 
+        /// <summary>
+        /// Returns true if both links point to the same leaf node, regardless of their subnode index.
+        /// </summary>
+        public bool SameLeafNode(SVOLink other) =>
+            LayerIdx == 0 && other.LayerIdx == 0 && NodeIdx == other.NodeIdx;
+
         #region Operators and overrides
 
         public static bool operator ==(SVOLink lhs, SVOLink rhs) => lhs._link == rhs._link;
