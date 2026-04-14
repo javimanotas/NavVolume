@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using NavVolume.Runtime.Core;
+using NavVolume.Core;
 using NUnit.Framework;
 
 namespace Assets.Tests.Core
@@ -223,6 +223,45 @@ namespace Assets.Tests.Core
             var result = code.TryGetNeighborCode((NeighborDirection)dir, _RESOLUTION, out _);
 
             Assert.IsFalse(result);
+        }
+
+        [Test]
+        public void EqualityOperators_OnEqualCodes_ReturnTrue(
+            [Random(0u, _MAX_COORD, 3)] uint x,
+            [Random(0u, _MAX_COORD, 3)] uint y,
+            [Random(0u, _MAX_COORD, 3)] uint z
+        )
+        {
+            var code1 = new MortonCode(x, y, z);
+            var code2 = new MortonCode(x, y, z);
+
+            Assert.IsTrue(code1 == code2);
+            Assert.IsFalse(code1 != code2);
+            Assert.IsTrue(code1.Equals(code2));
+        }
+
+        [Test]
+        public void EqualityOperators_OnDifferentCodes_ReturnFalse()
+        {
+            var code1 = new MortonCode(1, 1, 1);
+            var code2 = new MortonCode(2, 2, 2);
+
+            Assert.IsFalse(code1 == code2);
+            Assert.IsTrue(code1 != code2);
+            Assert.IsFalse(code1.Equals(code2));
+        }
+
+        [Test]
+        public void CompareTo_SortsByZOrder()
+        {
+            var code1 = new MortonCode(0, 0, 0);
+            var code2 = new MortonCode(1, 0, 0);
+            var code3 = new MortonCode(0, 1, 0);
+
+            Assert.IsTrue(code1.CompareTo(code2) < 0);
+            Assert.IsTrue(code2.CompareTo(code1) > 0);
+            Assert.IsTrue(code1.CompareTo(code1) == 0);
+            Assert.IsTrue(code2.CompareTo(code3) < 0);
         }
     }
 }

@@ -238,6 +238,8 @@ _button.onClick.AddListener(HandleButtonClicked);
 
 Use `var` for all local variable declarations. Do not use explicit types for locals.
 
+The only exception is where using var instead of the concrete type would require to do a cast.
+
 ```csharp
 // Bad
 float speedMagnitude = 5f;

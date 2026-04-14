@@ -1,10 +1,11 @@
-﻿namespace NavVolume.Runtime.Core
+﻿namespace NavVolume.Core
 {
     /// <summary>
-    /// Then six neighbor links of a node.
+    /// The six neighbor links of a node.
     /// </summary>
     internal struct NeighborSet
     {
+        // An array implementation would be cleaner but it would imply more runtime overhead.
         SVOLink _posX,
             _negX,
             _posY,

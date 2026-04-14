@@ -1,10 +1,15 @@
-﻿namespace NavVolume.Runtime.Core
+﻿namespace NavVolume.Core
 {
     /// <summary>
     /// The six axis-aligned face directions, used for neighbor lookups.
     /// </summary>
-    internal enum NeighborDirection : int
+    /// <remarks>
+    /// Even values match positive directions and odd values match negative directions.
+    /// Axis order is X, Y, Z.
+    /// </remarks>
+    internal enum NeighborDirection
     {
+        // DO NOT CHANGE THE ORDER OF THESE ENUM VALUES
         PosX = 0,
         NegX = 1,
         PosY = 2,

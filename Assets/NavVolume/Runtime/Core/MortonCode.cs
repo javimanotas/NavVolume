@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NavVolume.Runtime.Core
+namespace NavVolume.Core
 {
     /// <summary>
     /// Encoding of a 3D grid position into a Z-order space filling curve.
@@ -9,6 +9,8 @@ namespace NavVolume.Runtime.Core
     {
         public static MortonCode Invalid => new(uint.MaxValue);
 
+        // TODO: check the maximum grid resolution that can be encoded in 30 bits (10 bits per axis) and consider using a larger type if needed.
+        // add that information to the documentation of the struct and its members and consider adding some validation to the constructor.
         readonly uint _code;
 
         #region Helper functions
@@ -45,9 +47,6 @@ namespace NavVolume.Runtime.Core
             _code = rawCode;
         }
 
-        /// <summary>
-        /// Creates the encoding of the given grid position.
-        /// </summary>
         public MortonCode(uint x, uint y, uint z)
         {
             _code = Interleave00(x) | (Interleave00(y) << 1) | (Interleave00(z) << 2);
@@ -136,6 +135,8 @@ namespace NavVolume.Runtime.Core
             return false;
         }
 
+        #region Operators and overrides
+
         public static bool operator ==(MortonCode lhs, MortonCode rhs) => lhs._code == rhs._code;
 
         public static bool operator !=(MortonCode lhs, MortonCode rhs) => lhs._code != rhs._code;
@@ -145,5 +146,7 @@ namespace NavVolume.Runtime.Core
         public override int GetHashCode() => _code.GetHashCode();
 
         public int CompareTo(MortonCode other) => _code.CompareTo(other._code);
+
+        #endregion
     }
 }
