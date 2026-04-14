@@ -15,6 +15,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
       - uses: actions/cache@v4
         with:
           path: Library
@@ -32,10 +43,11 @@ jobs:
           testMode: editmode
           artifactsPath: test-results
           coverageOptions: generateAdditionalMetrics
+          customImage: unityci/editor:ubuntu-6000.3.11f1-linux-base-3
 
       - name: Upload results
         uses: actions/upload-artifact@v4
-        if: always() # upload even on test failure
+        if: always()
         with:
           name: test-results
           path: test-results
