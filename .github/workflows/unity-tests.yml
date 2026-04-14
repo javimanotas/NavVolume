@@ -43,7 +43,6 @@ jobs:
           testMode: editmode
           artifactsPath: test-results
           coverageOptions: generateAdditionalMetrics
-          customImage: unityci/editor:ubuntu-6000.3.11f1-linux-base-3
 
       - name: Upload results
         uses: actions/upload-artifact@v4
