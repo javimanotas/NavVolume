@@ -14,6 +14,8 @@ namespace NavVolume.Core
 
         public const int GRID_SIZE = 4;
 
+        public const int NUM_VOXELS = GRID_SIZE * GRID_SIZE * GRID_SIZE;
+
         // TODO: consider doing some assertions
         public static int SubnodeCoordsToIndex(int x, int y, int z) => (x << 4) | (y << 2) | z;
 

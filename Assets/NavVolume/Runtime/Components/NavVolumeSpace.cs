@@ -12,6 +12,9 @@ namespace NavVolume
     [DisallowMultipleComponent]
     public class NavVolumeSpace : MonoBehaviour
     {
+        // FIME: delete this
+        public static NavVolumeSpace Instance;
+
         [SerializeField]
         BuildSettings BuildSettings;
 
@@ -25,15 +28,17 @@ namespace NavVolume
         [SerializeField]
         int MaxNodesBudget = 100_000;
 
-        NavContext _navCtx;
+        internal NavContext NavCtx;
 
-        public bool IsReady => _navCtx.Svo != null;
+        public bool IsReady => NavCtx.Svo != null;
 
         void Awake()
         {
+            Instance = this;
+
             var builder = new SVOBuilder(BuildSettings);
-            _navCtx = builder.Build();
-            Debug.Log(_navCtx);
+            NavCtx = builder.Build();
+            Debug.Log(NavCtx);
         }
 
         /// <summary>
@@ -54,7 +59,7 @@ namespace NavVolume
                 MaxNodesBudget = MaxNodesBudget,
             };
 
-            return new SVOPathfinder().FindPath(_navCtx, request);
+            return new SVOPathfinder().FindPath(NavCtx, request);
         }
 
         public void OnDrawGizmos()

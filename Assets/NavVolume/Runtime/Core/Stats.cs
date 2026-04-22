@@ -1,23 +1,52 @@
-﻿namespace NavVolume.Core
+﻿using System.Linq;
+using System.Runtime.CompilerServices;
+using UnityEngine;
+
+namespace NavVolume.Core
 {
     internal partial class SVO
     {
-        struct Stats
+        readonly struct Stats
         {
-            // TODO: implement SVO stats (memory used, nodes per layer...)
-            // consider if the best approach is to be defined inside the SVO to access private data.
+            // TODO: consider if the best approach is to be defined inside the SVO to access private data.
             // consider if this struct should be tottaly private or if should be exposed in some way for displaying data in the editor or for debugging purposes (not using .ToString()).
 
-            public double BuildTimeMs;
+            public readonly double BuildTimeMs;
 
-            public override readonly string ToString() => $"SVO built in {BuildTimeMs} ms";
+            public readonly int NumLayers;
+
+            public readonly int TheoreticalVoxelsCount;
+
+            public readonly int VoxelsCount;
+
+            public readonly int MemoryUsedBytes;
+
+            public Stats(SVO svo, double buildTimeMs)
+            {
+                BuildTimeMs = buildTimeMs;
+                NumLayers = svo.Layers.Length;
+                TheoreticalVoxelsCount = (int)(
+                    Mathf.Pow(8, svo.Layers.Length - 1) * SVOLeaf.NUM_VOXELS
+                );
+                VoxelsCount = svo.LeafNodes.Length * SVOLeaf.NUM_VOXELS;
+                MemoryUsedBytes =
+                    Unsafe.SizeOf<SVOLeaf>() * svo.LeafNodes.Length
+                    + Unsafe.SizeOf<SVONode>() * svo.Layers.Sum(l => l.Count);
+            }
+
+            public override readonly string ToString() =>
+                $"SVO built in {BuildTimeMs} ms.\n"
+                + $"Theoretical voxels for {NumLayers} layer octree: {TheoreticalVoxelsCount}.\n"
+                + $"Allocated voxels: {VoxelsCount}.\n"
+                + $"Voxels saved with sparse implementation: {(1 - (float)VoxelsCount / TheoreticalVoxelsCount) * 100:F2}%.\n"
+                + $"Approximate memory usage (bytes): {MemoryUsedBytes}.\n";
         }
 
         Stats? _stats;
 
         public void CalculateStats(double buildTimeMs)
         {
-            _stats = new() { BuildTimeMs = buildTimeMs };
+            _stats = new(this, buildTimeMs);
         }
 
         public override string ToString() => _stats?.ToString() ?? "SVO stats not calculated yet";
