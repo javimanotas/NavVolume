@@ -12,10 +12,9 @@ namespace NavVolume.Builder
 
         public readonly BuildSettings BuildSettings;
 
-        public NavContext(SVO svo, BuildSettings settings, double buildTimeMs)
+        public NavContext(SVO svo, BuildSettings settings)
         {
             Svo = svo;
-            Svo.CalculateStats(buildTimeMs);
             BuildSettings = settings;
         }
 
@@ -138,7 +137,5 @@ namespace NavVolume.Builder
 
             return SVOLink.Invalid;
         }
-
-        public override string ToString() => Svo.ToString();
     }
 }

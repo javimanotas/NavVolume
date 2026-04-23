@@ -21,7 +21,6 @@ namespace NavVolume.Builder
 
         public NavContext Build()
         {
-            var stopWatch = Stopwatch.StartNew();
             var svo = new SVO(_settings.NumLayers);
 
             var occupiedL1 = SVORasterizer.RasterizeL1(_settings);
@@ -40,7 +39,7 @@ namespace NavVolume.Builder
 
             SVONeighborLinker.FillNeighborLinks(svo, _settings);
 
-            return new(svo, _settings, stopWatch.ElapsedMilliseconds);
+            return new(svo, _settings);
         }
 
         #region Lower layers allocation
