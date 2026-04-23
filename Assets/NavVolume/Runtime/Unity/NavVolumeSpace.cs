@@ -12,11 +12,19 @@ namespace NavVolume
     [DisallowMultipleComponent]
     public class NavVolumeSpace : MonoBehaviour
     {
-        // FIME: delete this
-        public static NavVolumeSpace Instance;
+        [SerializeField]
+        [Tooltip("Side length of the cubic world volume (meters).")]
+        [Min(0)]
+        float _rootSize = 100f;
 
         [SerializeField]
-        BuildSettings BuildSettings;
+        [Tooltip("The detail of the navigable space.")]
+        [Range(1, 9)]
+        int _numLayers = 5;
+
+        [SerializeField]
+        [Tooltip("Physics layers that count as solid obstacles.")]
+        LayerMask _collisionMask = ~0;
 
         [Header("Pathfinding")]
         [Tooltip("Heuristic weight. Greater values imply faster results but with worse quality.")]
@@ -34,9 +42,15 @@ namespace NavVolume
 
         void Awake()
         {
-            Instance = this;
+            var settings = new BuildSettings(
+                _numLayers,
+                transform.position,
+                _rootSize,
+                _collisionMask
+            );
 
-            var builder = new SVOBuilder(BuildSettings);
+            var builder = new SVOBuilder(settings);
+
             NavCtx = builder.Build();
             Debug.Log(NavCtx);
         }
@@ -65,10 +79,7 @@ namespace NavVolume
         public void OnDrawGizmos()
         {
             // TODO: add propper gizmos and editor visualization
-            Gizmos.DrawWireCube(
-                BuildSettings.Origin + Vector3.one * BuildSettings.RootSize / 2,
-                Vector3.one * BuildSettings.RootSize
-            );
+            Gizmos.DrawWireCube(transform.position, Vector3.one * _rootSize);
         }
     }
 }

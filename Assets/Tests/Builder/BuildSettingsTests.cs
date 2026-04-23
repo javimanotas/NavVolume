@@ -7,41 +7,7 @@ namespace Assets.Tests.Builder
 {
     public class BuildSettingsTests
     {
-        #region Auxiliary
-
-        // Fields are readonly, so reflection is needed to set them for testing.
-        const string _NUM_LAYERS_FIELD = "<NumLayers>k__BackingField";
-        const string _ROOT_SIZE_FIELD = "<RootSize>k__BackingField";
-
         const float _EPSILON = 1e-5f; // Used for floating-point comparisons.
-
-        /// <summary>
-        /// Creates a BuildSettings instance with the given parameters.
-        /// </summary>
-        BuildSettings CreateSettings(int numLayers, float rootSize)
-        {
-            var settings = ScriptableObject.CreateInstance<BuildSettings>();
-
-            var numLayersField = typeof(BuildSettings).GetField(
-                _NUM_LAYERS_FIELD,
-                BindingFlags.Instance | BindingFlags.NonPublic
-            );
-            Assert.IsNotNull(numLayersField, $"Backing field '{_NUM_LAYERS_FIELD}' not found.");
-            numLayersField.SetValue(settings, numLayers);
-
-            var rootSizeField = typeof(BuildSettings).GetField(
-                _ROOT_SIZE_FIELD,
-                BindingFlags.Instance | BindingFlags.NonPublic
-            );
-            Assert.IsNotNull(rootSizeField, $"Backing field '{_ROOT_SIZE_FIELD}' not found.");
-            rootSizeField.SetValue(settings, rootSize);
-
-            settings.OnValidate();
-
-            return settings;
-        }
-
-        #endregion
 
         [Test]
         public void NodeSizeForLastLayer_ReturnsRootSize(
@@ -49,7 +15,8 @@ namespace Assets.Tests.Builder
             [Random(1f, 100f, 3)] float rootSize
         )
         {
-            var settings = CreateSettings(numLayers, rootSize);
+            var settings = new BuildSettings(numLayers, Vector3.zero, rootSize, 0);
+
             Assert.AreEqual(settings.RootSize, settings.NodeSizeForLayer(numLayers - 1), _EPSILON);
         }
 
@@ -59,7 +26,7 @@ namespace Assets.Tests.Builder
             [Random(1f, 100f, 3)] float rootSize
         )
         {
-            var settings = CreateSettings(numLayers, rootSize);
+            var settings = new BuildSettings(numLayers, Vector3.zero, rootSize, 0);
 
             for (var layer = 0; layer < numLayers - 1; layer++)
             {
