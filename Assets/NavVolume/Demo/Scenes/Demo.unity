@@ -618,6 +618,8 @@ MonoBehaviour:
   NavVolumeSpace: {fileID: 1342004215}
   Speed: 1
   WaypointTolerance: 0.1
+  HeuristicWeight: 1.5
+  MaxNodesBudget: 100000
 --- !u!114 &1092216701
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -661,12 +663,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: NavVolume.Runtime::NavVolume.Runtime.Pathfinding.SVONavigation
   _rootSize: 27.9
-  _numLayers: 5
+  _numLayers: 7
   _collisionMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  HeuristicWeight: 1.5
-  MaxNodesBudget: 100000
+  _buildMode: 1
+  _bakedData: {fileID: 11400000, guid: 37224bdad0dd9eb41af705cdb5406a39, type: 2}
 --- !u!4 &1342004216
 Transform:
   m_ObjectHideFlags: 0

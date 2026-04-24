@@ -1,5 +1,6 @@
 using System;
 using NavVolume.Builder;
+using NavVolume.Core;
 using NavVolume.Pathfinding;
 using UnityEngine;
 
@@ -12,6 +13,9 @@ namespace NavVolume
     [DisallowMultipleComponent]
     public class NavVolumeSpace : MonoBehaviour
     {
+        #region Unity inspector fields
+
+        [Header("Build settings")]
         [SerializeField]
         [Tooltip("Side length of the cubic world volume (meters).")]
         [Min(0)]
@@ -26,60 +30,123 @@ namespace NavVolume
         [Tooltip("Physics layers that count as solid obstacles.")]
         LayerMask _collisionMask = ~0;
 
-        [Header("Pathfinding")]
-        [Tooltip("Heuristic weight. Greater values imply faster results but with worse quality.")]
+        [Header("Build Mode")]
         [SerializeField]
-        [Range(1f, 5f)]
-        float HeuristicWeight = 1.5f;
+        BuildMode _buildMode;
 
-        [Tooltip("Maximum A* nodes expanded before giving up. 0 = unlimited.")]
         [SerializeField]
-        int MaxNodesBudget = 100_000;
+        NavVolumeBakedData _bakedData;
 
-        internal NavContext NavCtx;
+        #endregion
+        BuildSettings CurrentSettings =>
+            new(transform.position, _rootSize, _numLayers, _collisionMask);
 
-        public bool IsReady => NavCtx.Svo != null;
+        NavContext _navCtx;
+
+        public bool IsReady => _navCtx.Svo != null;
 
         void Awake()
         {
-            var settings = new BuildSettings(
-                _numLayers,
-                transform.position,
-                _rootSize,
-                _collisionMask
+            switch (_buildMode)
+            {
+                case BuildMode.Baked:
+                    LoadBakedData();
+                    break;
+
+                case BuildMode.BuildOnAwake:
+                    Build();
+                    break;
+
+                case BuildMode.Manual:
+                    break;
+            }
+        }
+
+        void LoadBakedData()
+        {
+            if (_bakedData == null)
+            {
+                Debug.LogError(
+                    "[NavVolume][Space] Build mode is \"Baked\" but no baked data asset is assigned. "
+                        + "Assign it and bake the volume."
+                );
+            }
+            else if (_bakedData.IsEmpty)
+            {
+                Debug.LogError(
+                    "[NavVolume][Space] Build mode is \"Baked\" but the baked data asset is empty. "
+                        + "Bake the volume first."
+                );
+            }
+            else
+            {
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+                _bakedData.RetrieveBakedData();
+                Debug.Log(
+                    $"[NavVolume][Space] Baked data retrieved in {stopwatch.ElapsedMilliseconds} ms."
+                );
+            }
+        }
+
+        /// <summary>
+        /// Builds synchronously the NavVolume.
+        /// </summary>
+        public void Build()
+        {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+            var builder = new SVOBuilder(CurrentSettings);
+            _navCtx = builder.Build();
+
+            Debug.Log(
+                $"[NavVolume][Space] NavVolume built in {stopwatch.ElapsedMilliseconds} ms\n."
+                    + $"Stats: {new SVOStats(_navCtx.Svo)}"
             );
-
-            var builder = new SVOBuilder(settings);
-
-            NavCtx = builder.Build();
-            Debug.Log(NavCtx);
         }
 
         /// <summary>
         /// Find a path synchronously.
         /// </summary>
-        internal PathResult FindPath(Vector3 start, Vector3 goal)
+        internal PathResult FindPath(PathRequest request)
         {
             if (!IsReady)
             {
                 return PathResult.Failed(PathStatus.NoTree);
             }
 
-            var request = new PathRequest
-            {
-                Start = start,
-                Goal = goal,
-                HeuristicWeight = HeuristicWeight,
-                MaxNodesBudget = MaxNodesBudget,
-            };
-
-            return new SVOPathfinder().FindPath(NavCtx, request);
+            return new SVOPathfinder().FindPath(_navCtx, request);
         }
 
-        public void OnDrawGizmos()
+        void OnDrawGizmos()
         {
             // TODO: add propper gizmos and editor visualization
             Gizmos.DrawWireCube(transform.position, Vector3.one * _rootSize);
         }
+
+#if UNITY_EDITOR
+        internal void EditorBake()
+        {
+            if (_bakedData == null)
+            {
+                Debug.LogError(
+                    "[NavVolume][Space] Can't bake navigable space because \"BakedData\" asset is not assigned."
+                );
+            }
+            else
+            {
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+                var builder = new SVOBuilder(CurrentSettings);
+                _navCtx = builder.Build();
+                _bakedData.PopulateData(_navCtx);
+
+                Debug.Log(
+                    $"[NavVolume][Space] NavVolume baked in {stopwatch.ElapsedMilliseconds} ms\n."
+                        + $"Stats: {new SVOStats(_navCtx.Svo)}"
+                );
+            }
+        }
+#endif
     }
 }

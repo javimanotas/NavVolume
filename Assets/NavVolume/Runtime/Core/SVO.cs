@@ -18,6 +18,30 @@ namespace NavVolume.Core
 
         public readonly Dictionary<MortonCode, int>[] MortonToIndex;
 
+        /// <summary>
+        /// Raw constructor.
+        /// </summary>
+        public SVO(SVOLeaf[] leafNodes, List<SVONode>[] layers)
+        {
+            LeafNodes = leafNodes;
+            Layers = layers;
+
+            MortonToIndex = new Dictionary<MortonCode, int>[Layers.Length];
+
+            for (var layerIndex = 0; layerIndex < Layers.Length; layerIndex++)
+            {
+                var layer = Layers[layerIndex];
+                var dict = new Dictionary<MortonCode, int>(layer.Count);
+
+                for (var i = 0; i < layer.Count; i++)
+                {
+                    dict[layer[i].MortonCode] = i;
+                }
+
+                MortonToIndex[layerIndex] = dict;
+            }
+        }
+
         public SVO(int numLayers)
         {
             Layers = new List<SVONode>[numLayers];

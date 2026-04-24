@@ -98,6 +98,10 @@
 
         public override int GetHashCode() => _link.GetHashCode();
 
+        public static implicit operator uint(SVOLink link) => link._link;
+
+        public static implicit operator SVOLink(uint rawLink) => new(rawLink);
+
         #endregion
     }
 }

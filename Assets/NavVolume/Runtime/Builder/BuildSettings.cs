@@ -7,41 +7,49 @@ namespace NavVolume.Builder
     /// <summary>
     /// Data container for parameters involved in the build process of the SVO.
     /// </summary>
+    /// <remarks>
+    /// This struct is not implemented as read-only to allow serialization.
+    /// </remarks>
     [Serializable]
-    internal readonly struct BuildSettings
+    internal struct BuildSettings
     {
         // TODO: add settings for agent radius
 
         /// <summary>
         /// World-space minimum corner of the volume to cover.
         /// </summary>
-        public readonly Vector3 Origin;
+        [field: SerializeField]
+        public Vector3 Origin { get; private set; }
 
         /// <summary>
         /// Side length of the cubic world volume (meters).
         /// </summary>
-        public readonly float RootSize;
+        [field: SerializeField]
+        public float RootSize { get; private set; }
 
         /// <summary>
         /// Number of layers of the SVO.
         /// </summary>
-        public readonly int NumLayers;
+        [field: SerializeField]
+        public int NumLayers { get; private set; }
 
         /// <summary>
         /// Physics layers that count as solid obstacles.
         /// </summary>
-        public readonly LayerMask CollisionMask;
+        [field: SerializeField]
+        public LayerMask CollisionMask { get; private set; }
 
         /// <summary>
         /// Size of a single voxel (meters). This is derived from the root size and number of layers.
         /// </summary>
-        public readonly float VoxelSize;
+        [field: SerializeField]
+        public float VoxelSize { get; private set; }
 
-        public BuildSettings(int numLayers, Vector3 center, float rootSize, LayerMask collisionMask)
+        public BuildSettings(Vector3 center, float rootSize, int numLayers, LayerMask collisionMask)
         {
-            NumLayers = numLayers;
             Origin = center - Vector3.one * (rootSize / 2);
             RootSize = rootSize;
+            NumLayers = numLayers;
             VoxelSize = RootSize;
             CollisionMask = collisionMask;
 
@@ -61,6 +69,7 @@ namespace NavVolume.Builder
         /// <param name="layer">
         /// A lower layer index corresponds to a smaller node size.
         /// </param>
-        public float NodeSizeForLayer(int layer) => VoxelSize * SVOLeaf.GRID_SIZE * (1 << layer);
+        public readonly float NodeSizeForLayer(int layer) =>
+            VoxelSize * SVOLeaf.GRID_SIZE * (1 << layer);
     }
 }

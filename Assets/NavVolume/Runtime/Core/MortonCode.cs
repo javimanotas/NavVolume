@@ -153,6 +153,10 @@ namespace NavVolume.Core
 
         public int CompareTo(MortonCode other) => _code.CompareTo(other._code);
 
+        public static implicit operator uint(MortonCode code) => code._code;
+
+        public static implicit operator MortonCode(uint rawCode) => new(rawCode);
+
         #endregion
     }
 }

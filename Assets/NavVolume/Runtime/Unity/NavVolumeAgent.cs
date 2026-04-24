@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using NavVolume.Pathfinding;
 using UnityEngine;
 
 namespace NavVolume
@@ -24,6 +25,15 @@ namespace NavVolume
         [SerializeField]
         float WaypointTolerance = 0.1f;
 
+        [Tooltip("Heuristic weight. Greater values imply faster results but with worse quality.")]
+        [SerializeField]
+        [Range(1f, 5f)]
+        float HeuristicWeight = 1.5f;
+
+        [Tooltip("Maximum A* nodes expanded before giving up. 0 = unlimited.")]
+        [SerializeField]
+        int MaxNodesBudget = 100_000;
+
         List<Vector3> _waypoints = new();
 
         /// <summary>
@@ -33,14 +43,21 @@ namespace NavVolume
         {
             if (NavVolumeSpace == null || !NavVolumeSpace.IsReady)
             {
-                Debug.LogWarning("[SVOFlightAgent] NavVolumeSpace not ready.");
+                Debug.LogWarning("[NavVolume][Agent] Can't find path: NavVolumeSpace not ready.");
                 return;
             }
 
-            var result = NavVolumeSpace.FindPath(transform.position, goal);
+            var request = new PathRequest(
+                transform.position,
+                goal,
+                HeuristicWeight,
+                MaxNodesBudget
+            );
+            var result = NavVolumeSpace.FindPath(request);
+
             if (!result.Succeeded(out var status))
             {
-                Debug.LogError($"[SVOFlightAgent] Pathfinding failed: {status} ");
+                Debug.LogError($"[NavVolume][Agent] Pathfinding failed: {status} ");
                 return;
             }
 
