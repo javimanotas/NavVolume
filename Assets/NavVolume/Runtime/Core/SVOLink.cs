@@ -1,4 +1,4 @@
-﻿namespace NavVolume.Core
+﻿namespace NavVolume.Runtime.Core
 {
     /// <summary>
     /// Pointer to an arbitrary node or subnode in the SVO.

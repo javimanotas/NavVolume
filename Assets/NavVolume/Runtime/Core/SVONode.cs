@@ -1,4 +1,4 @@
-namespace NavVolume.Core
+namespace NavVolume.Runtime.Core
 {
     /// <summary>
     /// A non-leaf node in the Sparse Voxel Octree.

@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace NavVolume.Core
+namespace NavVolume.Runtime.Core
 {
     internal readonly struct SVOStats
     {

@@ -1,6 +1,6 @@
 {
-    "name": "Tests",
-    "rootNamespace": "",
+    "name": "NavVolume.Tests",
+    "rootNamespace": "NavVolume.Tests",
     "references": [
         "NavVolume.Runtime",
         "UnityEngine.TestRunner",

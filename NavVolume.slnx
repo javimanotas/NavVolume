@@ -1,6 +1,7 @@
 ﻿<Solution>
-  <Project Path="Assembly-CSharp.csproj" />
-  <Project Path="Assembly-CSharp-Editor-firstpass.csproj" />
+  <Project Path="NavVolume.Demo.csproj" />
   <Project Path="NavVolume.Runtime.csproj" />
-  <Project Path="Tests.csproj" />
+  <Project Path="Project.EditorPlugins.csproj" />
+  <Project Path="NavVolume.Tests.csproj" />
+  <Project Path="NavVolume.Editor.csproj" />
 </Solution>

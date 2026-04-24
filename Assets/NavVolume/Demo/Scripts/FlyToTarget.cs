@@ -8,12 +8,13 @@ namespace NavVolume.Demo
     /// <remarks>
     /// The position of the target can be changed at runtime, and the NavVolumeAgent will update its path accordingly.
     /// </remarks>
+    [AddComponentMenu("NavVolume/Demo/Fly To Target")]
     [RequireComponent(typeof(NavVolumeAgent))]
     [DisallowMultipleComponent]
     public class FlyToTarget : MonoBehaviour
     {
         [SerializeField]
-        Transform Target;
+        Transform _target;
 
         Vector3 _targetedPosition = Vector3.positiveInfinity;
 
@@ -26,10 +27,10 @@ namespace NavVolume.Demo
 
         void Update()
         {
-            if (_targetedPosition != Target.position)
+            if (_targetedPosition != _target.position)
             {
-                _targetedPosition = Target.position;
-                _agent.MoveTo(Target.position);
+                _targetedPosition = _target.position;
+                _agent.MoveTo(_target.position);
             }
         }
     }

@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
-using NavVolume.Core;
+using NavVolume.Runtime.Core;
 using UnityEngine;
 
-namespace NavVolume.Builder
+namespace NavVolume.Runtime.Builder
 {
     /// <summary>
     /// Builds an SVO and returns the tree with some stats.

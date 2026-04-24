@@ -1,8 +1,8 @@
 ﻿using System;
-using NavVolume.Core;
+using NavVolume.Runtime.Core;
 using UnityEngine;
 
-namespace NavVolume.Builder
+namespace NavVolume.Runtime.Builder
 {
     /// <summary>
     /// Data container for parameters involved in the build process of the SVO.

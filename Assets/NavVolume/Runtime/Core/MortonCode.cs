@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NavVolume.Core
+namespace NavVolume.Runtime.Core
 {
     /// <summary>
     /// Encoding of a 3D grid position into a Z-order space filling curve.

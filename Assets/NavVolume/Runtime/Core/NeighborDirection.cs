@@ -1,4 +1,4 @@
-﻿namespace NavVolume.Core
+﻿namespace NavVolume.Runtime.Core
 {
     /// <summary>
     /// The six axis-aligned face directions, used for neighbor lookups.

@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using NavVolume.Builder;
-using NavVolume.Core;
+using NavVolume.Runtime.Builder;
+using NavVolume.Runtime.Core;
 using UnityEngine;
 
-namespace NavVolume.Pathfinding
+namespace NavVolume.Runtime.Pathfinding
 {
     /// <summary>
     /// A* pathfinder for the Sparse Voxel Octree

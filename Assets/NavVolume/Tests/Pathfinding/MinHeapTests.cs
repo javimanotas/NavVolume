@@ -1,7 +1,7 @@
-using NavVolume.Pathfinding;
+using NavVolume.Runtime.Pathfinding;
 using NUnit.Framework;
 
-namespace Assets.Tests.Pathfinding
+namespace NavVolume.Tests.Pathfinding
 {
     public class MinHeapTests
     {

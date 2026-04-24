@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace NavVolume.Core
+namespace NavVolume.Runtime.Core
 {
     /// <summary>
     /// Sparse Voxel Octree

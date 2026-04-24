@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace NavVolume.Pathfinding
+namespace NavVolume.Runtime.Pathfinding
 {
     /// <summary>
     /// All heuristic and traversal cost functions for A* search.

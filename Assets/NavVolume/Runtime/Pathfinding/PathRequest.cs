@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace NavVolume.Pathfinding
+namespace NavVolume.Runtime.Pathfinding
 {
     /// <summary>
     /// Input parameters for a single A* query.

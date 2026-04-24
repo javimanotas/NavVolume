@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace NavVolume.Core
+namespace NavVolume.Runtime.Core
 {
     /// <summary>
     /// Defines a 4x4x4 subnode grid where each subnode corresponds to a voxel.

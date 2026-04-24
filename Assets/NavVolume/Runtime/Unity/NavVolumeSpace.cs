@@ -1,7 +1,7 @@
 using System;
-using NavVolume.Builder;
-using NavVolume.Core;
-using NavVolume.Pathfinding;
+using NavVolume.Runtime.Builder;
+using NavVolume.Runtime.Core;
+using NavVolume.Runtime.Pathfinding;
 using UnityEngine;
 
 namespace NavVolume
@@ -9,7 +9,7 @@ namespace NavVolume
     /// <summary>
     /// MonoBehaviour that owns a Navigation Volume and exposes 3D flight pathfinding to agents.
     /// </summary>
-    [AddComponentMenu("NavVolume/NavVolume Space")]
+    [AddComponentMenu("NavVolume/Space")]
     [DisallowMultipleComponent]
     public class NavVolumeSpace : MonoBehaviour
     {

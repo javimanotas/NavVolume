@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace NavVolume.Pathfinding
+namespace NavVolume.Runtime.Pathfinding
 {
     /// <summary>
     /// Output of a completed (or failed) A* query.

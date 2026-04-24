@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using NavVolume.Core;
+using NavVolume.Runtime.Core;
 using UnityEngine;
 
-namespace NavVolume.Builder
+namespace NavVolume.Runtime.Builder
 {
     /// <summary>
     /// Gathers SVO voxel data by sampling geometry of the scene.

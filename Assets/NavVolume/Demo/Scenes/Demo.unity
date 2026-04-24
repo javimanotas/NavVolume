@@ -632,7 +632,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7c41d8b7f8dfef4091b2a3dd409ce7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FlyToTarget
-  Target: {fileID: 285272122}
+  _target: {fileID: 285272122}
 --- !u!1 &1342004213
 GameObject:
   m_ObjectHideFlags: 0

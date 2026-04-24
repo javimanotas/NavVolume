@@ -1,7 +1,7 @@
-﻿using NavVolume.Core;
+﻿using NavVolume.Runtime.Core;
 using UnityEngine;
 
-namespace NavVolume.Builder
+namespace NavVolume.Runtime.Builder
 {
     /// <summary>
     /// Wrapper for the already built SVO with more information about the build process.

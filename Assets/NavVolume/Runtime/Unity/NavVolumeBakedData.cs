@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
-using NavVolume.Builder;
-using NavVolume.Core;
+using NavVolume.Runtime.Builder;
+using NavVolume.Runtime.Core;
 using UnityEngine;
 
 namespace NavVolume

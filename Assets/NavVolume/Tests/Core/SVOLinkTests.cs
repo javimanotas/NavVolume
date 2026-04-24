@@ -1,8 +1,8 @@
 using System;
-using NavVolume.Core;
+using NavVolume.Runtime.Core;
 using NUnit.Framework;
 
-namespace Assets.Tests.Core
+namespace NavVolume.Tests.Core
 {
     public class SVOLinkTests
     {

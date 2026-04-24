@@ -1,9 +1,8 @@
-﻿using System.Reflection;
-using NavVolume.Builder;
+﻿using NavVolume.Runtime.Builder;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace Assets.Tests.Builder
+namespace NavVolume.Tests.Builder
 {
     public class BuildSettingsTests
     {
