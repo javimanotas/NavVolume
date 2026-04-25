@@ -1,7 +1,7 @@
 ﻿<Solution>
   <Project Path="NavVolume.Demo.csproj" />
   <Project Path="NavVolume.Runtime.csproj" />
+  <Project Path="NavVolume.Editor.csproj" />
   <Project Path="Project.EditorPlugins.csproj" />
   <Project Path="NavVolume.Tests.csproj" />
-  <Project Path="NavVolume.Editor.csproj" />
 </Solution>

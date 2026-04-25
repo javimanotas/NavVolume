@@ -9,13 +9,12 @@ namespace NavVolume
     /// <summary>
     /// MonoBehaviour that owns a Navigation Volume and exposes 3D flight pathfinding to agents.
     /// </summary>
-    [AddComponentMenu("NavVolume/Space")]
+    [AddComponentMenu("NavVolume/NavVolume Space")]
     [DisallowMultipleComponent]
     public class NavVolumeSpace : MonoBehaviour
     {
         #region Unity inspector fields
 
-        [Header("Build settings")]
         [SerializeField]
         [Tooltip("Side length of the cubic world volume (meters).")]
         [Min(0)]
@@ -30,7 +29,6 @@ namespace NavVolume
         [Tooltip("Physics layers that count as solid obstacles.")]
         LayerMask _collisionMask = ~0;
 
-        [Header("Build Mode")]
         [SerializeField]
         BuildMode _buildMode;
 
@@ -38,7 +36,7 @@ namespace NavVolume
         NavVolumeBakedData _bakedData;
 
         #endregion
-        BuildSettings CurrentSettings =>
+        internal BuildSettings CurrentSettings =>
             new(transform.position, _rootSize, _numLayers, _collisionMask);
 
         NavContext _navCtx;
@@ -67,14 +65,14 @@ namespace NavVolume
             if (_bakedData == null)
             {
                 Debug.LogError(
-                    "[NavVolume][Space] Build mode is \"Baked\" but no baked data asset is assigned. "
+                    "[NavVolume][NavVolumeSpace] Build mode is \"Baked\" but no baked data asset is assigned. "
                         + "Assign it and bake the volume."
                 );
             }
             else if (_bakedData.IsEmpty)
             {
                 Debug.LogError(
-                    "[NavVolume][Space] Build mode is \"Baked\" but the baked data asset is empty. "
+                    "[NavVolume][NavVolumeSpace] Build mode is \"Baked\" but the baked data asset is empty. "
                         + "Bake the volume first."
                 );
             }
@@ -84,7 +82,7 @@ namespace NavVolume
 
                 _bakedData.RetrieveBakedData();
                 Debug.Log(
-                    $"[NavVolume][Space] Baked data retrieved in {stopwatch.ElapsedMilliseconds} ms."
+                    $"[NavVolume][NavVolumeSpace] Baked data retrieved in {stopwatch.ElapsedMilliseconds} ms."
                 );
             }
         }
@@ -100,7 +98,7 @@ namespace NavVolume
             _navCtx = builder.Build();
 
             Debug.Log(
-                $"[NavVolume][Space] NavVolume built in {stopwatch.ElapsedMilliseconds} ms\n."
+                $"[NavVolume][NavVolumeSpace] NavVolume built in {stopwatch.ElapsedMilliseconds} ms\n."
                     + $"Stats: {new SVOStats(_navCtx.Svo)}"
             );
         }
@@ -117,36 +115,5 @@ namespace NavVolume
 
             return new SVOPathfinder().FindPath(_navCtx, request);
         }
-
-        void OnDrawGizmos()
-        {
-            // TODO: add propper gizmos and editor visualization
-            Gizmos.DrawWireCube(transform.position, Vector3.one * _rootSize);
-        }
-
-#if UNITY_EDITOR
-        internal void EditorBake()
-        {
-            if (_bakedData == null)
-            {
-                Debug.LogError(
-                    "[NavVolume][Space] Can't bake navigable space because \"BakedData\" asset is not assigned."
-                );
-            }
-            else
-            {
-                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
-                var builder = new SVOBuilder(CurrentSettings);
-                _navCtx = builder.Build();
-                _bakedData.PopulateData(_navCtx);
-
-                Debug.Log(
-                    $"[NavVolume][Space] NavVolume baked in {stopwatch.ElapsedMilliseconds} ms\n."
-                        + $"Stats: {new SVOStats(_navCtx.Svo)}"
-                );
-            }
-        }
-#endif
     }
 }

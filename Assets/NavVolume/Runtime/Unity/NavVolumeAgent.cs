@@ -7,7 +7,7 @@ namespace NavVolume
     /// <summary>
     /// A simple flying agent that uses <see cref="Pathfinding.NavVolumeSpace"/> to navigate between a start and goal position in 3D space.
     /// </summary>
-    [AddComponentMenu("NavVolume/Agent")]
+    [AddComponentMenu("NavVolume/NavVolume Agent")]
     [DisallowMultipleComponent]
     public class NavVolumeAgent : MonoBehaviour
     {
@@ -43,7 +43,9 @@ namespace NavVolume
         {
             if (_navVolumeSpace == null || !_navVolumeSpace.IsReady)
             {
-                Debug.LogWarning("[NavVolume][Agent] Can't find path: NavVolumeSpace not ready.");
+                Debug.LogWarning(
+                    "[NavVolume][NavVolumeAgent] Can't find path: NavVolumeSpace not ready."
+                );
                 return;
             }
 
@@ -57,7 +59,7 @@ namespace NavVolume
 
             if (!result.Succeeded(out var status))
             {
-                Debug.LogError($"[NavVolume][Agent] Pathfinding failed: {status} ");
+                Debug.LogError($"[NavVolume][NavVolumeAgent] Pathfinding failed: {status} ");
                 return;
             }
 
