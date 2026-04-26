@@ -71,5 +71,20 @@ namespace NavVolume.Runtime.Builder
         /// </param>
         public readonly float NodeSizeForLayer(int layer) =>
             VoxelSize * SVOLeaf.GRID_SIZE * (1 << layer);
+
+        #region Operators and overrides
+
+        public static bool operator ==(BuildSettings lhs, BuildSettings rhs) =>
+            (lhs.Origin, lhs.RootSize, lhs.NumLayers, lhs.CollisionMask)
+            == (rhs.Origin, rhs.RootSize, rhs.NumLayers, rhs.CollisionMask);
+
+        public static bool operator !=(BuildSettings lhs, BuildSettings rhs) => !(lhs == rhs);
+
+        public override readonly bool Equals(object obj) => this == (BuildSettings)obj;
+
+        public override readonly int GetHashCode() =>
+            (Origin, RootSize, NumLayers, CollisionMask).GetHashCode();
+
+        #endregion
     }
 }

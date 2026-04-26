@@ -48,13 +48,29 @@ namespace NavVolume
         [HideInInspector]
         Layer[] _layers;
 
+        /// <summary>
+        /// Deterministic hash to ensure scene integrity.
+        /// </summary>
+        [SerializeField]
+        [HideInInspector]
+        ulong _sceneHash;
+
         public bool IsEmpty => _leafnodes == null || _layers == null || _layers.Length == 0;
 
         /// <summary>
-        /// Stores the data in the <see cref="ScriptableObject"/> given the <see cref="NavContext"/>
+        /// Ensures all the variables involved on the build process match the current ones.
+        /// </summary>
+        internal bool SceneWasModifiedSinceBake(BuildSettings buildSettings) =>
+            buildSettings != _buildSettings
+            || _sceneHash != BakedDataHasher.ComputeSceneHash(buildSettings);
+
+        /// <summary>
+        /// Stores the data in the <see cref="ScriptableObject"/> given the <see cref="NavContext"/>.
         /// </summary>
         internal void PopulateData(NavContext ctx)
         {
+            _sceneHash = BakedDataHasher.ComputeSceneHash(ctx.BuildSettings);
+
             _buildSettings = ctx.BuildSettings;
             _leafnodes = ctx.Svo.LeafNodes;
 
@@ -96,7 +112,6 @@ namespace NavVolume
         /// <summary>
         /// Retrieves the baked data into a <see cref="NavContext"/>.
         /// </summary>
-        /// <returns></returns>
         internal NavContext RetrieveBakedData()
         {
             var layers = _layers

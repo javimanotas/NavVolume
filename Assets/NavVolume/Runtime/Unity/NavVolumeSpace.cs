@@ -36,6 +36,7 @@ namespace NavVolume
         NavVolumeBakedData _bakedData;
 
         #endregion
+
         internal BuildSettings CurrentSettings =>
             new(transform.position, _rootSize, _numLayers, _collisionMask);
 
@@ -80,7 +81,16 @@ namespace NavVolume
             {
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-                _bakedData.RetrieveBakedData();
+                if (_bakedData.SceneWasModifiedSinceBake(CurrentSettings))
+                {
+                    Debug.LogWarning(
+                        "[NavVolume][NavVolumeSpace] The scene has been modified since the last bake. "
+                            + "Navigation may be inaccurate. Bake the volume again."
+                    );
+                }
+
+                _navCtx = _bakedData.RetrieveBakedData();
+
                 Debug.Log(
                     $"[NavVolume][NavVolumeSpace] Baked data retrieved in {stopwatch.ElapsedMilliseconds} ms."
                 );
