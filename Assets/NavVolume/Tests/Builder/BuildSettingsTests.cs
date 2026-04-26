@@ -1,4 +1,4 @@
-﻿using NavVolume.Runtime.Builder;
+using NavVolume.Runtime.Builder;
 using NUnit.Framework;
 using UnityEngine;
 

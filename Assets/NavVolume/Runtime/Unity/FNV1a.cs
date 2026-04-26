@@ -55,6 +55,14 @@ namespace NavVolume
 
         #region Operators and overrides
 
+        public static bool operator ==(FNV1a lhs, FNV1a rhs) => lhs._hash == rhs._hash;
+
+        public static bool operator !=(FNV1a lhs, FNV1a rhs) => lhs._hash != rhs._hash;
+
+        public override bool Equals(object obj) => this == (FNV1a)obj;
+
+        public override int GetHashCode() => _hash.GetHashCode();
+
         public static implicit operator ulong(FNV1a hasher) => hasher._hash;
 
         #endregion
