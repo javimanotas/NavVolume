@@ -1,15 +1,15 @@
 using UnityEngine;
 
-namespace NavVolume.Pathfinding
+namespace NavVolume.Runtime.Pathfinding
 {
     /// <summary>
     /// Input parameters for a single A* query.
     /// </summary>
-    internal struct PathRequest
+    internal readonly struct PathRequest
     {
-        public Vector3 Start;
+        public readonly Vector3 Start;
 
-        public Vector3 Goal;
+        public readonly Vector3 Goal;
 
         /// <summary>
         /// Greedy heuristic weight W.
@@ -17,13 +17,26 @@ namespace NavVolume.Pathfinding
         /// <remarks>
         /// See <see cref="SVOHeuristic"/> for details.
         /// </remarks>
-        public float HeuristicWeight;
+        public readonly float HeuristicWeight;
 
         /// <summary>
         /// Maximum number of nodes the search is allowed to pop off the open list before giving up.
         /// Prevents runaway searches in degenerate cases.
         /// 0 = unlimited.
         /// </summary>
-        public int MaxNodesBudget;
+        public readonly int MaxNodesBudget;
+
+        public PathRequest(
+            Vector3 start,
+            Vector3 goal,
+            float heuristicWeight,
+            int maxNodesBudget = 0
+        )
+        {
+            Start = start;
+            Goal = goal;
+            HeuristicWeight = heuristicWeight;
+            MaxNodesBudget = maxNodesBudget;
+        }
     }
 }

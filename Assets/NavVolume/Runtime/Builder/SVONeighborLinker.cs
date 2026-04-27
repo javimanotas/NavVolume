@@ -1,7 +1,7 @@
-﻿using NavVolume.Core;
+﻿using NavVolume.Runtime.Core;
 using UnityEngine;
 
-namespace NavVolume.Builder
+namespace NavVolume.Runtime.Builder
 {
     /// <summary>
     /// Runs the last stage of the build pipeline: filling the six face-neighbor links on every node.

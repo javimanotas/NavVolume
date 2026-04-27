@@ -1,7 +1,7 @@
-﻿using NavVolume.Core;
+﻿using NavVolume.Runtime.Core;
 using UnityEngine;
 
-namespace NavVolume.Builder
+namespace NavVolume.Runtime.Builder
 {
     /// <summary>
     /// Wrapper for the already built SVO with more information about the build process.
@@ -12,10 +12,9 @@ namespace NavVolume.Builder
 
         public readonly BuildSettings BuildSettings;
 
-        public NavContext(SVO svo, BuildSettings settings, double buildTimeMs)
+        public NavContext(SVO svo, BuildSettings settings)
         {
             Svo = svo;
-            Svo.CalculateStats(buildTimeMs);
             BuildSettings = settings;
         }
 
@@ -39,11 +38,8 @@ namespace NavVolume.Builder
                 );
         }
 
-        Bounds NodeBounds(SVOLink link)
+        public Bounds NodeBounds(int layer, MortonCode mortonCode)
         {
-            var layer = (int)link.LayerIdx;
-            var mortonCode = Svo.Layers[link.LayerIdx][(int)link.NodeIdx].MortonCode;
-
             var (x, y, z) = mortonCode.Decoded;
             var size = BuildSettings.NodeSizeForLayer(layer);
             var center =
@@ -51,6 +47,13 @@ namespace NavVolume.Builder
                 + new Vector3((x + 0.5f) * size, (y + 0.5f) * size, (z + 0.5f) * size);
 
             return new(center, Vector3.one * size);
+        }
+
+        Bounds NodeBounds(SVOLink link)
+        {
+            var layer = (int)link.LayerIdx;
+            var mortonCode = Svo.Layers[link.LayerIdx][(int)link.NodeIdx].MortonCode;
+            return NodeBounds(layer, mortonCode);
         }
 
         /// <summary>
@@ -134,7 +137,5 @@ namespace NavVolume.Builder
 
             return SVOLink.Invalid;
         }
-
-        public override string ToString() => Svo.ToString();
     }
 }

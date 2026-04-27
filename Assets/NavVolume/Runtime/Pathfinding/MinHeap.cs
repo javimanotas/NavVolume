@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace NavVolume.Pathfinding
+namespace NavVolume.Runtime.Pathfinding
 {
     /// <summary>
     /// A generic binary min-heap (priority queue).

@@ -1,0 +1,16 @@
+{
+    "name": "NavVolume.Demo",
+    "rootNamespace": "NavVolume.Demo",
+    "references": [
+        "GUID:0d0dfbca7e36eb4418348de990fce1bc"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,18 @@
+{
+    "name": "NavVolume.Editor",
+    "rootNamespace": "NavVolume.Editor",
+    "references": [
+        "GUID:0d0dfbca7e36eb4418348de990fce1bc"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

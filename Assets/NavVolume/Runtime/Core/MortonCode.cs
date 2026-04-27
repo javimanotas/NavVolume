@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NavVolume.Core
+namespace NavVolume.Runtime.Core
 {
     /// <summary>
     /// Encoding of a 3D grid position into a Z-order space filling curve.
@@ -49,6 +49,14 @@ namespace NavVolume.Core
 
         public MortonCode(uint x, uint y, uint z)
         {
+#if UNITY_ASSERTIONS
+            if (x != (x & 0b1111111111) || y != (y & 0b1111111111) || y != (y & 0b1111111111))
+            {
+                UnityEngine.Debug.LogError(
+                    "[NavVolume][MortonCode] Morton code does not fit on a 32 bit integer."
+                );
+            }
+#endif
             _code = Interleave00(x) | (Interleave00(y) << 1) | (Interleave00(z) << 2);
         }
 
@@ -96,7 +104,7 @@ namespace NavVolume.Core
                 case NeighborDirection.NegX:
                     if (x == 0)
                     {
-                        goto invalid;
+                        goto Invalid;
                     }
                     x--;
                     break;
@@ -106,7 +114,7 @@ namespace NavVolume.Core
                 case NeighborDirection.NegY:
                     if (y == 0)
                     {
-                        goto invalid;
+                        goto Invalid;
                     }
                     y--;
                     break;
@@ -116,7 +124,7 @@ namespace NavVolume.Core
                 case NeighborDirection.NegZ:
                     if (z == 0)
                     {
-                        goto invalid;
+                        goto Invalid;
                     }
                     z--;
                     break;
@@ -124,13 +132,13 @@ namespace NavVolume.Core
 
             if (x >= gridResolution || y >= gridResolution || z >= gridResolution)
             {
-                goto invalid;
+                goto Invalid;
             }
 
             neighborCode = new(x, y, z);
             return true;
 
-            invalid:
+            Invalid:
             neighborCode = Invalid;
             return false;
         }
@@ -146,6 +154,10 @@ namespace NavVolume.Core
         public override int GetHashCode() => _code.GetHashCode();
 
         public int CompareTo(MortonCode other) => _code.CompareTo(other._code);
+
+        public static implicit operator uint(MortonCode code) => code._code;
+
+        public static implicit operator MortonCode(uint rawCode) => new(rawCode);
 
         #endregion
     }

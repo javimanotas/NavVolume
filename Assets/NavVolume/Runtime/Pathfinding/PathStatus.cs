@@ -1,4 +1,4 @@
-﻿namespace NavVolume.Pathfinding
+﻿namespace NavVolume.Runtime.Pathfinding
 {
     /// <summary>
     /// Status code for a completed pathfinding query.

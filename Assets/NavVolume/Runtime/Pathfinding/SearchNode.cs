@@ -1,6 +1,6 @@
-﻿using NavVolume.Core;
+﻿using NavVolume.Runtime.Core;
 
-namespace NavVolume.Pathfinding
+namespace NavVolume.Runtime.Pathfinding
 {
     /// <summary>
     /// Node with relevant information for A* search.

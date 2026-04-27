@@ -615,9 +615,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce8062d65cf886f43804078b1581819e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NavVolume.Runtime::NavVolume.Runtime.Pathfinding.SVOFlightAgent
-  NavVolumeSpace: {fileID: 1342004215}
-  Speed: 1
-  WaypointTolerance: 0.1
+  _navVolumeSpace: {fileID: 1342004215}
+  _speed: 1
+  _waypointTolerance: 0.1
+  _heuristicWeight: 1.5
+  _maxNodesBudget: 100000
 --- !u!114 &1092216701
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -630,7 +632,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7c41d8b7f8dfef4091b2a3dd409ce7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FlyToTarget
-  Target: {fileID: 285272122}
+  _target: {fileID: 285272122}
 --- !u!1 &1342004213
 GameObject:
   m_ObjectHideFlags: 0
@@ -660,9 +662,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d966747b1791e2e45a93abf430b86217, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NavVolume.Runtime::NavVolume.Runtime.Pathfinding.SVONavigation
-  BuildSettings: {fileID: 11400000, guid: d5e067d9588afd247ac56d8787673851, type: 2}
-  HeuristicWeight: 1.5
-  MaxNodesBudget: 100000
+  _rootSize: 23.056223
+  _numLayers: 7
+  _collisionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  _buildMode: 0
+  _bakedData: {fileID: 11400000, guid: 37224bdad0dd9eb41af705cdb5406a39, type: 2}
 --- !u!4 &1342004216
 Transform:
   m_ObjectHideFlags: 0
@@ -672,7 +678,7 @@ Transform:
   m_GameObject: {fileID: 1342004213}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 6.26, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

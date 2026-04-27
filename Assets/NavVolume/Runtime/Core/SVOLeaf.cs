@@ -1,8 +1,12 @@
-namespace NavVolume.Core
+using System;
+using UnityEngine;
+
+namespace NavVolume.Runtime.Core
 {
     /// <summary>
     /// Defines a 4x4x4 subnode grid where each subnode corresponds to a voxel.
     /// </summary>
+    [Serializable]
     internal struct SVOLeaf
     {
         public static SVOLeaf Empty => new() { _occupiedSubnodes = 0 };
@@ -10,9 +14,12 @@ namespace NavVolume.Core
         /// <summary>
         /// Bitset of the occupied subnodes.
         /// </summary>
+        [SerializeField]
         ulong _occupiedSubnodes;
 
         public const int GRID_SIZE = 4;
+
+        public const int NUM_VOXELS = GRID_SIZE * GRID_SIZE * GRID_SIZE;
 
         // TODO: consider doing some assertions
         public static int SubnodeCoordsToIndex(int x, int y, int z) => (x << 4) | (y << 2) | z;

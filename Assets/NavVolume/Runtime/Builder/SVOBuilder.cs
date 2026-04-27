@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
-using NavVolume.Core;
+using NavVolume.Runtime.Core;
 using UnityEngine;
 
-namespace NavVolume.Builder
+namespace NavVolume.Runtime.Builder
 {
     /// <summary>
     /// Builds an SVO and returns the tree with some stats.
@@ -21,7 +20,6 @@ namespace NavVolume.Builder
 
         public NavContext Build()
         {
-            var stopWatch = Stopwatch.StartNew();
             var svo = new SVO(_settings.NumLayers);
 
             var occupiedL1 = SVORasterizer.RasterizeL1(_settings);
@@ -40,7 +38,7 @@ namespace NavVolume.Builder
 
             SVONeighborLinker.FillNeighborLinks(svo, _settings);
 
-            return new(svo, _settings, stopWatch.ElapsedMilliseconds);
+            return new(svo, _settings);
         }
 
         #region Lower layers allocation
