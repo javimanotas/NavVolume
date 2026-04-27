@@ -81,7 +81,7 @@ namespace NavVolume
             {
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-                if (_bakedData.SceneWasModifiedSinceBake(CurrentSettings))
+                if (_bakedData.HasSceneBeenModifiedSinceBake(CurrentSettings))
                 {
                     Debug.LogWarning(
                         "[NavVolume][NavVolumeSpace] The scene has been modified since the last bake. "

@@ -10,24 +10,15 @@
         public static readonly SVOLink Invalid = new(uint.MaxValue);
 
         /// <summary>
-        /// The whole data is packed into this 32 bit integer.
+        /// The whole data is packed into this 32 bit integer with the following data representation:
+        /// <list type="bullet">
+        ///     <item> [31..28]: layer index   |  4 bits | range: [0, 15] </item>
+        ///     <item> [27..6 ]: node index    | 22 bits | range: [0, 4_194_303] </item>
+        ///     <item> [ 5..0 ]: subnode index |  6 bits | range: [0, 63]        (only if its a leaf) </item>
+        /// </list>
         /// </summary>
         /// <remarks>
-        ///   <para>
-        ///   Bit data representation:
-        ///   </para>
-        ///   <br>
-        ///   [31..28] -> layer index   |  4 bits | range: [0, 15]
-        ///   </br>
-        ///   <br>
-        ///   [27..6 ] -> node index    | 22 bits | range: [0, 4_194_303]
-        ///   </br>
-        ///   <br>
-        ///   [ 5..0 ] -> subnode index |  6 bits | range: [0, 63]        (only if its a leaf)
-        ///   </br>
-        ///   <para>
-        ///   See <see cref="SVOLeaf"/> for more information about subnodes.
-        ///   </para>
+        /// See <see cref="SVOLeaf"/> for more information about subnodes.
         /// </remarks>
         readonly uint _link;
 

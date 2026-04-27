@@ -52,7 +52,9 @@ namespace NavVolume.Runtime.Core
 #if UNITY_ASSERTIONS
             if (x != (x & 0b1111111111) || y != (y & 0b1111111111) || y != (y & 0b1111111111))
             {
-                UnityEngine.Debug.LogError("Morton code does not fit on a 32 bit integer.");
+                UnityEngine.Debug.LogError(
+                    "[NavVolume][MortonCode] Morton code does not fit on a 32 bit integer."
+                );
             }
 #endif
             _code = Interleave00(x) | (Interleave00(y) << 1) | (Interleave00(z) << 2);

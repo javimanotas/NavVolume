@@ -60,7 +60,7 @@ namespace NavVolume
         /// <summary>
         /// Ensures all the variables involved on the build process match the current ones.
         /// </summary>
-        internal bool SceneWasModifiedSinceBake(BuildSettings buildSettings) =>
+        internal bool HasSceneBeenModifiedSinceBake(BuildSettings buildSettings) =>
             buildSettings != _buildSettings
             || _sceneHash != BakedDataHasher.ComputeSceneHash(buildSettings);
 
