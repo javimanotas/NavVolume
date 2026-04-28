@@ -44,13 +44,13 @@ namespace NavVolume.Runtime.Pathfinding
                 || IsBlocked(navCtx.Svo, goalLink)
             )
             {
-                return PathResult.Failed(PathStatus.InvalidEndpoint);
+                return PathResult.Failure(PathResultStatus.InvalidEndpoint);
             }
 
             if (startLink == goalLink)
             {
                 var trivial = new List<Vector3> { request.Start, request.Goal };
-                return new(trivial);
+                return PathResult.Success(trivial);
             }
 
             ClearState();
@@ -68,7 +68,7 @@ namespace NavVolume.Runtime.Pathfinding
             {
                 if (request.MaxNodesBudget > 0 && expanded >= request.MaxNodesBudget)
                 {
-                    return PathResult.Failed(PathStatus.BudgetExceeded);
+                    return PathResult.Failure(PathResultStatus.BudgetExceeded);
                 }
 
                 var current = _openList.Pop();
@@ -89,7 +89,7 @@ namespace NavVolume.Runtime.Pathfinding
                 ExpandNeighbors(navCtx, current, goalCenter, request);
             }
 
-            return PathResult.Failed(PathStatus.NoPathFound);
+            return PathResult.Failure(PathResultStatus.NoPathFound);
         }
 
         void ExpandNeighbors(
@@ -369,7 +369,7 @@ namespace NavVolume.Runtime.Pathfinding
             rawPath[0] = request.Start;
             rawPath.Add(request.Goal);
 
-            return new(rawPath);
+            return PathResult.Success(rawPath);
         }
     }
 }
