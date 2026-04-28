@@ -10,8 +10,8 @@ namespace NavVolume
     /// </remarks>
     internal class FNV1a
     {
-        const ulong _OFFSET_BASIS = 0xcbf29ce484222325;
-        const ulong _PRIME = 0x00000100000001b3;
+        const ulong _OFFSET_BASIS = 0xCBF29CE484222325;
+        const ulong _PRIME = 0x00000100000001B3;
 
         ulong _hash = _OFFSET_BASIS;
 
@@ -33,10 +33,10 @@ namespace NavVolume
 
         public void Feed(int i)
         {
-            Feed((byte)(i & 0xff));
-            Feed((byte)((i >> 8) & 0xff));
-            Feed((byte)((i >> 16) & 0xff));
-            Feed((byte)((i >> 24) & 0xff));
+            Feed((byte)(i & 0xFF));
+            Feed((byte)((i >> 8) & 0xFF));
+            Feed((byte)((i >> 16) & 0xFF));
+            Feed((byte)((i >> 24) & 0xFF));
         }
 
         public void Feed(float f)

@@ -3,9 +3,9 @@
     /// <summary>
     /// Status code for a completed pathfinding query.
     /// </summary>
-    internal enum PathStatus
+    internal enum PathResultStatus
     {
-        Success,
+        Sucess,
         NoPathFound,
         InvalidEndpoint,
         NoTree,

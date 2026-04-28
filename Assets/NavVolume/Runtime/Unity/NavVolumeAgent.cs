@@ -55,11 +55,11 @@ namespace NavVolume
                 _heuristicWeight,
                 _maxNodesBudget
             );
-            var result = _navVolumeSpace.FindPath(request);
 
-            if (!result.Succeeded(out var status))
+            var result = _navVolumeSpace.FindPath(request);
+            if (!result.Succeeded)
             {
-                Debug.LogError($"[NavVolume][NavVolumeAgent] Pathfinding failed: {status} ");
+                Debug.LogError($"[NavVolume][NavVolumeAgent] Pathfinding failed: {result.Status} ");
                 return;
             }
 

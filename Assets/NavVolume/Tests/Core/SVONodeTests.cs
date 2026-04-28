@@ -25,7 +25,7 @@ namespace NavVolume.Tests.Core
         [Test]
         public void HasChildren_WhenFirstChildIsInvalid_ReturnsFalse()
         {
-            var node = new SVONode(new MortonCode(0, 0, 0));
+            var node = new SVONode(new(0, 0, 0));
 
             Assert.IsFalse(node.HasChildren);
         }

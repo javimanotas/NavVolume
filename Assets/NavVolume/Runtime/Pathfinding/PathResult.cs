@@ -8,30 +8,28 @@ namespace NavVolume.Runtime.Pathfinding
     /// </summary>
     internal readonly struct PathResult
     {
-        public static PathResult Failed(PathStatus status) => new(status);
+        public static PathResult Success(List<Vector3> waypoints) => new(waypoints);
 
-        readonly PathStatus _status;
+        public static PathResult Failure(PathResultStatus status) => new(status);
+
+        public readonly PathResultStatus Status;
 
         public readonly List<Vector3> Waypoints;
 
+        public bool Succeeded => Status == PathResultStatus.Sucess;
+
         // TODO: implement stats
 
-        PathResult(PathStatus rawStatus)
+        PathResult(PathResultStatus rawStatus)
         {
-            _status = rawStatus;
-            Waypoints = new();
+            Status = rawStatus;
+            Waypoints = null;
         }
 
-        public PathResult(List<Vector3> waypoints)
+        PathResult(List<Vector3> rawWaypoints)
         {
-            _status = PathStatus.Success;
-            Waypoints = waypoints;
-        }
-
-        public bool Succeeded(out PathStatus status)
-        {
-            status = _status;
-            return _status == PathStatus.Success;
+            Status = PathResultStatus.Sucess;
+            Waypoints = rawWaypoints;
         }
     }
 }

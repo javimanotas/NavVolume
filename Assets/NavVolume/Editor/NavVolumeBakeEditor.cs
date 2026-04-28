@@ -280,7 +280,7 @@ namespace NavVolume.Editor
             if (bakedData == null)
             {
                 Debug.LogError(
-                    "[NavVolume][NavVolumeSpace] Can't bake: \"BakedData\" asset is not assigned."
+                    "[NavVolume][NavVolumeBakeEditor] Can't bake: \"BakedData\" asset is not assigned."
                 );
                 return;
             }
@@ -294,7 +294,7 @@ namespace NavVolume.Editor
             AssetDatabase.SaveAssetIfDirty(bakedData);
 
             Debug.Log(
-                $"[NavVolume][NavVolumeSpace] NavVolume baked in {stopwatch.ElapsedMilliseconds} ms.\n"
+                $"[NavVolume][NavVolumeBakeEditor] NavVolume baked in {stopwatch.ElapsedMilliseconds} ms.\n"
                     + $"Stats: {new SVOStats(navCtx.Svo)}"
             );
         }

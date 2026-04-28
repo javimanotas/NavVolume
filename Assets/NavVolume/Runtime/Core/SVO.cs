@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using NavVolume.Runtime.Builder;
 
 namespace NavVolume.Runtime.Core
 {
@@ -75,6 +76,22 @@ namespace NavVolume.Runtime.Core
 
             link = SVOLink.Invalid;
             return false;
+        }
+
+        public bool IsVoxelOccupied(int x, int y, int z)
+        {
+            var (nodeX, nodeY, nodeZ) = (x >> 2, y >> 2, z >> 2);
+            var (subNodeX, subNodeY, subNodeZ) = (x & 0b11, y & 0b11, z & 0b11);
+
+            var morton = new MortonCode((uint)nodeX, (uint)nodeY, (uint)nodeZ);
+            if (!MortonToIndex[0].TryGetValue(morton, out var nodeIdx))
+            {
+                return false;
+            }
+
+            var leaf = LeafNodes[nodeIdx];
+            var bitIdx = SVOLeaf.SubnodeCoordsToIndex(subNodeX, subNodeY, subNodeZ);
+            return leaf.IsOccupied(bitIdx);
         }
     }
 }
