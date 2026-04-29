@@ -38,7 +38,7 @@ namespace NavVolume
         #endregion
 
         internal BuildSettings CurrentSettings =>
-            new(transform.position, _rootSize, _numLayers, _collisionMask);
+            new(transform.position, _rootSize, _numLayers, _collisionMask, 0);
 
         NavContext _navCtx;
 

@@ -14,7 +14,7 @@ namespace NavVolume.Tests.Builder
             [Random(1f, 100f, 3)] float rootSize
         )
         {
-            var settings = new BuildSettings(Vector3.zero, rootSize, numLayers, 0);
+            var settings = new BuildSettings(Vector3.zero, rootSize, numLayers, 0, 0);
 
             Assert.AreEqual(settings.RootSize, settings.NodeSizeForLayer(numLayers - 1), _EPSILON);
         }
@@ -25,7 +25,7 @@ namespace NavVolume.Tests.Builder
             [Random(1f, 100f, 3)] float rootSize
         )
         {
-            var settings = new BuildSettings(Vector3.zero, rootSize, numLayers, 0);
+            var settings = new BuildSettings(Vector3.zero, rootSize, numLayers, 0, 0);
 
             for (var layer = 0; layer < numLayers - 1; layer++)
             {
