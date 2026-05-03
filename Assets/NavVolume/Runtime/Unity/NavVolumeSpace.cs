@@ -124,16 +124,7 @@ namespace NavVolume
             }
 
             var raw = new SVOPathfinder().FindPath(_navCtx, request);
-
-            if (!raw.Succeeded)
-            {
-                return raw;
-            }
-
-            var waypoints = PathSmoother.GreedyShortcut(raw.Waypoints, in _navCtx);
-            waypoints = PathSmoother.CatmullRomSpline(waypoints);
-
-            return PathResult.Success(waypoints);
+            return raw;
         }
     }
 }
