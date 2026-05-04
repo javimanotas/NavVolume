@@ -17,6 +17,8 @@ namespace NavVolume.Runtime.Core
 
         public readonly int MemoryUsedBytes;
 
+        public readonly int[] NodesPerLayer;
+
         public SVOStats(SVO svo)
         {
             NumLayers = svo.Layers.Length;
@@ -31,12 +33,21 @@ namespace NavVolume.Runtime.Core
             MemoryUsedBytes =
                 Unsafe.SizeOf<SVOLeaf>() * svo.LeafNodes.Length
                 + Unsafe.SizeOf<SVONode>() * svo.Layers.Sum(l => l.Count);
+
+            NodesPerLayer = svo
+                .Layers.Select(l => l.Count)
+                .Reverse()
+                .Append(svo.LeafNodes.Length)
+                .ToArray();
         }
 
         public override readonly string ToString() =>
             $"Theoretical voxels for {NumLayers} layer octree: {TheoreticalVoxelsCount}.\n"
             + $"Allocated voxels: {VoxelsCount}.\n"
             + $"Voxels saved with sparse implementation: {(1 - (float)VoxelsCount / TheoreticalVoxelsCount) * 100:F2}%.\n"
-            + $"Approximate memory usage (bytes): {MemoryUsedBytes}.\n";
+            + $"Approximate memory usage (bytes): {MemoryUsedBytes}.\n"
+            + $"Nodes per layer: ["
+            + NodesPerLayer.Aggregate("", (a, b) => $"{a}, {b}")
+            + "] .\n";
     }
 }
