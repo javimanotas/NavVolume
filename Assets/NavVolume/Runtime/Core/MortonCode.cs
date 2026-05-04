@@ -50,7 +50,7 @@ namespace NavVolume.Runtime.Core
         public MortonCode(uint x, uint y, uint z)
         {
 #if UNITY_ASSERTIONS
-            if (x != (x & 0b1111111111) || y != (y & 0b1111111111) || y != (y & 0b1111111111))
+            if (x != (x & 0b1111111111) || y != (y & 0b1111111111) || z != (z & 0b1111111111))
             {
                 UnityEngine.Debug.LogError(
                     "[NavVolume][MortonCode] Morton code does not fit on a 32 bit integer."
