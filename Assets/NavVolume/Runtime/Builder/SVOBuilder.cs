@@ -195,7 +195,7 @@ namespace NavVolume.Runtime.Builder
                 var parentNode = svo.GetNode(parentLink);
                 if (!parentNode.HasChildren)
                 {
-                    parentNode.FirstChild = new(childLayer, (uint)childIdx);
+                    parentNode.FirstChild = SVOLink.NodeLink(childLayer, (uint)childIdx);
                     svo.SetNode(parentLink, parentNode);
                 }
             }

@@ -81,7 +81,12 @@ namespace NavVolume.Runtime.Pathfinding
                 _closed.Add(current.Link);
                 expanded++;
 
-                if (current.Link == goalLink || current.Link.SameLeafNode(goalLink))
+                if (
+                    current.Link == goalLink
+                    || current.Link.IsVoxel(out _) // TODO: check if this is necessary
+                        && goalLink.IsVoxel(out _)
+                        && current.Link.Offset == goalLink.Offset
+                )
                 {
                     return ReconstructPath(navCtx, current.Link, request);
                 }
@@ -147,10 +152,7 @@ namespace NavVolume.Runtime.Pathfinding
         {
             buffer.Clear();
 
-            // TODO: this might be wrong. also this should be encapsulated in SVOLink or SVONode, not here.
-            var isVoxel = link.LayerIdx == 0 && link.SubnodeIdx != 0;
-
-            if (!isVoxel)
+            if (link.IsNode(out _))
             {
                 var node = svo.GetNode(link);
 
@@ -163,17 +165,17 @@ namespace NavVolume.Runtime.Pathfinding
                         buffer.Add(neighbor);
                     }
                 }
-
-                return;
             }
-
-            var (x, y, z) = SVOLeaf.IndexToSubnodeCoords((int)link.SubnodeIdx);
-            TryAddVoxelNeighbor(svo, link, x + 1, y, z, NeighborDirection.PosX, buffer);
-            TryAddVoxelNeighbor(svo, link, x - 1, y, z, NeighborDirection.NegX, buffer);
-            TryAddVoxelNeighbor(svo, link, x, y + 1, z, NeighborDirection.PosY, buffer);
-            TryAddVoxelNeighbor(svo, link, x, y - 1, z, NeighborDirection.NegY, buffer);
-            TryAddVoxelNeighbor(svo, link, x, y, z + 1, NeighborDirection.PosZ, buffer);
-            TryAddVoxelNeighbor(svo, link, x, y, z - 1, NeighborDirection.NegZ, buffer);
+            else if (link.IsVoxel(out var subnodeIdx))
+            {
+                var (x, y, z) = SVOLeaf.IndexToSubnodeCoords((int)subnodeIdx);
+                TryAddVoxelNeighbor(svo, link, x + 1, y, z, NeighborDirection.PosX, buffer);
+                TryAddVoxelNeighbor(svo, link, x - 1, y, z, NeighborDirection.NegX, buffer);
+                TryAddVoxelNeighbor(svo, link, x, y + 1, z, NeighborDirection.PosY, buffer);
+                TryAddVoxelNeighbor(svo, link, x, y - 1, z, NeighborDirection.NegY, buffer);
+                TryAddVoxelNeighbor(svo, link, x, y, z + 1, NeighborDirection.PosZ, buffer);
+                TryAddVoxelNeighbor(svo, link, x, y, z - 1, NeighborDirection.NegZ, buffer);
+            }
         }
 
         /// <summary>
@@ -181,7 +183,7 @@ namespace NavVolume.Runtime.Pathfinding
         /// </summary>
         void TryAddVoxelNeighbor(
             SVO svo,
-            SVOLink sourceLink,
+            SVOLink voxelLink,
             int nx,
             int ny,
             int nz,
@@ -201,13 +203,13 @@ namespace NavVolume.Runtime.Pathfinding
             )
             {
                 var subnode = SVOLeaf.SubnodeCoordsToIndex(nx, ny, nz);
-                buffer.Add(sourceLink.WithSubnode((uint)subnode));
+                buffer.Add(SVOLink.VoxelLink(voxelLink.Offset, (uint)subnode));
                 return;
             }
 
             #endregion
 
-            var srcNode = svo.GetNode(sourceLink.WithoutSubnode());
+            var srcNode = svo.GetNode(SVOLink.NodeLink(0, voxelLink.Offset));
             var leafNeighbor = srcNode.Neighbors[overflowDir];
 
             if (!leafNeighbor.IsValid)
@@ -219,14 +221,21 @@ namespace NavVolume.Runtime.Pathfinding
             ny = WrapVoxelCoord(ny);
             nz = WrapVoxelCoord(nz);
 
-            if (leafNeighbor.LayerIdx == 0)
+            if (leafNeighbor.IsNode(out var layerIdx))
             {
-                var entrySubnode = SVOLeaf.SubnodeCoordsToIndex(nx, ny, nz);
-                buffer.Add(leafNeighbor.WithSubnode((uint)entrySubnode));
+                if (layerIdx == 0)
+                {
+                    var entrySubnode = SVOLeaf.SubnodeCoordsToIndex(nx, ny, nz);
+                    buffer.Add(SVOLink.VoxelLink(leafNeighbor.Offset, (uint)entrySubnode));
+                }
+                else
+                {
+                    buffer.Add(leafNeighbor);
+                }
             }
             else
             {
-                buffer.Add(leafNeighbor);
+                Debug.LogError("[NavVolume][SVOPathfinder] This code should be unreachable.");
             }
         }
 
@@ -240,7 +249,11 @@ namespace NavVolume.Runtime.Pathfinding
         /// </remarks>
         static bool NeedsChildExpansion(SVO svo, SVOLink from, SVOLink neighbor)
         {
-            if (from.LayerIdx <= neighbor.LayerIdx)
+            if (
+                from.IsNode(out var fromL)
+                && neighbor.IsNode(out var neighborL)
+                && fromL <= neighborL
+            )
             {
                 return false;
             }
@@ -265,12 +278,18 @@ namespace NavVolume.Runtime.Pathfinding
                 return;
             }
 
-            var childLayer = coarseNeighbor.LayerIdx - 1;
-            var firstIdx = coarse.FirstChild.NodeIdx;
+            if (coarseNeighbor.IsNode(out var coarseNeighborLIdx)) { }
+            else
+            {
+                Debug.LogError("[NavVolume][SVOPathfinder] This code should be unreachable.");
+                return;
+            }
+            var childLayer = coarseNeighborLIdx - 1;
+            var firstOffset = coarse.FirstChild.Offset;
 
             for (var c = 0u; c < 8; c++)
             {
-                var childLink = new SVOLink(childLayer, firstIdx + c);
+                var childLink = SVOLink.NodeLink(childLayer, firstOffset + c);
 
                 if (
                     !childLink.IsValid
@@ -323,12 +342,12 @@ namespace NavVolume.Runtime.Pathfinding
 
         static bool IsBlocked(SVO svo, SVOLink link)
         {
-            if (link.LayerIdx > 0)
+            if (link.IsNode(out var layer) && layer > 0)
             {
                 return false;
             }
 
-            var leaf = svo.LeafNodes[link.NodeIdx];
+            var leaf = svo.LeafNodes[link.Offset];
 
             if (leaf.IsEmpty)
             {
@@ -340,13 +359,8 @@ namespace NavVolume.Runtime.Pathfinding
                 return true;
             }
 
-            // TODO: check this
-            if (link.SubnodeIdx == 0)
-            {
-                return false;
-            }
-
-            return leaf.IsOccupied((int)link.SubnodeIdx);
+            link.IsVoxel(out var subnodeIdx);
+            return leaf.IsOccupied((int)subnodeIdx);
         }
 
         PathResult ReconstructPath(NavContext navCtx, SVOLink reachedLink, PathRequest request)

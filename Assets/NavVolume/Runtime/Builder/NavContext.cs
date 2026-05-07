@@ -49,21 +49,21 @@ namespace NavVolume.Runtime.Builder
             return new(center, Vector3.one * size);
         }
 
-        Bounds NodeBounds(SVOLink link)
+        Bounds NodeBounds(SVOLink nodelink)
         {
-            var layer = (int)link.LayerIdx;
-            var mortonCode = Svo.Layers[link.LayerIdx][(int)link.NodeIdx].MortonCode;
-            return NodeBounds(layer, mortonCode);
+            nodelink.IsNode(out var layer);
+            var mortonCode = Svo.Layers[layer][(int)nodelink.Offset].MortonCode;
+            return NodeBounds((int)layer, mortonCode);
         }
 
         /// <summary>
-        /// World-space minimum corner of the node referenced by a link.
+        /// World-space minimum corner of a layer 0 node.
         /// </summary>
-        public Vector3 NodeMin(SVOLink link)
+        Vector3 NodeMin(int nodeOffset)
         {
-            var code = Svo.Layers[link.LayerIdx][(int)link.NodeIdx].MortonCode;
+            var code = Svo.Layers[0][nodeOffset].MortonCode;
             var (x, y, z) = code.Decoded;
-            var s = BuildSettings.NodeSizeForLayer((int)link.LayerIdx);
+            var s = BuildSettings.NodeSizeForLayer(0);
             return BuildSettings.Origin + new Vector3(x * s, y * s, z * s);
         }
 
@@ -73,11 +73,10 @@ namespace NavVolume.Runtime.Builder
         /// </summary>
         public Vector3 LinkToCenter(SVOLink link)
         {
-            // TODO: check if this is wrong.
-            if (link.LayerIdx == 0 && link.SubnodeIdx != 0)
+            if (link.IsVoxel(out var subnodeIdx))
             {
-                var nodeMin = NodeMin(link);
-                return VoxelCenter(nodeMin, (int)link.SubnodeIdx);
+                var nodeMin = NodeMin((int)link.Offset);
+                return VoxelCenter(nodeMin, (int)subnodeIdx);
             }
 
             return NodeBounds(link).center;
@@ -110,12 +109,12 @@ namespace NavVolume.Runtime.Builder
                 var z = (uint)(local.z / nodeSize);
                 var code = new MortonCode(x, y, z);
 
-                if (!Svo.MortonToIndex[layer].TryGetValue(code, out var idx))
+                if (!Svo.MortonToIndex[layer].TryGetValue(code, out var offset))
                 {
                     continue;
                 }
 
-                var link = new SVOLink((uint)layer, (uint)idx);
+                var link = SVOLink.NodeLink((uint)layer, (uint)offset);
 
                 if (layer == 0)
                 {
@@ -129,7 +128,10 @@ namespace NavVolume.Runtime.Builder
                     var vy = Mathf.Clamp((int)(localVoxel.y / BuildSettings.VoxelSize), 0, 3);
                     var vz = Mathf.Clamp((int)(localVoxel.z / BuildSettings.VoxelSize), 0, 3);
 
-                    return link.WithSubnode((uint)SVOLeaf.SubnodeCoordsToIndex(vx, vy, vz));
+                    return SVOLink.VoxelLink(
+                        (uint)offset,
+                        (uint)SVOLeaf.SubnodeCoordsToIndex(vx, vy, vz)
+                    );
                 }
 
                 return link;

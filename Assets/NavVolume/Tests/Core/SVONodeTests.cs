@@ -35,7 +35,7 @@ namespace NavVolume.Tests.Core
         {
             var node = new SVONode(new(0, 0, 0))
             {
-                FirstChild = new SVOLink(1, 0), // arbitrary valid link
+                FirstChild = SVOLink.NodeLink(1, 1), // arbitrary valid link
             };
 
             Assert.IsTrue(node.HasChildren);

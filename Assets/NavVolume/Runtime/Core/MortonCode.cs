@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine.Assertions;
 
 namespace NavVolume.Runtime.Core
 {
@@ -9,8 +10,10 @@ namespace NavVolume.Runtime.Core
     {
         public static MortonCode Invalid => new(uint.MaxValue);
 
-        // TODO: check the maximum grid resolution that can be encoded in 30 bits (10 bits per axis) and consider using a larger type if needed.
-        // add that information to the documentation of the struct and its members and consider adding some validation to the constructor.
+        /// <summary>
+        /// Since the encoding uses 32-bit integers, we can only encode a grid of up to 1024 (2^10) resolution per axis.
+        /// That implies that the maximum number of layers of the octree is 11 (since the root node is at depth 0).
+        /// </summary>
         readonly uint _code;
 
         #region Helper functions
@@ -50,12 +53,10 @@ namespace NavVolume.Runtime.Core
         public MortonCode(uint x, uint y, uint z)
         {
 #if UNITY_ASSERTIONS
-            if (x != (x & 0b1111111111) || y != (y & 0b1111111111) || z != (z & 0b1111111111))
-            {
-                UnityEngine.Debug.LogError(
-                    "[NavVolume][MortonCode] Morton code does not fit on a 32 bit integer."
-                );
-            }
+            const int TEN_BITS = 0b1111111111;
+            Assert.AreEqual(x & TEN_BITS, x, $"X: {x} is out of range. Max allowed is {TEN_BITS}.");
+            Assert.AreEqual(y & TEN_BITS, y, $"Y: {y} is out of range. Max allowed is {TEN_BITS}.");
+            Assert.AreEqual(z & TEN_BITS, z, $"Z: {z} is out of range. Max allowed is {TEN_BITS}.");
 #endif
             _code = Interleave00(x) | (Interleave00(y) << 1) | (Interleave00(z) << 2);
         }

@@ -1,38 +1,46 @@
-﻿namespace NavVolume.Runtime.Core
+﻿using UnityEngine.Assertions;
+
+namespace NavVolume.Runtime.Core
 {
     /// <summary>
-    /// Pointer to an arbitrary node or subnode in the SVO.
+    /// Pointer to an arbitrary node or voxel in the SVO.
     /// </summary>
     internal readonly struct SVOLink
     {
-        // Technically every node in a layer different to layer 0 with a subnode index set to a value will be invalid.
-        // This is just the easiest representation.
+        // Technically this is not an invalid pointer but in practice we will never have this data configuration.
+        // This will imply that we are using 63 layers and it is completely impossible to rasterize at such a high resolution.
         public static readonly SVOLink Invalid = new(uint.MaxValue);
 
         /// <summary>
         /// The whole data is packed into this 32 bit integer with the following data representation:
         /// <list type="bullet">
-        ///     <item> [31..28]: layer index   |  4 bits | range: [0, 15] </item>
-        ///     <item> [27..6 ]: node index    | 22 bits | range: [0, 4_194_303] </item>
-        ///     <item> [ 5..0 ]: subnode index |  6 bits | range: [0, 63]        (only if its a leaf) </item>
+        ///     <item> bit 31: link type | 1 bit | 0 for voxels and 1 for nodes </item>
+        ///     <item> bits [30..6 ]: offset | 25 bits | values up to 33_554_431 </item>
+        ///     <item> bits [ 5..0 ]: concrete data | 6 bits | values up to 63 </item>
         /// </list>
+        /// The concrete data will represent:
+        /// <list type="bullet">
+        ///     <item> Layer of the node for nodes. </item>
+        ///     <item> The specific subnode for voxels. </item>
+        /// </list>
+        /// See <see cref="SVOLeaf"/> for more details.
         /// </summary>
-        /// <remarks>
-        /// See <see cref="SVOLeaf"/> for more information about subnodes.
-        /// </remarks>
         readonly uint _link;
 
         #region Bit representation constants
 
-        const int _LAYER_SHIFT = 28;
-        const uint _UNSHIFTED_LAYER_MASK = 0xF;
-        const uint _LAYER_MASK = _UNSHIFTED_LAYER_MASK << _LAYER_SHIFT;
+        const uint _IS_NODE_MASK = 1u << 31;
 
-        const int _NODE_SHIFT = 6;
-        const uint _UNSHIFTED_NODE_MASK = 0x3FFFFF;
-        const uint _NODE_MASK = _UNSHIFTED_NODE_MASK << _NODE_SHIFT;
+        const int _OFFSET_MASK_SHIFT = 6;
+        const uint _OFFSET_MASK = 0x1FFFFFF << _OFFSET_MASK_SHIFT;
 
-        const uint _UNSHIFTED_SUBNODE_MASK = 0x3F;
+        const uint _CONCRETE_DATA_MASK = 0x3F;
+
+        public const uint MAX_OFFSET_ALLOWED = _OFFSET_MASK >> _OFFSET_MASK_SHIFT;
+
+        public const uint MAX_LAYER_ALLOWED = _CONCRETE_DATA_MASK;
+
+        public const uint MAX_SUBNODE_ALLOWED = _CONCRETE_DATA_MASK;
 
         #endregion
 
@@ -41,43 +49,68 @@
             _link = rawLink;
         }
 
-        public SVOLink(uint layer, uint nodeIndex, uint subnode = 0)
+        /// <summary>
+        /// Creates a link to a node in the SVO with the given layer and offset on the layer.
+        /// </summary>
+        public static SVOLink NodeLink(uint layer, uint nodeOffset)
         {
-            // TODO: add defensive assertions to check that values are in range
-
-            _link =
-                ((layer & _UNSHIFTED_LAYER_MASK) << _LAYER_SHIFT)
-                | ((nodeIndex & _UNSHIFTED_NODE_MASK) << _NODE_SHIFT)
-                | (subnode & _UNSHIFTED_SUBNODE_MASK);
+#if UNITY_ASSERTIONS
+            Assert.IsTrue(
+                layer == (layer & _CONCRETE_DATA_MASK),
+                $"Layer {layer} is invalid for SVOLink.NodeLink."
+            );
+            Assert.IsTrue(
+                nodeOffset == (nodeOffset & (_OFFSET_MASK >> _OFFSET_MASK_SHIFT)),
+                $"Node offset {nodeOffset} is invalid for SVOLink.NodeLink."
+            );
+#endif
+            return new(_IS_NODE_MASK | (nodeOffset << _OFFSET_MASK_SHIFT) | layer);
         }
 
-        public readonly bool IsValid => _link != uint.MaxValue;
-
-        public readonly uint LayerIdx => (_link & _LAYER_MASK) >> _LAYER_SHIFT;
-
-        public readonly uint NodeIdx => (_link & _NODE_MASK) >> _NODE_SHIFT;
-
-        public readonly uint SubnodeIdx => _link & _UNSHIFTED_SUBNODE_MASK;
-
-        public const uint MAX_LAYER_ALLOWED = _UNSHIFTED_LAYER_MASK;
-
-        public const uint MAX_NODE_ALLOWED = _UNSHIFTED_NODE_MASK;
-
-        public const uint MAX_SUBNODE_ALLOWED = _UNSHIFTED_SUBNODE_MASK;
-
-        // TODO: consider if l0 nodes should have a different layer than leaf nodes
-        // right now is impossible to distinguish between a leaf node and a layer 0 node, but maybe it would be useful to be able to do so.
-
-        public SVOLink WithSubnode(uint subnode) =>
-            new(_link & ~_UNSHIFTED_SUBNODE_MASK | subnode & _UNSHIFTED_SUBNODE_MASK);
-
-        public SVOLink WithoutSubnode() => new(_link & ~_UNSHIFTED_SUBNODE_MASK);
+        /// <summary>
+        /// Creates a link to a voxel in the SVO with the given offset of the leaf and subnode index.
+        /// </summary>
+        public static SVOLink VoxelLink(uint leafOffset, uint subnodeIndex)
+        {
+#if UNITY_ASSERTIONS
+            Assert.IsTrue(
+                subnodeIndex == (subnodeIndex & _CONCRETE_DATA_MASK),
+                $"Subnode index {subnodeIndex} is invalid for SVOLink.VoxelLink."
+            );
+            Assert.IsTrue(
+                leafOffset == (leafOffset & (_OFFSET_MASK >> _OFFSET_MASK_SHIFT)),
+                $"Leaf offset {leafOffset} is invalid for SVOLink.VoxelLink."
+            );
+#endif
+            return new((leafOffset << _OFFSET_MASK_SHIFT) | subnodeIndex);
+        }
 
         /// <summary>
-        /// Returns true if both links point to the same leaf node, regardless of their subnode index.
+        /// Returns the same as comparing equality with <see cref="SVOLink.Invalid"/>.
         /// </summary>
-        public bool SameLeafNode(SVOLink other) =>
-            LayerIdx == 0 && other.LayerIdx == 0 && NodeIdx == other.NodeIdx;
+        public bool IsValid => _link != uint.MaxValue;
+
+        public uint Offset => (_link & _OFFSET_MASK) >> _OFFSET_MASK_SHIFT;
+
+        /// <summary>
+        /// Returns true if this link points to a node and outputs its layer.
+        /// If it returns false the value of layerIdx is undefined and SHOULD NOT be used.
+        /// </summary>
+        public bool IsNode(out uint layerIdx)
+        {
+            layerIdx = _link & _CONCRETE_DATA_MASK;
+            return (_link & _IS_NODE_MASK) != 0;
+        }
+
+        /// <summary>
+        /// Returns true if this link points to a voxel and outputs its subnode index.
+        /// If it returns false the value of subnodeIdx is undefined and SHOULD NOT be used.
+        /// </summary>
+        public bool IsVoxel(out uint subnodeIdx)
+        {
+            subnodeIdx = _link & _CONCRETE_DATA_MASK;
+            return (_link & _IS_NODE_MASK) == 0;
+        }
 
         #region Operators and overrides
 
