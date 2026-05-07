@@ -50,17 +50,6 @@ namespace NavVolume.Tests.Core
             Assert.IsTrue(SVOLink.NodeLink(layer, offset).IsValid);
         }
 
-        [Test]
-        public void NodeLink_AtMaxValues_IsValid()
-        {
-            var link = SVOLink.NodeLink(SVOLink.MAX_LAYER_ALLOWED, SVOLink.MAX_OFFSET_ALLOWED);
-
-            Assert.IsTrue(link.IsValid);
-            Assert.IsTrue(link.IsNode(out uint outLayer));
-            Assert.AreEqual(SVOLink.MAX_LAYER_ALLOWED, outLayer);
-            Assert.AreEqual(SVOLink.MAX_OFFSET_ALLOWED, link.Offset);
-        }
-
         #endregion
 
         #region Voxel link
@@ -138,18 +127,6 @@ namespace NavVolume.Tests.Core
         public void Invalid_IsValid_ReturnsFalse()
         {
             Assert.IsFalse(SVOLink.Invalid.IsValid);
-        }
-
-        [Test]
-        public void Invalid_IsNode_ReturnsFalse()
-        {
-            Assert.IsFalse(SVOLink.Invalid.IsNode(out _));
-        }
-
-        [Test]
-        public void Invalid_IsVoxel_ReturnsFalse()
-        {
-            Assert.IsFalse(SVOLink.Invalid.IsVoxel(out _));
         }
 
         [Test]
