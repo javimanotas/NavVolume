@@ -28,7 +28,7 @@ namespace NavVolume.Runtime.Builder
         {
             var gridResolution = settings.NodeSizeForLayer(1);
             var gridSize = Mathf.RoundToInt(settings.RootSize / gridResolution);
-            var halfExtents = Vector3.one * (gridSize * 0.5f - _OVERLAP_BOX_SHRINK);
+            var halfExtents = Vector3.one * (gridResolution * 0.5f - _OVERLAP_BOX_SHRINK);
 
             // TODO: check if this can be optimized with a sortedset
             var occupied = new HashSet<MortonCode>();
