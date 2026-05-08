@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using NavVolume.Runtime.Core;
-using NavVolume.Runtime.Validation;
 using UnityEngine;
 
 namespace NavVolume.Runtime.Builder
@@ -45,7 +44,6 @@ namespace NavVolume.Runtime.Builder
             SVONeighborLinker.FillNeighborLinks(svo, _settings);
 
             var navCtx = new NavContext(svo, _settings);
-            SVOValidator.Validate(navCtx).LogToConsole();
             return navCtx;
         }
 

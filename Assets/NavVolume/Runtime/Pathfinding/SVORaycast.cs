@@ -113,9 +113,7 @@ namespace NavVolume.Runtime.Pathfinding
             }
 
             var distToBoundary =
-                step > 0
-                    ? Mathf.Floor(localPos) + 1f - localPos
-                    : localPos - Mathf.Floor(localPos);
+                step > 0 ? Mathf.Floor(localPos) + 1f - localPos : localPos - Mathf.Floor(localPos);
 
             return distToBoundary * tDelta;
         }
