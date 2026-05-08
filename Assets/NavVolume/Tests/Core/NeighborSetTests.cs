@@ -31,7 +31,7 @@ namespace NavVolume.Tests.Core
         public void Indexer_SetAndGet_WorksCorrectly(int dir)
         {
             var neighbors = NeighborSet.AllInvalid;
-            var arbitraryValidLink = new SVOLink(1, (uint)dir);
+            var arbitraryValidLink = SVOLink.NodeLink(1, 0);
 
             neighbors[(NeighborDirection)dir] = arbitraryValidLink;
 

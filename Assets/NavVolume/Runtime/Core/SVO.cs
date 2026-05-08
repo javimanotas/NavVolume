@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using NavVolume.Runtime.Builder;
+using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace NavVolume.Runtime.Core
 {
@@ -58,19 +60,35 @@ namespace NavVolume.Runtime.Core
         // TODO: consider getting a ref instead of a copy. this would allow to remove SetNode
         public SVONode GetNode(SVOLink link)
         {
-            return Layers[link.LayerIdx][(int)link.NodeIdx];
+            if (link.IsNode(out var layerIdx))
+            {
+                return Layers[layerIdx][(int)link.Offset];
+            }
+
+            Debug.LogError(
+                "[NavVolume][SVO] This code should be never reached. Link is not a node link."
+            );
+            return Layers[layerIdx][(int)link.Offset];
         }
 
         public void SetNode(SVOLink link, in SVONode node)
         {
-            Layers[link.LayerIdx][(int)link.NodeIdx] = node;
+            if (link.IsNode(out var layerIdx))
+            {
+                Layers[layerIdx][(int)link.Offset] = node;
+                return;
+            }
+
+            Debug.LogError(
+                "[NavVolume][SVO] This code should be never reached. Link is not a node link."
+            );
         }
 
         public bool TryGetLink(uint layer, MortonCode mortonCode, out SVOLink link)
         {
             if (MortonToIndex[layer].TryGetValue(mortonCode, out var idx))
             {
-                link = new(layer, (uint)idx);
+                link = SVOLink.NodeLink(layer, (uint)idx);
                 return true;
             }
 

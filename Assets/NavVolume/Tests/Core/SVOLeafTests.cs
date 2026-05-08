@@ -85,49 +85,5 @@ namespace NavVolume.Tests.Core
 
             Assert.IsFalse(leaf.IsFull);
         }
-
-        [Test]
-        public void SameLeafNode_ReturnsTrue_ForSameNode(
-            [Random(0u, SVOLink.MAX_NODE_ALLOWED, 3)] uint node,
-            [Random(0u, SVOLink.MAX_SUBNODE_ALLOWED, 3)] uint subnodeA,
-            [Random(0u, SVOLink.MAX_SUBNODE_ALLOWED, 3)] uint subnodeB
-        )
-        {
-            var linkA = new SVOLink(0, node, subnodeA);
-            var linkB = new SVOLink(0, node, subnodeB);
-
-            Assert.IsTrue(linkA.SameLeafNode(linkB));
-        }
-
-        [Test]
-        public void SameLeafNode_ReturnsFalse_ForDifferentNode(
-            [Random(0u, SVOLink.MAX_NODE_ALLOWED, 3)] uint nodeA,
-            [Random(0u, SVOLink.MAX_NODE_ALLOWED, 3)] uint nodeB,
-            [Random(0u, SVOLink.MAX_SUBNODE_ALLOWED, 3)] uint subnode
-        )
-        {
-            if (nodeA == nodeB)
-            {
-                return;
-            }
-
-            var linkA = new SVOLink(0, nodeA, subnode);
-            var linkB = new SVOLink(0, nodeB, subnode);
-
-            Assert.IsFalse(linkA.SameLeafNode(linkB));
-        }
-
-        [Test]
-        public void SameLeafNode_ReturnsFalse_ForNonLeafNode(
-            [Random(1u, SVOLink.MAX_LAYER_ALLOWED, 3)] uint layer,
-            [Random(0u, SVOLink.MAX_NODE_ALLOWED, 3)] uint node,
-            [Random(0u, SVOLink.MAX_SUBNODE_ALLOWED, 3)] uint subnode
-        )
-        {
-            var linkA = new SVOLink(layer, node, subnode);
-            var linkB = new SVOLink(layer, node, subnode);
-
-            Assert.IsFalse(linkA.SameLeafNode(linkB));
-        }
     }
 }

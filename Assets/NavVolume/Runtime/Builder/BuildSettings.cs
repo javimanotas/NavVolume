@@ -50,7 +50,6 @@ namespace NavVolume.Runtime.Builder
             Origin = center - Vector3.one * (rootSize / 2);
             RootSize = rootSize;
             NumLayers = numLayers;
-            VoxelSize = RootSize;
             CollisionMask = collisionMask;
 
             VoxelSize = RootSize;

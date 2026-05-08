@@ -663,11 +663,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: NavVolume.Runtime::NavVolume.Runtime.Pathfinding.SVONavigation
   _rootSize: 23.056223
-  _numLayers: 7
+  _numLayers: 6
   _collisionMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  _buildMode: 0
+  _buildMode: 1
   _bakedData: {fileID: 11400000, guid: 37224bdad0dd9eb41af705cdb5406a39, type: 2}
 --- !u!4 &1342004216
 Transform:

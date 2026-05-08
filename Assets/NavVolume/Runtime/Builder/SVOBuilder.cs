@@ -36,9 +36,15 @@ namespace NavVolume.Runtime.Builder
                 BuildUpperLayer(svo, layer);
             }
 
+            for (var layer = 1u; layer < svo.Layers.Length; layer++)
+            {
+                LinkParentAndChildren(svo, layer, layer - 1);
+            }
+
             SVONeighborLinker.FillNeighborLinks(svo, _settings);
 
-            return new(svo, _settings);
+            var navCtx = new NavContext(svo, _settings);
+            return navCtx;
         }
 
         #region Lower layers allocation
@@ -109,7 +115,6 @@ namespace NavVolume.Runtime.Builder
 
             AllocateMissingSiblings(svo, childLayer, parentCodes);
             AllocateParentNodes(svo, layer, parentCodes);
-            LinkParentAndChildren(svo, layer, childLayer);
         }
 
         SortedSet<MortonCode> CalculateParentCodes(SVO svo, uint childLayer)
@@ -178,6 +183,8 @@ namespace NavVolume.Runtime.Builder
             }
         }
 
+        #endregion
+
         void LinkParentAndChildren(SVO svo, uint layer, uint childLayer)
         {
             var sortedChildren = svo.Layers[childLayer];
@@ -195,12 +202,10 @@ namespace NavVolume.Runtime.Builder
                 var parentNode = svo.GetNode(parentLink);
                 if (!parentNode.HasChildren)
                 {
-                    parentNode.FirstChild = new(childLayer, (uint)childIdx);
+                    parentNode.FirstChild = SVOLink.NodeLink(childLayer, (uint)childIdx);
                     svo.SetNode(parentLink, parentNode);
                 }
             }
         }
-
-        #endregion
     }
 }
