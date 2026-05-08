@@ -117,7 +117,7 @@ namespace NavVolume.Runtime.Pathfinding
                     continue;
                 }
 
-                if (NeedsChildExpansion(navCtx.Svo, current.Link, neighbor))
+                if (NeedsChildExpansion(navCtx.Svo, neighbor))
                 {
                     ExpandChildren(
                         navCtx,
@@ -242,18 +242,14 @@ namespace NavVolume.Runtime.Pathfinding
         static int WrapVoxelCoord(int v) => (v + SVOLeaf.GRID_SIZE) % SVOLeaf.GRID_SIZE;
 
         /// <summary>
-        /// True when we are coming from a higher layer than the neighbor and it has children.
+        /// True when the neighbor is a node that contains geometry and must be expanded to find a safe path.
         /// </summary>
         /// <remarks>
         /// This prevents the search from treating a dense block as a single cheap hop.
         /// </remarks>
-        static bool NeedsChildExpansion(SVO svo, SVOLink from, SVOLink neighbor)
+        static bool NeedsChildExpansion(SVO svo, SVOLink neighbor)
         {
-            if (
-                from.IsNode(out var fromL)
-                && neighbor.IsNode(out var neighborL)
-                && fromL <= neighborL
-            )
+            if (!neighbor.IsNode(out _))
             {
                 return false;
             }
