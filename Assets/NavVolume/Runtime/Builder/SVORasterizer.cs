@@ -16,7 +16,7 @@ namespace NavVolume.Runtime.Builder
         /// <summary>
         /// Epsilon value used to avoid detecting overlaps on edges.
         /// </summary>
-        const float _OVERLAP_BOX_SHRINK = 1e-3f;
+        const float _OVERLAP_BOX_SHRINK = 0;
 
         /// <summary>
         /// Sweeps the navigation volume with layer 1 resolution while checking for geometry.
@@ -30,7 +30,7 @@ namespace NavVolume.Runtime.Builder
             var gridSize = Mathf.RoundToInt(settings.RootSize / gridResolution);
 
             var halfExtents =
-                Vector3.one * (gridResolution * 0.5f - _OVERLAP_BOX_SHRINK + settings.AgentRadius);
+                Vector3.one * (gridSize * 0.5f - _OVERLAP_BOX_SHRINK + settings.AgentRadius);
 
             // TODO: check if this can be optimized with a sortedset
             var occupied = new HashSet<MortonCode>();
