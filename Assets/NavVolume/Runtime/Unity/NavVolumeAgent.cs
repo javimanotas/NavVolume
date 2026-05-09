@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using NavVolume.Runtime;
 using NavVolume.Runtime.Pathfinding;
 using UnityEngine;
 
@@ -11,30 +12,30 @@ namespace NavVolume
     [DisallowMultipleComponent]
     public class NavVolumeAgent : MonoBehaviour
     {
-        [Tooltip("Navigation component to query.")]
-        [SerializeField]
-        // TODO: instead of assigning this in the inspector, we should find it at runtime.
-        // my current idea is to find which overlaps this agent's collider. if multiple overlap logwarning
-        NavVolumeSpace _navVolumeSpace;
+        [field: SerializeField]
+        [Tooltip("TODO: add this description")]
+        public AgentType AgentType { get; private set; }
 
-        [Tooltip("World units per second.")]
+        [Tooltip("Movement speed in world units per second.")]
         [SerializeField]
         float _speed = 1;
 
-        [Tooltip("How close the agent must get to a waypoint before advancing.")]
-        [SerializeField]
-        float _waypointTolerance = 0.1f;
-
-        [Tooltip("Heuristic weight. Greater values imply faster results but with worse quality.")]
-        [SerializeField]
-        [Range(1f, 5f)]
-        float _heuristicWeight = 1.5f;
-
-        [Tooltip("Maximum A* nodes expanded before giving up. 0 = unlimited.")]
-        [SerializeField]
-        int _maxNodesBudget = 100_000;
+        NavVolumeSpace _navVolumeSpace;
 
         List<Vector3> _waypoints = new();
+
+        void Start()
+        {
+            if (!NavVolumeSpace.FindBetterInstanceFor(this, out var navVolumeSpace))
+            {
+                Debug.LogError(
+                    "[NavVolume][NavVolumeAgent] No suitable NavVolumeSpace found for agent"
+                );
+                return;
+            }
+
+            _navVolumeSpace = navVolumeSpace;
+        }
 
         /// <summary>
         /// Request a path to a goal and begin flying.
@@ -52,8 +53,8 @@ namespace NavVolume
             var request = new PathRequest(
                 transform.position,
                 goal,
-                _heuristicWeight,
-                _maxNodesBudget
+                AgentType.HeuristicWeight,
+                AgentType.MaxNodesBudget
             );
 
             var result = _navVolumeSpace.FindPath(request);
@@ -82,7 +83,7 @@ namespace NavVolume
                 _speed * Time.deltaTime
             );
 
-            if (Vector3.Distance(transform.position, _waypoints[0]) < _waypointTolerance)
+            if (Vector3.Distance(transform.position, _waypoints[0]) < AgentType.WaypointTolerance)
             {
                 _waypoints.RemoveAt(0);
             }
