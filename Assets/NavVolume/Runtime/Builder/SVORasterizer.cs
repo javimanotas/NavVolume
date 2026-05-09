@@ -28,7 +28,9 @@ namespace NavVolume.Runtime.Builder
         {
             var gridResolution = settings.NodeSizeForLayer(1);
             var gridSize = Mathf.RoundToInt(settings.RootSize / gridResolution);
-            var halfExtents = Vector3.one * (gridResolution * 0.5f - _OVERLAP_BOX_SHRINK);
+
+            var halfExtents =
+                Vector3.one * (gridSize * 0.5f - _OVERLAP_BOX_SHRINK + settings.AgentRadius);
 
             // TODO: check if this can be optimized with a sortedset
             var occupied = new HashSet<MortonCode>();
@@ -74,7 +76,9 @@ namespace NavVolume.Runtime.Builder
         public static SVOLeaf RasterizeLeaf(BuildSettings settings, Vector3 leafOriginCornerPos)
         {
             var leaf = SVOLeaf.Empty;
-            var halfExt = Vector3.one * (settings.VoxelSize * 0.5f - _OVERLAP_BOX_SHRINK);
+            var halfExt =
+                Vector3.one
+                * (settings.VoxelSize * 0.5f - _OVERLAP_BOX_SHRINK + settings.AgentRadius);
 
             for (var i = 0; i < SVOLeaf.GRID_SIZE; i++)
             {

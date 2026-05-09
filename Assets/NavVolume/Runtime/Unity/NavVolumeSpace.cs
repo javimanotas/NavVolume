@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using NavVolume.Runtime;
 using NavVolume.Runtime.Builder;
 using NavVolume.Runtime.Core;
 using NavVolume.Runtime.Pathfinding;
@@ -13,7 +16,15 @@ namespace NavVolume
     [DisallowMultipleComponent]
     public class NavVolumeSpace : MonoBehaviour
     {
+        static readonly List<NavVolumeSpace> s_Instances = new();
+
         #region Unity inspector fields
+
+        [SerializeField]
+        int _priority;
+
+        [SerializeField]
+        AgentType _agentType;
 
         [SerializeField]
         [Tooltip("Side length of the cubic world volume (meters).")]
@@ -37,15 +48,19 @@ namespace NavVolume
 
         #endregion
 
-        internal BuildSettings CurrentSettings =>
-            new(transform.position, _rootSize, _numLayers, _collisionMask);
-
         NavContext _navCtx;
+
+        internal BuildSettings CurrentSettings =>
+            new(transform.position, _rootSize, _numLayers, _collisionMask, 0);
+
+        Bounds VolumeBounds => new(transform.position, Vector3.one * _rootSize);
 
         public bool IsReady => _navCtx.Svo != null;
 
         void Awake()
         {
+            s_Instances.Add(this);
+
             switch (_buildMode)
             {
                 case BuildMode.Baked:
@@ -59,6 +74,30 @@ namespace NavVolume
                 case BuildMode.Manual:
                     break;
             }
+        }
+
+        void OnDestroy()
+        {
+            s_Instances.Remove(this);
+        }
+
+        /// <summary>
+        /// Returns the active NavVolume instance that better suits the target agent.
+        /// </summary>
+        public static bool FindBetterInstanceFor(
+            NavVolumeAgent agent,
+            out NavVolumeSpace navVolumeSpace
+        )
+        {
+            navVolumeSpace = s_Instances
+                .Where(n =>
+                    n._agentType == agent.AgentType
+                    && n.VolumeBounds.Contains(agent.transform.position)
+                )
+                .OrderBy(n => n._priority)
+                .FirstOrDefault();
+
+            return navVolumeSpace != null;
         }
 
         void LoadBakedData()

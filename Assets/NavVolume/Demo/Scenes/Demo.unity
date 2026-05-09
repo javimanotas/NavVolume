@@ -615,11 +615,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce8062d65cf886f43804078b1581819e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NavVolume.Runtime::NavVolume.Runtime.Pathfinding.SVOFlightAgent
-  _navVolumeSpace: {fileID: 1342004215}
+  <AgentType>k__BackingField: {fileID: 11400000, guid: 51590df48e78f3c4e8cb574273fa89a9, type: 2}
   _speed: 1
-  _waypointTolerance: 0.1
-  _heuristicWeight: 1.5
-  _maxNodesBudget: 100000
 --- !u!114 &1092216701
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -662,6 +659,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d966747b1791e2e45a93abf430b86217, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NavVolume.Runtime::NavVolume.Runtime.Pathfinding.SVONavigation
+  _priority: 0
+  _agentType: {fileID: 11400000, guid: 51590df48e78f3c4e8cb574273fa89a9, type: 2}
   _rootSize: 23.056223
   _numLayers: 6
   _collisionMask:

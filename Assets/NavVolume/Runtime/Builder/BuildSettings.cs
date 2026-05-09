@@ -13,8 +13,6 @@ namespace NavVolume.Runtime.Builder
     [Serializable]
     internal struct BuildSettings
     {
-        // TODO: add settings for agent radius
-
         /// <summary>
         /// World-space minimum corner of the volume to cover.
         /// </summary>
@@ -45,12 +43,27 @@ namespace NavVolume.Runtime.Builder
         [field: SerializeField]
         public float VoxelSize { get; private set; }
 
-        public BuildSettings(Vector3 center, float rootSize, int numLayers, LayerMask collisionMask)
+        /// <summary>
+        /// Physical radius of the agent (meters).
+        /// <remarks>
+        /// Practical upper bound: keep AgentRadius <= VoxelSize / 2 to avoid fully blocking single-voxel-wide corridors.
+        /// </remarks>
+        [field: SerializeField]
+        public float AgentRadius { get; private set; }
+
+        public BuildSettings(
+            Vector3 center,
+            float rootSize,
+            int numLayers,
+            LayerMask collisionMask,
+            float agentRadius
+        )
         {
             Origin = center - Vector3.one * (rootSize / 2);
             RootSize = rootSize;
             NumLayers = numLayers;
             CollisionMask = collisionMask;
+            AgentRadius = agentRadius;
 
             VoxelSize = RootSize;
 
@@ -74,15 +87,15 @@ namespace NavVolume.Runtime.Builder
         #region Operators and overrides
 
         public static bool operator ==(BuildSettings lhs, BuildSettings rhs) =>
-            (lhs.Origin, lhs.RootSize, lhs.NumLayers, lhs.CollisionMask)
-            == (rhs.Origin, rhs.RootSize, rhs.NumLayers, rhs.CollisionMask);
+            (lhs.Origin, lhs.RootSize, lhs.NumLayers, lhs.CollisionMask, lhs.AgentRadius)
+            == (rhs.Origin, rhs.RootSize, rhs.NumLayers, rhs.CollisionMask, rhs.AgentRadius);
 
         public static bool operator !=(BuildSettings lhs, BuildSettings rhs) => !(lhs == rhs);
 
         public override readonly bool Equals(object obj) => this == (BuildSettings)obj;
 
         public override readonly int GetHashCode() =>
-            (Origin, RootSize, NumLayers, CollisionMask).GetHashCode();
+            (Origin, RootSize, NumLayers, CollisionMask, AgentRadius).GetHashCode();
 
         #endregion
     }
