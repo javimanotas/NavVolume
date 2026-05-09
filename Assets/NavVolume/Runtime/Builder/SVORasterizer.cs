@@ -16,7 +16,7 @@ namespace NavVolume.Runtime.Builder
         /// <summary>
         /// Epsilon value used to avoid detecting overlaps on edges.
         /// </summary>
-        const float _OVERLAP_BOX_SHRINK = 0;
+        const float _OVERLAP_BOX_SHRINK = 1e-3f;
 
         /// <summary>
         /// Sweeps the navigation volume with layer 1 resolution while checking for geometry.
