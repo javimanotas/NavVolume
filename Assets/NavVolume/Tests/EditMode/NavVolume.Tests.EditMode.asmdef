@@ -1,6 +1,6 @@
 {
-    "name": "NavVolume.Tests",
-    "rootNamespace": "NavVolume.Tests",
+    "name": "NavVolume.Tests.EditMode",
+    "rootNamespace": "NavVolume.Tests.EditMode",
     "references": [
         "NavVolume.Runtime",
         "UnityEngine.TestRunner",

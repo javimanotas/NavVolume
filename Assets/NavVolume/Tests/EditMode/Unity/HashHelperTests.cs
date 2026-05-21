@@ -1,7 +1,7 @@
 using System;
 using NUnit.Framework;
 
-namespace NavVolume.Tests.Unity
+namespace NavVolume.Tests.EditMode.Unity
 {
     public class HashHelperTests
     {

@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using UnityEngine;
 
-namespace NavVolume.Tests.Unity
+namespace NavVolume.Tests.EditMode.Unity
 {
     public class FNV1aTests
     {

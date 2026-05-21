@@ -2,7 +2,7 @@ using NavVolume.Runtime.Builder;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace NavVolume.Tests.Builder
+namespace NavVolume.Tests.EditMode.Builder
 {
     public class BuildSettingsTests
     {
