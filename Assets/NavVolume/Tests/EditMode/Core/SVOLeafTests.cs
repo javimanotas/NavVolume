@@ -1,7 +1,7 @@
 using NavVolume.Runtime.Core;
 using NUnit.Framework;
 
-namespace NavVolume.Tests.Core
+namespace NavVolume.Tests.EditMode.Core
 {
     public class SVOLeafTests
     {
