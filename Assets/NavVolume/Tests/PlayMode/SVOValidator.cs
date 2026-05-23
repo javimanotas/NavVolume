@@ -49,6 +49,8 @@ namespace NavVolume.Runtime.Validation
             var svo = ctx.Svo;
             var settings = ctx.BuildSettings;
 
+            errors.Add("intentional error to test validation");
+
             CheckTopLevelCounts(svo, settings, errors);
             CheckMortonIndexConsistency(svo, errors);
             CheckParentLinks(svo, errors);
