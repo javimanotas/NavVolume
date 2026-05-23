@@ -9,7 +9,7 @@ on:
 
 jobs:
   test:
-    name: Run EditMode Tests
+    name: Run EditMode + PlayMode Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -37,12 +37,12 @@ jobs:
         id: tests
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-          UNITY_EMAIL:   ${{ secrets.UNITY_EMAIL }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          testMode: editmode
+          testMode: all
           artifactsPath: test-results
-          coverageOptions: generateAdditionalMetrics
+          coverageOptions: generateAdditionalMetrics;generateTestReportBadge
 
       - name: Upload results
         uses: actions/upload-artifact@v4
