@@ -2,6 +2,7 @@
   <Project Path="NavVolume.Demo.csproj" />
   <Project Path="NavVolume.Tests.EditMode.csproj" />
   <Project Path="NavVolume.Runtime.csproj" />
+  <Project Path="NavVolume.Tests.PlayMode.csproj" />
   <Project Path="NavVolume.Editor.csproj" />
   <Project Path="Project.EditorPlugins.csproj" />
 </Solution>

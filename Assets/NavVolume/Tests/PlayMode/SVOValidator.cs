@@ -1,0 +1,531 @@
+﻿using System;
+using System.Collections.Generic;
+using NavVolume.Runtime.Builder;
+using NavVolume.Runtime.Core;
+using UnityEngine;
+
+namespace NavVolume.Runtime.Validation
+{
+    /// <summary>
+    /// Static inspection utility that validates a fully built <see cref="NavContext"/>.
+    /// </summary>
+    internal static class SVOValidator
+    {
+        #region Helpers
+
+        static readonly NeighborDirection[] AllDirections = (NeighborDirection[])
+            Enum.GetValues(typeof(NeighborDirection));
+
+        static readonly NeighborDirection[] OppositeDirection =
+        {
+            NeighborDirection.NegX,
+            NeighborDirection.PosX,
+            NeighborDirection.NegY,
+            NeighborDirection.PosY,
+            NeighborDirection.NegZ,
+            NeighborDirection.PosZ,
+        };
+
+        static bool BoundsAreAdjacent(Bounds a, Bounds b)
+        {
+            const float EPSILON = 1e-3f;
+
+            var gap = Vector3.Max(
+                a.min - b.max - Vector3.one * EPSILON,
+                b.min - a.max - Vector3.one * EPSILON
+            );
+
+            return Mathf.Max(gap.x, Mathf.Max(gap.y, gap.z)) <= 0f;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Runs all validation passes over <paramref name="ctx"/> and returns if there are no errors.
+        /// </summary>
+        public static bool IsValid(NavContext ctx, out List<string> errors)
+        {
+            errors = new List<string>();
+            var svo = ctx.Svo;
+            var settings = ctx.BuildSettings;
+
+            CheckTopLevelCounts(svo, settings, errors);
+            CheckMortonIndexConsistency(svo, errors);
+            CheckParentLinks(svo, errors);
+            CheckChildLinks(svo, errors);
+            CheckSiblingInvariant(svo, errors);
+            CheckNeighborLinks(ctx, errors);
+
+            return errors.Count == 0;
+        }
+
+        /// <summary>
+        /// Checks that:
+        /// <list type="bullet">
+        ///     <item> Layer array length matches the intended settings depth. </item>
+        ///     <item> MortonToIndex exists for every layer. </item>
+        ///     <item> LeafNodes must match the number of layer-0 nodes. </item>
+        /// </list>
+        /// </summary>
+        static void CheckTopLevelCounts(SVO svo, BuildSettings settings, List<string> report)
+        {
+            // Layer array length matches the intended settings depth.
+            if (svo.Layers.Length != settings.NumLayers)
+            {
+                report.Add(
+                    $"Layer count mismatch: SVO has {svo.Layers.Length} layer(s) "
+                        + $"but BuildSettings.NumLayers = {settings.NumLayers}."
+                );
+            }
+
+            // MortonToIndex exists for every layer.
+            if (svo.MortonToIndex.Length != svo.Layers.Length)
+            {
+                report.Add(
+                    $"MortonToIndex has {svo.MortonToIndex.Length} element(s) "
+                        + $"but there are {svo.Layers.Length} layer(s)."
+                );
+            }
+
+            // LeafNodes must match the number of layer-0 nodes.
+            if (svo.Layers.Length > 0 && svo.LeafNodes.Length != svo.Layers[0].Count)
+            {
+                report.Add(
+                    $"LeafNodes.Length = {svo.LeafNodes.Length} "
+                        + $"but Layer 0 has {svo.Layers[0].Count} node(s). They must match 1-to-1."
+                );
+            }
+        }
+
+        /// <summary>
+        /// For every layer, checks that:
+        /// <list type="bullet">
+        ///     <item> The dictionary and the layer list have the same number of entries. </item>
+        ///     <item> No two nodes in the same layer share a MortonCode. </item>
+        ///     <item> Every node's MortonCode maps to its correct list index. </item>
+        ///     <item> Every dictionary entry is valid list index. </item>
+        /// </list>
+        /// </summary>
+        static void CheckMortonIndexConsistency(SVO svo, List<string> report)
+        {
+            for (var layerIdx = 0; layerIdx < svo.Layers.Length; layerIdx++)
+            {
+                var layer = svo.Layers[layerIdx];
+                var mortonToIdx = svo.MortonToIndex[layerIdx];
+                var prefix = $"Layer {layerIdx}";
+
+                // The dictionary and the layer list have the same number of entries.
+                if (mortonToIdx.Count != layer.Count)
+                {
+                    report.Add(
+                        $"{prefix}: Dictionary has {mortonToIdx.Count} entry/entries "
+                            + $"but layer has {layer.Count} node(s)."
+                    );
+                }
+
+                var seenCodes = new HashSet<MortonCode>();
+
+                for (var nodeIdx = 0; nodeIdx < layer.Count; nodeIdx++)
+                {
+                    var code = layer[nodeIdx].MortonCode;
+
+                    // No two nodes in the same layer share a MortonCode.
+                    if (!seenCodes.Add(code))
+                    {
+                        report.Add(
+                            $"{prefix}, node {nodeIdx}: Duplicate MortonCode 0x{(uint)code:X8}."
+                        );
+                        continue;
+                    }
+
+                    // Every node's MortonCode maps to its correct list index.
+                    if (!mortonToIdx.TryGetValue(code, out var mappedIdx))
+                    {
+                        report.Add(
+                            $"{prefix}, node {nodeIdx}: MortonCode 0x{(uint)code:X8} is absent from the index dictionary."
+                        );
+                    }
+                    else if (mappedIdx != nodeIdx)
+                    {
+                        report.Add(
+                            $"{prefix}, node {nodeIdx}: Index dictionary maps MortonCode 0x{(uint)code:X8} "
+                                + $"to index {mappedIdx}, expected {nodeIdx}."
+                        );
+                    }
+                }
+
+                // Every dictionary entry is valid list index.
+                foreach (var (code, idx) in mortonToIdx)
+                {
+                    if (idx >= layer.Count)
+                    {
+                        report.Add(
+                            $"{prefix}: Dictionary entry for MortonCode 0x{(uint)code:X8} "
+                                + $"maps to out-of-range index {idx} (layer count = {layer.Count})."
+                        );
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// For every node in every layer, checks that:
+        /// <list type="bullet">
+        ///     <item> Root nodes have invalid parent links. </item>
+        ///     <item> Non-root nodes have valid parent links pointing to the next coarser layer. </item>
+        ///     <item> Parent's 8 child range contains this node. </item>
+        /// </list>
+        /// </summary>
+        static void CheckParentLinks(SVO svo, List<string> report)
+        {
+            var numLayers = svo.Layers.Length;
+            var coarsestLayer = numLayers - 1;
+
+            for (var layerIdx = 0; layerIdx < numLayers; layerIdx++)
+            {
+                var layer = svo.Layers[layerIdx];
+                var isRoot = layerIdx == coarsestLayer;
+                var prefix = $"Layer {layerIdx}";
+
+                for (var nodeIdx = 0; nodeIdx < layer.Count; nodeIdx++)
+                {
+                    var node = layer[nodeIdx];
+                    var nodePfx = $"{prefix}, node {nodeIdx} (Morton 0x{(uint)node.MortonCode:X8})";
+
+                    if (isRoot)
+                    {
+                        // Root nodes have invalid parent links.
+                        if (node.Parent.IsValid)
+                        {
+                            report.Add(
+                                $"{nodePfx}: Root node has a non-invalid Parent link (0x{(uint)node.Parent:X8})."
+                            );
+                        }
+                    }
+                    else
+                    {
+                        // Non-root nodes have valid parent links pointing to the next coarser layer.
+                        #region Check
+
+                        if (!node.Parent.IsValid)
+                        {
+                            report.Add($"{nodePfx}: Non-root node has an invalid Parent link.");
+                            return;
+                        }
+
+                        if (!node.Parent.IsNode(out var parentLayerIdx))
+                        {
+                            report.Add(
+                                $"{nodePfx}: Parent link is a voxel link, expected a node link."
+                            );
+                            return;
+                        }
+
+                        var expectedParentLayer = (uint)(layerIdx + 1);
+
+                        if (parentLayerIdx != expectedParentLayer)
+                        {
+                            report.Add(
+                                $"{nodePfx}: Parent link targets layer {parentLayerIdx}, "
+                                    + $"expected layer {expectedParentLayer}."
+                            );
+                        }
+
+                        #endregion
+
+                        var parentOffset = (int)node.Parent.Offset;
+                        var parentLayer = svo.Layers[parentLayerIdx];
+                        var parent = parentLayer[parentOffset];
+                        var parentFirstOffset = parent.FirstChild.IsValid
+                            ? (int)parent.FirstChild.Offset
+                            : -1;
+
+                        // Parent's 8 child range contains this node.
+                        if (
+                            parentFirstOffset < 0
+                            || nodeIdx < parentFirstOffset
+                            || nodeIdx >= parentFirstOffset + 8
+                        )
+                        {
+                            report.Add(
+                                $"{nodePfx}: Node index {nodeIdx} is outside parent's child range "
+                                    + $"[{parentFirstOffset}, {parentFirstOffset + 7}]."
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// For every non leaf node with children in every layer, checks that:
+        /// <list type="bullet">
+        ///     <item> Child links point to the next coarser layer. </item>
+        ///     <item> All 8 child offsets must be in range. </item>
+        ///     <item> Each child's Parent link points back to the correct parent node. </item>
+        ///     <item> Each child's MortonCode matches the expected ChildCode of the parent. </item>
+        /// </list>
+        /// </summary>
+        static void CheckChildLinks(SVO svo, List<string> report)
+        {
+            var numLayers = svo.Layers.Length;
+
+            for (var layerIdx = 0; layerIdx < numLayers; layerIdx++)
+            {
+                var layer = svo.Layers[layerIdx];
+                var isLeaf = layerIdx == 0;
+                var prefix = $"Layer {layerIdx}";
+
+                for (var nodeIdx = 0; nodeIdx < layer.Count; nodeIdx++)
+                {
+                    var node = layer[nodeIdx];
+                    var selfLink = SVOLink.NodeLink((uint)layerIdx, (uint)nodeIdx);
+                    var nodePfx = $"{prefix}, node {nodeIdx} (Morton 0x{(uint)node.MortonCode:X8})";
+
+                    if (isLeaf || !node.FirstChild.IsValid)
+                    {
+                        continue;
+                    }
+
+                    node.FirstChild.IsNode(out var childLayerIdx);
+
+                    var expectedChildLayer = (uint)(layerIdx - 1);
+
+                    // Child links point to the next coarser layer.
+                    if (childLayerIdx != expectedChildLayer)
+                    {
+                        report.Add(
+                            $"{nodePfx}: FirstChild targets layer {childLayerIdx}, "
+                                + $"expected layer {expectedChildLayer}."
+                        );
+                    }
+
+                    var childLayer = svo.Layers[childLayerIdx];
+                    var firstChildOff = (int)node.FirstChild.Offset;
+                    var lastChildOff = firstChildOff + 7;
+
+                    // All 8 child offsets must be in range.
+                    if (lastChildOff >= childLayer.Count)
+                    {
+                        report.Add(
+                            $"{nodePfx}: Child range [{firstChildOff}, {lastChildOff}] "
+                                + $"exceeds layer {childLayerIdx} count ({childLayer.Count}). "
+                                + "Node does not have 8 valid children."
+                        );
+                        continue;
+                    }
+
+                    for (var slot = 0; slot < 8; slot++)
+                    {
+                        var childIdx = firstChildOff + slot;
+                        var child = childLayer[childIdx];
+                        var childPfx = $"Layer {childLayerIdx}, node {childIdx} (slot {slot})";
+
+                        // Each child's Parent link points back to the correct parent node.
+                        if (child.Parent != selfLink)
+                        {
+                            report.Add(
+                                $"{childPfx}: Parent back-link (0x{(uint)child.Parent:X8}) "
+                                    + $"does not point to expected parent (0x{(uint)selfLink:X8})."
+                            );
+                        }
+
+                        // Each child's MortonCode matches the expected ChildCode of the parent.
+                        var expectedCode = node.MortonCode.ChildCode((uint)slot);
+
+                        if (child.MortonCode != expectedCode)
+                        {
+                            report.Add(
+                                $"{childPfx}: MortonCode 0x{(uint)child.MortonCode:X8} "
+                                    + $"does not match expected ChildCode(slot {slot}) = 0x{(uint)expectedCode:X8} "
+                                    + $"of parent Morton 0x{(uint)node.MortonCode:X8}."
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// For every sibling group (8 children under the same parent):
+        /// <list type="bullet">
+        ///     <item> At least one sibling must carry geometry. </item>
+        /// </list>
+        /// </summary>
+        static void CheckSiblingInvariant(SVO svo, List<string> report)
+        {
+            var checkedGroups = new HashSet<uint>();
+
+            for (var layerIdx = 0; layerIdx < svo.Layers.Length; layerIdx++)
+            {
+                var layer = svo.Layers[layerIdx];
+
+                for (var nodeIdx = 0; nodeIdx < layer.Count; nodeIdx++)
+                {
+                    var node = layer[nodeIdx];
+
+                    if (!node.Parent.IsValid || !checkedGroups.Add((uint)node.Parent))
+                    {
+                        continue;
+                    }
+
+                    var parentLayerIdx = layerIdx + 1;
+                    var parentOffset = (int)node.Parent.Offset;
+                    var parent = svo.Layers[parentLayerIdx][parentOffset];
+
+                    var firstSiblingOffset = (int)parent.FirstChild.Offset;
+                    var siblingLayer = svo.Layers[layerIdx];
+                    var isSiblingLeaf = layerIdx == 0;
+
+                    var anyWithGeometry = false;
+
+                    for (var slot = 0; slot < 8; slot++)
+                    {
+                        var sibIdx = firstSiblingOffset + slot;
+                        var sibling = siblingLayer[sibIdx];
+
+                        if (isSiblingLeaf ? !svo.LeafNodes[sibIdx].IsEmpty : sibling.HasChildren)
+                        {
+                            anyWithGeometry = true;
+                            break;
+                        }
+                    }
+
+                    // At least one sibling must carry geometry.
+                    if (!anyWithGeometry)
+                    {
+                        report.Add(
+                            $"Sibling group under parent (Layer {parentLayerIdx}, "
+                                + $"node {parentOffset}, Morton 0x{(uint)parent.MortonCode:X8}): "
+                                + "None of the 8 siblings contains geometry. "
+                                + "The parent should not exist if no child is solid."
+                        );
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// For every node, checks each of the six face-neighbor links:
+        /// <list type="bullet">
+        ///     <item> There cant be unliked direct neighbors. </item>
+        ///     <item> Must be a node link, not a voxel link. </item>
+        ///     <item> Neighbor must not link to itself. </item>
+        ///     <item> If points to same layer, the neighbor's back-link must point exactly back to this node. </item>
+        ///     <item> If points to different layer, the bounding box should be adjacent or overlapping. </item>
+        /// </list>
+        /// </summary>
+        static void CheckNeighborLinks(NavContext ctx, List<string> report)
+        {
+            var svo = ctx.Svo;
+            var settings = ctx.BuildSettings;
+
+            var numLayers = svo.Layers.Length;
+
+            for (var layerIdx = 0; layerIdx < numLayers; layerIdx++)
+            {
+                var layer = svo.Layers[layerIdx];
+                var nodeSize = settings.NodeSizeForLayer(layerIdx);
+                var gridRes = Mathf.RoundToInt(settings.RootSize / nodeSize);
+                var prefix = $"Layer {layerIdx}";
+
+                for (var nodeIdx = 0; nodeIdx < layer.Count; nodeIdx++)
+                {
+                    var node = layer[nodeIdx];
+                    var selfLink = SVOLink.NodeLink((uint)layerIdx, (uint)nodeIdx);
+                    var nodePfx = $"{prefix}, node {nodeIdx} (Morton 0x{(uint)node.MortonCode:X8})";
+
+                    foreach (var dir in AllDirections)
+                    {
+                        var neighborLink = node.Neighbors[dir];
+                        var opp = OppositeDirection[(int)dir];
+
+                        var hasAdjacentCode = node.MortonCode.TryGetNeighborCode(
+                            dir,
+                            gridRes,
+                            out var adjCode
+                        );
+
+                        if (!neighborLink.IsValid)
+                        {
+                            if (!hasAdjacentCode)
+                            {
+                                continue;
+                            }
+
+                            // There cant be unliked direct neighbors.
+                            if (svo.MortonToIndex[layerIdx].ContainsKey(adjCode))
+                            {
+                                report.Add(
+                                    $"{nodePfx}, dir {dir}: Neighbor link is invalid but an adjacent "
+                                        + $"same-layer node (Morton 0x{(uint)adjCode:X8}) exists. "
+                                        + "This may indicate a missing link (cross-layer linking is legal, "
+                                        + "but investigate if pathfinding produces unexpected gaps)."
+                                );
+                            }
+
+                            continue;
+                        }
+
+                        // Must be a node link, not a voxel link.
+                        if (!neighborLink.IsNode(out var neighborLayerIdx))
+                        {
+                            report.Add(
+                                $"{nodePfx}, dir {dir}: Neighbor link is a voxel link, expected a node link."
+                            );
+                            continue;
+                        }
+
+                        var neighborOffset = (int)neighborLink.Offset;
+                        var neighborLayer = svo.Layers[neighborLayerIdx];
+
+                        // Neighbor must not link to itself.
+                        if (neighborLink == selfLink)
+                        {
+                            report.Add(
+                                $"{nodePfx}, dir {dir}: Neighbor link points to the node itself (self-loop)."
+                            );
+                            continue;
+                        }
+
+                        var neighbor = neighborLayer[neighborOffset];
+                        var backLink = neighbor.Neighbors[opp];
+                        var isSameLayer = neighborLayerIdx == (uint)layerIdx;
+
+                        if (isSameLayer)
+                        {
+                            // The neighbor's back-link must point exactly back to this node.
+                            if (backLink != selfLink)
+                            {
+                                report.Add(
+                                    $"{nodePfx}, dir {dir}: Same-layer neighbor "
+                                        + $"(node {neighborOffset}) back-link in direction {opp} "
+                                        + $"is 0x{(uint)backLink:X8}, expected 0x{(uint)selfLink:X8}."
+                                );
+                            }
+                        }
+                        else
+                        {
+                            var thisBounds = ctx.NodeBounds(layerIdx, node.MortonCode);
+                            var neighborBounds = ctx.NodeBounds(
+                                (int)neighborLayerIdx,
+                                neighbor.MortonCode
+                            );
+
+                            // The bounding box should be adjacent or overlapping.
+                            if (!BoundsAreAdjacent(thisBounds, neighborBounds))
+                            {
+                                report.Add(
+                                    $"{nodePfx}, dir {dir}: Cross-layer neighbor "
+                                        + $"(Layer {neighborLayerIdx}, node {neighborOffset}, "
+                                        + $"Morton 0x{(uint)neighbor.MortonCode:X8}) bounding boxes "
+                                        + "are not adjacent or overlapping. This is a dangling reference."
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

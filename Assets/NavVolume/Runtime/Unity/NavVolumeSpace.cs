@@ -48,14 +48,14 @@ namespace NavVolume
 
         #endregion
 
-        NavContext _navCtx;
+        internal NavContext NavCtx;
 
         internal BuildSettings CurrentSettings =>
             new(transform.position, _rootSize, _numLayers, _collisionMask, 0);
 
         Bounds VolumeBounds => new(transform.position, Vector3.one * _rootSize);
 
-        public bool IsReady => _navCtx.Svo != null;
+        public bool IsReady => NavCtx.Svo != null;
 
         void Awake()
         {
@@ -128,7 +128,7 @@ namespace NavVolume
                     );
                 }
 
-                _navCtx = _bakedData.RetrieveBakedData();
+                NavCtx = _bakedData.RetrieveBakedData();
 
                 Debug.Log(
                     $"[NavVolume][NavVolumeSpace] Baked data retrieved in {stopwatch.ElapsedMilliseconds} ms."
@@ -144,11 +144,11 @@ namespace NavVolume
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
             var builder = new SVOBuilder(CurrentSettings);
-            _navCtx = builder.Build();
+            NavCtx = builder.Build();
 
             Debug.Log(
-                $"[NavVolume][NavVolumeSpace] NavVolume built in {stopwatch.ElapsedMilliseconds} ms\n."
-                    + $"Stats: {new SVOStats(_navCtx.Svo)}"
+                $"[NavVolume][NavVolumeSpace] NavVolume built in {stopwatch.ElapsedMilliseconds} ms.\n"
+                    + $"Stats: {new SVOStats(NavCtx.Svo)}"
             );
         }
 
@@ -162,14 +162,14 @@ namespace NavVolume
                 return PathResult.Failure(PathResultStatus.NoTree);
             }
 
-            var raw = new SVOPathfinder().FindPath(_navCtx, request);
+            var raw = new SVOPathfinder().FindPath(NavCtx, request);
 
             if (!raw.Succeeded)
             {
                 return raw;
             }
 
-            var waypoints = PathSmoother.GreedyShortcut(raw.Waypoints, in _navCtx);
+            var waypoints = PathSmoother.GreedyShortcut(raw.Waypoints, in NavCtx);
             waypoints = PathSmoother.CatmullRomSpline(waypoints);
 
             return PathResult.Success(waypoints);
