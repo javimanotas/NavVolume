@@ -42,7 +42,6 @@ jobs:
         with:
           testMode: all
           artifactsPath: test-results
-          customImage: unityci/editor:ubuntu-6000.3.11f1-linux-mono-3
           coverageOptions: generateAdditionalMetrics;generateTestReportBadge
 
       - name: Upload results
