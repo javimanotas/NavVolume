@@ -8,13 +8,18 @@ namespace NavVolume.Runtime.Pathfinding
     /// </summary>
     internal readonly struct PathResult
     {
-        public static PathResult Success(List<Vector3> waypoints) => new(waypoints);
+        public static PathResult Success(List<Vector3> waypoints) => new(waypoints, null);
+
+        public static PathResult Success(List<Vector3> waypoints, List<Vector3> rawWaypoints) =>
+            new(waypoints, rawWaypoints);
 
         public static PathResult Failure(PathResultStatus status) => new(status);
 
         public readonly PathResultStatus Status;
 
         public readonly List<Vector3> Waypoints;
+
+        public readonly List<Vector3> RawWaypoints;
 
         public bool Succeeded => Status == PathResultStatus.Sucess;
 
@@ -24,12 +29,14 @@ namespace NavVolume.Runtime.Pathfinding
         {
             Status = rawStatus;
             Waypoints = null;
+            RawWaypoints = null;
         }
 
-        PathResult(List<Vector3> rawWaypoints)
+        PathResult(List<Vector3> waypoints, List<Vector3> rawWaypoints)
         {
             Status = PathResultStatus.Sucess;
-            Waypoints = rawWaypoints;
+            Waypoints = waypoints;
+            RawWaypoints = rawWaypoints;
         }
     }
 }

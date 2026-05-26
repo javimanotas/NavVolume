@@ -22,7 +22,19 @@ namespace NavVolume
 
         NavVolumeSpace _navVolumeSpace;
 
-        List<Vector3> _waypoints = new();
+        List<Vector3> _smoothedWaypoints = new();
+
+        List<Vector3> _rawWaypoints = new();
+
+        int _currentWaypointIndex;
+
+        internal IReadOnlyList<Vector3> SmoothedWaypoints => _smoothedWaypoints;
+
+        internal IReadOnlyList<Vector3> RawWaypoints => _rawWaypoints;
+
+        internal int CurrentWaypointIndex => _currentWaypointIndex;
+
+        internal bool HasActivePath => _currentWaypointIndex < _smoothedWaypoints.Count;
 
         void Start()
         {
@@ -64,12 +76,14 @@ namespace NavVolume
                 return;
             }
 
-            _waypoints = result.Waypoints;
+            _smoothedWaypoints = result.Waypoints;
+            _rawWaypoints = result.RawWaypoints ?? new List<Vector3>();
+            _currentWaypointIndex = 0;
         }
 
         void Update()
         {
-            if (_waypoints.Count == 0)
+            if (!HasActivePath)
             {
                 return;
             }
@@ -77,15 +91,17 @@ namespace NavVolume
             // TODO: add rotation
             // TODO: consider using physics optional (check how unity navmesh works)
 
+            var target = _smoothedWaypoints[_currentWaypointIndex];
+
             transform.position = Vector3.MoveTowards(
                 transform.position,
-                _waypoints[0],
+                target,
                 _speed * Time.deltaTime
             );
 
-            if (Vector3.Distance(transform.position, _waypoints[0]) < AgentType.WaypointTolerance)
+            if (Vector3.Distance(transform.position, target) < AgentType.WaypointTolerance)
             {
-                _waypoints.RemoveAt(0);
+                _currentWaypointIndex++;
             }
         }
     }

@@ -50,6 +50,10 @@ namespace NavVolume
 
         internal NavContext NavCtx;
 
+        internal NavVolumeBakedData BakedData => _bakedData;
+
+        internal BuildMode BuildMode => _buildMode;
+
         internal BuildSettings CurrentSettings =>
             new(transform.position, _rootSize, _numLayers, _collisionMask, 0);
 
@@ -169,10 +173,11 @@ namespace NavVolume
                 return raw;
             }
 
-            var waypoints = PathSmoother.GreedyShortcut(raw.Waypoints, in NavCtx);
-            waypoints = PathSmoother.CatmullRomSpline(waypoints);
+            var rawWaypoints = raw.Waypoints;
+            var shortcut = PathSmoother.GreedyShortcut(rawWaypoints, in NavCtx);
+            var smoothed = PathSmoother.CatmullRomSpline(shortcut);
 
-            return PathResult.Success(waypoints);
+            return PathResult.Success(smoothed, rawWaypoints);
         }
     }
 }
