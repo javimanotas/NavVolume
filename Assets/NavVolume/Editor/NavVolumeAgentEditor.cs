@@ -21,7 +21,7 @@ namespace NavVolume.Editor
         const float _RAW_SPHERE_RADIUS = 0.18f;
         const float _TARGET_SPHERE_RADIUS = 0.28f;
 
-        [DrawGizmo(GizmoType.Selected | GizmoType.InSelectionHierarchy)]
+        [DrawGizmo(GizmoType.NonSelected | GizmoType.Selected)]
         static void DrawPathGizmo(NavVolumeAgent agent, GizmoType _)
         {
             DrawWaypoints(agent.RawWaypoints, s_RawColor, _RAW_SPHERE_RADIUS, wireSphere: true);
