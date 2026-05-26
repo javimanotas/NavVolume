@@ -42,7 +42,6 @@ jobs:
         with:
           testMode: all
           artifactsPath: test-results
-          customParameters: -nographics
           coverageOptions: generateAdditionalMetrics;generateTestReportBadge
 
       - name: Upload results
