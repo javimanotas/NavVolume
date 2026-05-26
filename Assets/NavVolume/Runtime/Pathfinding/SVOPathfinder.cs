@@ -296,6 +296,19 @@ namespace NavVolume.Runtime.Pathfinding
                     continue;
                 }
 
+                if (NeedsChildExpansion(navCtx.Svo, childLink))
+                {
+                    ExpandChildren(
+                        navCtx,
+                        childLink,
+                        incomingLink,
+                        goalCenter,
+                        incomingGCost,
+                        request
+                    );
+                    continue;
+                }
+
                 var newG = incomingGCost + SVOHeuristic.UnitCost();
 
                 if (_gCost.TryGetValue(childLink, out var existingG) && newG >= existingG)
@@ -338,23 +351,25 @@ namespace NavVolume.Runtime.Pathfinding
 
         static bool IsBlocked(SVO svo, SVOLink link)
         {
-            if (link.IsNode(out var layer) && layer > 0)
+            if (link.IsNode(out var layer))
             {
-                return false;
+                if (layer > 0)
+                {
+                    return false;
+                }
+
+                // Layer-0 NODE link: only fully empty leaves are safe to use
+                // as a single waypoint. The node center of a partial leaf sits
+                // on the inner-octant boundary of the 4x4x4 voxel grid and may
+                // land inside an occupied subnode, so partial (and full)
+                // leaves must be entered via voxel links instead. The
+                // cross-leaf voxel transitions in TryAddVoxelNeighbor already
+                // produce the correct voxel entry links, so the search can
+                // still reach those cells.
+                return !svo.LeafNodes[link.Offset].IsEmpty;
             }
 
             var leaf = svo.LeafNodes[link.Offset];
-
-            if (leaf.IsEmpty)
-            {
-                return false;
-            }
-
-            if (leaf.IsFull)
-            {
-                return true;
-            }
-
             link.IsVoxel(out var subnodeIdx);
             return leaf.IsOccupied((int)subnodeIdx);
         }
