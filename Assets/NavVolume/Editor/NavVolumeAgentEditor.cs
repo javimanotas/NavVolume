@@ -21,6 +21,71 @@ namespace NavVolume.Editor
         const float _RAW_SPHERE_RADIUS = 0.18f;
         const float _TARGET_SPHERE_RADIUS = 0.28f;
 
+        static readonly string[] s_FreezeRotationFields =
+        {
+            "_freezeRotationX",
+            "_freezeRotationY",
+            "_freezeRotationZ",
+        };
+
+        static readonly string[] s_HiddenProperties =
+        {
+            "m_Script",
+            "_freezeRotationX",
+            "_freezeRotationY",
+            "_freezeRotationZ",
+        };
+
+        static readonly GUIContent[] s_AxisLabels = { new("X"), new("Y"), new("Z") };
+
+        static readonly GUIContent s_FreezeRotationLabel = new(
+            "Freeze Rotation",
+            "Locks rotation around the selected world axes. Locked axes stay at the agent's initial rotation."
+        );
+
+        public override void OnInspectorGUI()
+        {
+            serializedObject.Update();
+
+            DrawPropertiesExcluding(serializedObject, s_HiddenProperties);
+            DrawFreezeRotationRow();
+
+            serializedObject.ApplyModifiedProperties();
+        }
+
+        void DrawFreezeRotationRow()
+        {
+            var x = serializedObject.FindProperty(s_FreezeRotationFields[0]);
+            var y = serializedObject.FindProperty(s_FreezeRotationFields[1]);
+            var z = serializedObject.FindProperty(s_FreezeRotationFields[2]);
+
+            var props = new[] { x, y, z };
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Label(
+                    s_FreezeRotationLabel,
+                    GUILayout.Width(EditorGUIUtility.labelWidth)
+                );
+
+                var toggleWidth = GUILayout.Width(30f);
+                var labelWidth = GUILayout.Width(15f);
+
+                for (var i = 0; i < props.Length; i++)
+                {
+                    GUILayout.Label(s_AxisLabels[i], labelWidth);
+                    EditorGUI.BeginChangeCheck();
+                    var value = EditorGUILayout.Toggle(props[i].boolValue, toggleWidth);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        props[i].boolValue = value;
+                    }
+                }
+
+                GUILayout.FlexibleSpace();
+            }
+        }
+
         [DrawGizmo(GizmoType.NonSelected | GizmoType.Selected)]
         static void DrawPathGizmo(NavVolumeAgent agent, GizmoType _)
         {
