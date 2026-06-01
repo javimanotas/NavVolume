@@ -20,6 +20,23 @@ namespace NavVolume
         [SerializeField]
         float _speed = 1;
 
+        [Tooltip(
+            "Maximum rotation speed in degrees per second when turning to face the movement direction."
+        )]
+        [SerializeField]
+        float _angularSpeed = 360f;
+
+        [SerializeField]
+        internal bool _freezeRotationX;
+
+        [SerializeField]
+        internal bool _freezeRotationY;
+
+        [SerializeField]
+        internal bool _freezeRotationZ;
+
+        Vector3 _initialEuler;
+
         NavVolumeSpace _navVolumeSpace;
 
         List<Vector3> _smoothedWaypoints = new();
@@ -38,6 +55,8 @@ namespace NavVolume
 
         void Start()
         {
+            _initialEuler = transform.rotation.eulerAngles;
+
             if (!NavVolumeSpace.FindBetterInstanceFor(this, out var navVolumeSpace))
             {
                 Debug.LogError(
@@ -88,10 +107,10 @@ namespace NavVolume
                 return;
             }
 
-            // TODO: add rotation
-            // TODO: consider using physics optional (check how unity navmesh works)
-
             var target = _smoothedWaypoints[_currentWaypointIndex];
+            var toTarget = target - transform.position;
+
+            UpdateRotation(toTarget);
 
             transform.position = Vector3.MoveTowards(
                 transform.position,
@@ -103,6 +122,34 @@ namespace NavVolume
             {
                 _currentWaypointIndex++;
             }
+        }
+
+        void UpdateRotation(Vector3 direction)
+        {
+            if (direction.sqrMagnitude < 1e-6f)
+            {
+                return;
+            }
+
+            var desired = Quaternion.LookRotation(direction, Vector3.up);
+
+            if (_freezeRotationX || _freezeRotationY || _freezeRotationZ)
+            {
+                var e = desired.eulerAngles;
+                if (_freezeRotationX)
+                    e.x = _initialEuler.x;
+                if (_freezeRotationY)
+                    e.y = _initialEuler.y;
+                if (_freezeRotationZ)
+                    e.z = _initialEuler.z;
+                desired = Quaternion.Euler(e);
+            }
+
+            transform.rotation = Quaternion.RotateTowards(
+                transform.rotation,
+                desired,
+                _angularSpeed * Time.deltaTime
+            );
         }
     }
 }

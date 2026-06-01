@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Data;
 using NavVolume.Runtime.Builder;
 using NavVolume.Runtime.Core;
 using UnityEditor;
@@ -432,7 +431,6 @@ namespace NavVolume.Editor
 
         static string LayerName(int chartIndex, int total)
         {
-            // NodesPerLayer is ordered root → ... → layer 0 → leaves.
             if (chartIndex == 0)
             {
                 return "root";
