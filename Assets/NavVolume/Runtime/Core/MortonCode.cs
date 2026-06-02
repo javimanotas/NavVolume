@@ -52,12 +52,6 @@ namespace NavVolume.Runtime.Core
 
         public MortonCode(uint x, uint y, uint z)
         {
-#if UNITY_ASSERTIONS
-            const int TEN_BITS = 0b1111111111;
-            Assert.AreEqual(x & TEN_BITS, x, $"X: {x} is out of range. Max allowed is {TEN_BITS}.");
-            Assert.AreEqual(y & TEN_BITS, y, $"Y: {y} is out of range. Max allowed is {TEN_BITS}.");
-            Assert.AreEqual(z & TEN_BITS, z, $"Z: {z} is out of range. Max allowed is {TEN_BITS}.");
-#endif
             _code = Interleave00(x) | (Interleave00(y) << 1) | (Interleave00(z) << 2);
         }
 

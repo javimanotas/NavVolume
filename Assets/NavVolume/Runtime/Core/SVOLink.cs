@@ -52,38 +52,14 @@ namespace NavVolume.Runtime.Core
         /// <summary>
         /// Creates a link to a node in the SVO with the given layer and offset on the layer.
         /// </summary>
-        public static SVOLink NodeLink(uint layer, uint nodeOffset)
-        {
-#if UNITY_ASSERTIONS
-            Assert.IsTrue(
-                layer == (layer & _CONCRETE_DATA_MASK),
-                $"Layer {layer} is invalid for SVOLink.NodeLink."
-            );
-            Assert.IsTrue(
-                nodeOffset == (nodeOffset & (_OFFSET_MASK >> _OFFSET_MASK_SHIFT)),
-                $"Node offset {nodeOffset} is invalid for SVOLink.NodeLink."
-            );
-#endif
-            return new(_IS_NODE_MASK | (nodeOffset << _OFFSET_MASK_SHIFT) | layer);
-        }
+        public static SVOLink NodeLink(uint layer, uint nodeOffset) =>
+            new(_IS_NODE_MASK | (nodeOffset << _OFFSET_MASK_SHIFT) | layer);
 
         /// <summary>
         /// Creates a link to a voxel in the SVO with the given offset of the leaf and subnode index.
         /// </summary>
-        public static SVOLink VoxelLink(uint leafOffset, uint subnodeIndex)
-        {
-#if UNITY_ASSERTIONS
-            Assert.IsTrue(
-                subnodeIndex == (subnodeIndex & _CONCRETE_DATA_MASK),
-                $"Subnode index {subnodeIndex} is invalid for SVOLink.VoxelLink."
-            );
-            Assert.IsTrue(
-                leafOffset == (leafOffset & (_OFFSET_MASK >> _OFFSET_MASK_SHIFT)),
-                $"Leaf offset {leafOffset} is invalid for SVOLink.VoxelLink."
-            );
-#endif
-            return new((leafOffset << _OFFSET_MASK_SHIFT) | subnodeIndex);
-        }
+        public static SVOLink VoxelLink(uint leafOffset, uint subnodeIndex) =>
+            new((leafOffset << _OFFSET_MASK_SHIFT) | subnodeIndex);
 
         /// <summary>
         /// Returns the same as comparing equality with <see cref="SVOLink.Invalid"/>.
