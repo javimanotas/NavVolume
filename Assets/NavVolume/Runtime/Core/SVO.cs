@@ -10,8 +10,6 @@ namespace NavVolume.Runtime.Core
     /// </summary>
     internal partial class SVO
     {
-        // TODO: consider encapsulating all fields
-
         public SVOLeaf[] LeafNodes;
 
         /// <summary>
@@ -57,7 +55,8 @@ namespace NavVolume.Runtime.Core
             }
         }
 
-        // TODO: consider getting a ref instead of a copy. this would allow to remove SetNode
+        public bool IsEmpty => Layers[0].Count == 0;
+
         public SVONode GetNode(SVOLink link)
         {
             if (link.IsNode(out var layerIdx))

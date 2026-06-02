@@ -24,11 +24,6 @@ namespace NavVolume.Runtime.Builder
 
             var occupiedL1 = SVORasterizer.RasterizeL1(_settings);
 
-            if (occupiedL1.Count == 0)
-            {
-                // TODO: check if this has to be handled differently
-            }
-
             AllocateLowerLayers(svo, occupiedL1);
 
             for (var layer = 1u; layer < svo.Layers.Length; layer++)

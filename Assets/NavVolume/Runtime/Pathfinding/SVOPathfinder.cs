@@ -34,6 +34,11 @@ namespace NavVolume.Runtime.Pathfinding
         /// </summary>
         public PathResult FindPath(NavContext navCtx, PathRequest request)
         {
+            if (navCtx.Svo.IsEmpty)
+            {
+                return FindPathEmptyVolume(navCtx, request);
+            }
+
             var startLink = navCtx.PositionToLink(request.Start);
             var goalLink = navCtx.PositionToLink(request.Goal);
 
@@ -95,6 +100,39 @@ namespace NavVolume.Runtime.Pathfinding
             }
 
             return PathResult.Failure(PathResultStatus.NoPathFound);
+        }
+
+        /// <summary>
+        /// Trivial path through a volume with no obstacles.
+        /// </summary>
+        static PathResult FindPathEmptyVolume(NavContext navCtx, PathRequest request)
+        {
+            var settings = navCtx.BuildSettings;
+            var start = request.Start - settings.Origin;
+            var goal = request.Goal - settings.Origin;
+            var size = settings.RootSize;
+
+            var startInside =
+                start.x >= 0f
+                && start.y >= 0f
+                && start.z >= 0f
+                && start.x <= size
+                && start.y <= size
+                && start.z <= size;
+            var goalInside =
+                goal.x >= 0f
+                && goal.y >= 0f
+                && goal.z >= 0f
+                && goal.x <= size
+                && goal.y <= size
+                && goal.z <= size;
+
+            if (!startInside || !goalInside)
+            {
+                return PathResult.Failure(PathResultStatus.InvalidEndpoint);
+            }
+
+            return PathResult.Success(new List<Vector3> { request.Start, request.Goal });
         }
 
         void ExpandNeighbors(
