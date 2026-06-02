@@ -57,6 +57,8 @@ namespace NavVolume.Runtime.Core
             }
         }
 
+        public bool IsEmpty => Layers[0].Count == 0;
+
         // TODO: consider getting a ref instead of a copy. this would allow to remove SetNode
         public SVONode GetNode(SVOLink link)
         {
