@@ -13,7 +13,7 @@ namespace NavVolume
     public class NavVolumeAgent : MonoBehaviour
     {
         [field: SerializeField]
-        [Tooltip("TODO: add this description")]
+        [Tooltip("Type of the agent which determines its base parameters and behaviour.")]
         public AgentType AgentType { get; private set; }
 
         [Tooltip("Movement speed in world units per second.")]

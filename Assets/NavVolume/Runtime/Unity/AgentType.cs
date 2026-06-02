@@ -12,6 +12,8 @@ namespace NavVolume.Runtime
         [Tooltip("The radius of the agent.")]
         public float Radius { get; private set; } = 0;
 
+        // TODO: revisit pathfinding parameters and heuristics.
+
         [field: SerializeField]
         [Tooltip("How close the agent must get to a waypoint before advancing.")]
         public float WaypointTolerance { get; private set; } = 0.1f;
