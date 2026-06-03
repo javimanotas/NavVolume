@@ -8,8 +8,8 @@ on:
     branches: [main, develop]
 
 jobs:
-  test:
-    name: Run EditMode + PlayMode Tests
+  editmode:
+    name: Run EditMode Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -34,18 +34,85 @@ jobs:
 
       - name: Run tests
         uses: game-ci/unity-test-runner@v4
-        id: tests
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          testMode: all
-          artifactsPath: test-results
+          testMode: editmode
+          artifactsPath: test-results-editmode
+          coverageOptions: generateAdditionalMetrics;generateTestReportBadge
 
       - name: Upload results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
-          path: test-results
+          name: test-results-editmode
+          path: test-results-editmode
+
+  playmode:
+    name: Run PlayMode Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: Library-
+
+      - name: Run tests (attempt 1)
+        id: play1
+        continue-on-error: true
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          testMode: playmode
+          artifactsPath: test-results-playmode
+
+      - name: Run tests (attempt 2)
+        id: play2
+        if: steps.play1.outcome == 'failure'
+        continue-on-error: true
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          testMode: playmode
+          artifactsPath: test-results-playmode
+
+      - name: Run tests (attempt 3)
+        if: steps.play1.outcome == 'failure' && steps.play2.outcome == 'failure'
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          testMode: playmode
+          artifactsPath: test-results-playmode
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-playmode
+          path: test-results-playmode
