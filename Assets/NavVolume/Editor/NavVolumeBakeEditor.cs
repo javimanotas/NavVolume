@@ -331,36 +331,40 @@ namespace NavVolume.Editor
             EditorGUILayout.LabelField("Memory (approx.)", $"{memoryKB:N1} KB");
 
             EditorGUILayout.Space(4);
-            EditorGUILayout.LabelField("Nodes per Layer", EditorStyles.boldLabel);
-            DrawNodesPerLayerChart(stats.NodesPerLayer);
+            EditorGUILayout.LabelField("Nodes per Layer (log scale)", EditorStyles.boldLabel);
+            DrawNodesPerLayerChart(stats.NodesPerLayer, stats.TheoreticalNodesPerLayer);
         }
 
         static readonly Color s_ChartBarColor = new(0.40f, 0.75f, 0.95f, 1f);
+        static readonly Color s_ChartDenseBarColor = new(0.85f, 0.30f, 0.30f, 0.55f);
         static readonly Color s_ChartBgColor = new(0.18f, 0.18f, 0.18f, 1f);
 
-        static void DrawNodesPerLayerChart(int[] nodesPerLayer)
+        static void DrawNodesPerLayerChart(int[] nodesPerLayer, long[] theoreticalPerLayer)
         {
             if (nodesPerLayer == null || nodesPerLayer.Length == 0)
             {
                 return;
             }
 
-            var maxCount = 0;
-            foreach (var c in nodesPerLayer)
+            // Use the theoretical (dense) maximum as the global axis. Real counts can never exceed it.
+            var maxTheoretical = 1L;
+            foreach (var c in theoreticalPerLayer)
             {
-                if (c > maxCount)
+                if (c > maxTheoretical)
                 {
-                    maxCount = c;
+                    maxTheoretical = c;
                 }
             }
 
-            if (maxCount == 0)
+            // log10(maxTheoretical + 1) gives a stable upper bound that includes the +1 offset used below.
+            var logMax = Mathf.Log10(maxTheoretical + 1f);
+            if (logMax <= 0f)
             {
                 EditorGUILayout.LabelField("(no nodes)");
                 return;
             }
 
-            const float _CHART_HEIGHT = 64f;
+            const float _CHART_HEIGHT = 80f;
             const float _LABEL_HEIGHT = 14f;
             const float _BAR_SPACING = 2f;
 
@@ -399,32 +403,33 @@ namespace NavVolume.Editor
 
             for (var i = 0; i < n; i++)
             {
-                var count = nodesPerLayer[i];
-                var ratio = (float)count / maxCount;
-                var barHeight = ratio * (barsRect.height - 2f);
+                var dense = theoreticalPerLayer[i];
+                var sparse = nodesPerLayer[i];
 
-                var bar = new Rect(
-                    barsRect.x + i * (barWidth + _BAR_SPACING),
-                    barsRect.yMax - barHeight,
-                    barWidth,
-                    barHeight
-                );
-                EditorGUI.DrawRect(bar, s_ChartBarColor);
+                // log10(x + 1) keeps 0 → 0 and stays monotonic.
+                var denseRatio = Mathf.Log10(dense + 1f) / logMax;
+                var sparseRatio = Mathf.Log10(sparse + 1f) / logMax;
 
-                var topLabel = new Rect(
-                    barsRect.x + i * (barWidth + _BAR_SPACING),
-                    labelTop.y,
-                    barWidth,
-                    _LABEL_HEIGHT
-                );
-                var bottomLabel = new Rect(
-                    barsRect.x + i * (barWidth + _BAR_SPACING),
-                    labelBottom.y,
-                    barWidth,
-                    _LABEL_HEIGHT
-                );
+                var denseHeight = denseRatio * (barsRect.height - 2f);
+                var sparseHeight = sparseRatio * (barsRect.height - 2f);
 
-                EditorGUI.LabelField(topLabel, count.ToString(), topStyle);
+                var barX = barsRect.x + i * (barWidth + _BAR_SPACING);
+
+                var denseBar = new Rect(barX, barsRect.yMax - denseHeight, barWidth, denseHeight);
+                EditorGUI.DrawRect(denseBar, s_ChartDenseBarColor);
+
+                var sparseBar = new Rect(
+                    barX,
+                    barsRect.yMax - sparseHeight,
+                    barWidth,
+                    sparseHeight
+                );
+                EditorGUI.DrawRect(sparseBar, s_ChartBarColor);
+
+                var topLabel = new Rect(barX, labelTop.y, barWidth, _LABEL_HEIGHT);
+                var bottomLabel = new Rect(barX, labelBottom.y, barWidth, _LABEL_HEIGHT);
+
+                EditorGUI.LabelField(topLabel, $"{sparse}/{dense}", topStyle);
                 EditorGUI.LabelField(bottomLabel, LayerName(i, n), bottomStyle);
             }
         }
@@ -436,13 +441,8 @@ namespace NavVolume.Editor
                 return "root";
             }
 
-            if (chartIndex == total - 1)
-            {
-                return "leaves";
-            }
-
-            // chartIndex maps to layer (total-2 - chartIndex) when 1 <= chartIndex <= total-2
-            var layer = total - 2 - chartIndex;
+            // NodesPerLayer is root → L0. chartIndex i maps to layer (total - 1 - i).
+            var layer = total - 1 - chartIndex;
             return $"L{layer}";
         }
 
