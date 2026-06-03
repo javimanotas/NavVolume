@@ -6,6 +6,7 @@ using NavVolume.Runtime.Builder;
 using NavVolume.Runtime.Core;
 using NavVolume.Runtime.Pathfinding;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace NavVolume
 {
@@ -57,7 +58,10 @@ namespace NavVolume
         internal BuildSettings CurrentSettings =>
             new(transform.position, _rootSize, _numLayers, _collisionMask, 0);
 
-        Bounds VolumeBounds => new(transform.position, Vector3.one * _rootSize);
+        /// <summary>
+        /// World-space axis-aligned bounding box of the cubic volume managed by this space.
+        /// </summary>
+        public Bounds VolumeBounds => new(transform.position, Vector3.one * _rootSize);
 
         public bool IsReady => NavCtx.Svo != null;
 
@@ -195,6 +199,309 @@ namespace NavVolume
             );
 
             return PathResult.Success(smoothed, rawWaypoints, stats);
+        }
+
+        /// <summary>
+        /// Returns true if the point lies inside the cubic root bounds of this volume, regardless of whether the underlying voxel is free or occupied.
+        /// </summary>
+        public bool IsInsideVolume(Vector3 worldPos) => VolumeBounds.Contains(worldPos);
+
+        /// <summary>
+        /// Returns true if the point lies inside the volume and the voxel containing it is free.
+        /// </summary>
+        public bool IsNavigable(Vector3 worldPos)
+        {
+            if (!IsReady)
+            {
+                return false;
+            }
+
+            if (!IsInsideVolume(worldPos))
+            {
+                return false;
+            }
+
+            var settings = NavCtx.BuildSettings;
+            var local = worldPos - settings.Origin;
+            var x = Mathf.FloorToInt(local.x / settings.VoxelSize);
+            var y = Mathf.FloorToInt(local.y / settings.VoxelSize);
+            var z = Mathf.FloorToInt(local.z / settings.VoxelSize);
+
+            var gridDim = Mathf.RoundToInt(settings.RootSize / settings.VoxelSize);
+            if (x < 0 || y < 0 || z < 0 || x >= gridDim || y >= gridDim || z >= gridDim)
+            {
+                return false;
+            }
+
+            return !NavCtx.Svo.IsVoxelOccupied(x, y, z);
+        }
+
+        /// <summary>
+        /// Finds the closest navigable voxel center to <paramref name="worldPos"/> within <paramref name="maxDistance"/> meters.
+        /// </summary>
+        /// <remarks>
+        /// The search is performed against the finest voxel grid in concentric shells around the query point.
+        /// </remarks>
+        public bool TrySnapToNavigable(Vector3 worldPos, float maxDistance, out Vector3 result)
+        {
+            result = default;
+
+            if (!IsReady || maxDistance < 0f)
+            {
+                return false;
+            }
+
+            var settings = NavCtx.BuildSettings;
+            var voxelSize = settings.VoxelSize;
+            var gridDim = Mathf.RoundToInt(settings.RootSize / voxelSize);
+            var maxDistSq = maxDistance * maxDistance;
+
+            var local = worldPos - settings.Origin;
+            var cx = Mathf.FloorToInt(local.x / voxelSize);
+            var cy = Mathf.FloorToInt(local.y / voxelSize);
+            var cz = Mathf.FloorToInt(local.z / voxelSize);
+
+            var maxShell =
+                maxDistance >= settings.RootSize
+                    ? gridDim
+                    : Mathf.Min(Mathf.CeilToInt(maxDistance / voxelSize), gridDim);
+
+            var bestDistSq = float.MaxValue;
+            var found = false;
+
+            for (var r = 0; r <= maxShell; r++)
+            {
+                var shellNearVoxels = Mathf.Max(0, r - 1);
+                var shellNearDistSq = (shellNearVoxels * voxelSize) * (shellNearVoxels * voxelSize);
+                if (found && shellNearDistSq > bestDistSq)
+                {
+                    break;
+                }
+
+                for (var dx = -r; dx <= r; dx++)
+                {
+                    for (var dy = -r; dy <= r; dy++)
+                    {
+                        for (var dz = -r; dz <= r; dz++)
+                        {
+                            if (
+                                Mathf.Max(Mathf.Abs(dx), Mathf.Max(Mathf.Abs(dy), Mathf.Abs(dz)))
+                                != r
+                            )
+                            {
+                                continue;
+                            }
+
+                            var x = cx + dx;
+                            var y = cy + dy;
+                            var z = cz + dz;
+
+                            if (
+                                x < 0
+                                || y < 0
+                                || z < 0
+                                || x >= gridDim
+                                || y >= gridDim
+                                || z >= gridDim
+                            )
+                            {
+                                continue;
+                            }
+
+                            if (NavCtx.Svo.IsVoxelOccupied(x, y, z))
+                            {
+                                continue;
+                            }
+
+                            var voxelCenter =
+                                settings.Origin
+                                + new Vector3(
+                                    (x + 0.5f) * voxelSize,
+                                    (y + 0.5f) * voxelSize,
+                                    (z + 0.5f) * voxelSize
+                                );
+
+                            var distSq = (voxelCenter - worldPos).sqrMagnitude;
+                            if (distSq > maxDistSq)
+                            {
+                                continue;
+                            }
+
+                            if (distSq < bestDistSq)
+                            {
+                                bestDistSq = distSq;
+                                result = voxelCenter;
+                                found = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return found;
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="worldPos"/> to the closest navigable point that lies inside volume AABB.
+        /// </summary>
+        /// <remarks>
+        /// Fails only when no free voxel can be found inside the volume.
+        /// </remarks>
+        public bool TryClampToVolume(Vector3 worldPos, out Vector3 result)
+        {
+            var bounds = VolumeBounds;
+            var clamped = new Vector3(
+                Mathf.Clamp(worldPos.x, bounds.min.x, bounds.max.x),
+                Mathf.Clamp(worldPos.y, bounds.min.y, bounds.max.y),
+                Mathf.Clamp(worldPos.z, bounds.min.z, bounds.max.z)
+            );
+
+            if (IsNavigable(clamped))
+            {
+                result = clamped;
+                return true;
+            }
+
+            return TrySnapToNavigable(clamped, _rootSize * Mathf.Sqrt(3f), out result);
+        }
+
+        /// <summary>
+        /// Samples a uniformly random navigable point inside the volume.
+        /// </summary>
+        public Vector3 GetRandomPoint()
+        {
+            TryGetRandomPoint(out var point, int.MaxValue);
+            return point;
+        }
+
+        /// <summary>
+        /// Samples a uniformly random navigable point inside the intersection of <paramref name="bounds"/> and the volume.
+        /// </summary>
+        public Vector3 GetRandomPointInBounds(Bounds bounds)
+        {
+            TryGetRandomPointInBounds(bounds, out var point, int.MaxValue);
+            return point;
+        }
+
+        /// <summary>
+        /// Samples a uniformly random navigable point inside the intersection of the given sphere and the volume.
+        /// </summary>
+        public Vector3 GetRandomPointInSphere(Vector3 center, float radius)
+        {
+            TryGetRandomPointInSphere(center, radius, out var point, int.MaxValue);
+            return point;
+        }
+
+        /// <summary>
+        /// Tries to sample a uniformly random navigable point inside the volume.
+        /// </summary>
+        /// <remarks>
+        /// This method uses rejection sampling, so it will give up after <paramref name="maxAttempts"/> rejected samples.
+        /// </remarks>
+        public bool TryGetRandomPoint(out Vector3 point, int maxAttempts = 30)
+        {
+            return TryGetRandomPointInBounds(VolumeBounds, out point, maxAttempts);
+        }
+
+        /// <summary>
+        /// Tries to sample a uniformly random navigable point inside the intersection of <paramref name="bounds"/> and the volume.
+        /// </summary>
+        /// <remarks>
+        /// This method uses rejection sampling, so it will give up after <paramref name="maxAttempts"/> rejected samples.
+        /// </remarks>
+        public bool TryGetRandomPointInBounds(
+            Bounds bounds,
+            out Vector3 point,
+            int maxAttempts = 30
+        )
+        {
+            point = default;
+
+            if (!IsReady || maxAttempts <= 0)
+            {
+                return false;
+            }
+
+            var volume = VolumeBounds;
+            var min = Vector3.Max(bounds.min, volume.min);
+            var max = Vector3.Min(bounds.max, volume.max);
+
+            if (min.x > max.x || min.y > max.y || min.z > max.z)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < maxAttempts; i++)
+            {
+                var candidate = new Vector3(
+                    Random.Range(min.x, max.x),
+                    Random.Range(min.y, max.y),
+                    Random.Range(min.z, max.z)
+                );
+
+                if (IsNavigable(candidate))
+                {
+                    point = candidate;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to sample a uniformly random navigable point inside the intersection of the given sphere and the volume.
+        /// </summary>
+        /// <remarks>
+        /// This method uses rejection sampling, so it will give up after <paramref name="maxAttempts"/> rejected samples.
+        /// </remarks>
+        public bool TryGetRandomPointInSphere(
+            Vector3 center,
+            float radius,
+            out Vector3 point,
+            int maxAttempts = 30
+        )
+        {
+            point = default;
+
+            if (!IsReady || maxAttempts <= 0 || radius < 0f)
+            {
+                return false;
+            }
+
+            var volume = VolumeBounds;
+            var sphereBox = new Bounds(center, Vector3.one * (radius * 2f));
+            var min = Vector3.Max(sphereBox.min, volume.min);
+            var max = Vector3.Min(sphereBox.max, volume.max);
+
+            if (min.x > max.x || min.y > max.y || min.z > max.z)
+            {
+                return false;
+            }
+
+            var radiusSq = radius * radius;
+
+            for (var i = 0; i < maxAttempts; i++)
+            {
+                var candidate = new Vector3(
+                    Random.Range(min.x, max.x),
+                    Random.Range(min.y, max.y),
+                    Random.Range(min.z, max.z)
+                );
+
+                if ((candidate - center).sqrMagnitude > radiusSq)
+                {
+                    continue;
+                }
+
+                if (IsNavigable(candidate))
+                {
+                    point = candidate;
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
