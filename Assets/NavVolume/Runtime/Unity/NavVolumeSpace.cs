@@ -58,7 +58,10 @@ namespace NavVolume
         internal BuildSettings CurrentSettings =>
             new(transform.position, _rootSize, _numLayers, _collisionMask, 0);
 
-        Bounds VolumeBounds => new(transform.position, Vector3.one * _rootSize);
+        /// <summary>
+        /// World-space axis-aligned bounding box of the cubic volume managed by this space.
+        /// </summary>
+        public Bounds VolumeBounds => new(transform.position, Vector3.one * _rootSize);
 
         public bool IsReady => NavCtx.Svo != null;
 

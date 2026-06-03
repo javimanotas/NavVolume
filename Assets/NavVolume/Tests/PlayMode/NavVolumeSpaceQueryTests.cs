@@ -11,13 +11,6 @@ namespace NavVolume.Tests.PlayMode
     {
         const string _SCENE_PATH = "Assets/NavVolume/Tests/PlayMode/Scenes/SVOValidationTest.unity";
 
-        // Volume in the test scene spans roughly x in [-5.27, 17.79], y/z in [-11.53, 11.53].
-        // Keep a small margin so floored voxel coords never fall on the gridDim boundary.
-        const float _SAMPLE_X_MIN = -5f;
-        const float _SAMPLE_X_MAX = 17f;
-        const float _SAMPLE_YZ_MIN = -11f;
-        const float _SAMPLE_YZ_MAX = 11f;
-
         const float _PATH_HEURISTIC_WEIGHT = 1.5f;
 
         const int _PATH_MAX_NODES_BUDGET = 100_000;
@@ -31,16 +24,16 @@ namespace NavVolume.Tests.PlayMode
 
         [UnityTest]
         public IEnumerator TrySnapToNavigable_OnNonNavigableSample_YieldsNavigablePoint(
-            [Random(_SAMPLE_X_MIN, _SAMPLE_X_MAX, 3)] float x,
-            [Random(_SAMPLE_YZ_MIN, _SAMPLE_YZ_MAX, 3)] float y,
-            [Random(_SAMPLE_YZ_MIN, _SAMPLE_YZ_MAX, 3)] float z
+            [Random(0f, 1f, 3)] float tx,
+            [Random(0f, 1f, 3)] float ty,
+            [Random(0f, 1f, 3)] float tz
         )
         {
             var space = Object.FindFirstObjectByType<NavVolumeSpace>();
             Assert.IsNotNull(space, "Scene must contain a NavVolumeSpace.");
             Assert.IsTrue(space.IsReady, "NavVolumeSpace failed to build.");
 
-            var sample = new Vector3(x, y, z);
+            var sample = RemapToVolume(space, tx, ty, tz);
 
             if (space.IsNavigable(sample))
             {
@@ -64,29 +57,32 @@ namespace NavVolume.Tests.PlayMode
 
         [UnityTest]
         public IEnumerator FindPath_BetweenTwoSnappedRandomSamples_Succeeds(
-            [Random(_SAMPLE_X_MIN, _SAMPLE_X_MAX, 2)] float sx,
-            [Random(_SAMPLE_YZ_MIN, _SAMPLE_YZ_MAX, 2)] float sy,
-            [Random(_SAMPLE_YZ_MIN, _SAMPLE_YZ_MAX, 2)] float sz,
-            [Random(_SAMPLE_X_MIN, _SAMPLE_X_MAX, 2)] float gx,
-            [Random(_SAMPLE_YZ_MIN, _SAMPLE_YZ_MAX, 2)] float gy,
-            [Random(_SAMPLE_YZ_MIN, _SAMPLE_YZ_MAX, 2)] float gz
+            [Random(0f, 1f, 2)] float stx,
+            [Random(0f, 1f, 2)] float sty,
+            [Random(0f, 1f, 2)] float stz,
+            [Random(0f, 1f, 2)] float gtx,
+            [Random(0f, 1f, 2)] float gty,
+            [Random(0f, 1f, 2)] float gtz
         )
         {
             var space = Object.FindFirstObjectByType<NavVolumeSpace>();
             Assert.IsNotNull(space, "Scene must contain a NavVolumeSpace.");
             Assert.IsTrue(space.IsReady, "NavVolumeSpace failed to build.");
 
-            if (!TryResolveNavigable(space, new Vector3(sx, sy, sz), out var start))
+            var startSample = RemapToVolume(space, stx, sty, stz);
+            var goalSample = RemapToVolume(space, gtx, gty, gtz);
+
+            if (!TryResolveNavigable(space, startSample, out var start))
             {
                 Assert.Inconclusive(
-                    $"Could not snap start sample ({sx}, {sy}, {sz}) to a navigable point."
+                    $"Could not snap start sample {startSample} to a navigable point."
                 );
             }
 
-            if (!TryResolveNavigable(space, new Vector3(gx, gy, gz), out var goal))
+            if (!TryResolveNavigable(space, goalSample, out var goal))
             {
                 Assert.Inconclusive(
-                    $"Could not snap goal sample ({gx}, {gy}, {gz}) to a navigable point."
+                    $"Could not snap goal sample {goalSample} to a navigable point."
                 );
             }
 
@@ -104,6 +100,16 @@ namespace NavVolume.Tests.PlayMode
             );
 
             yield return null;
+        }
+
+        static Vector3 RemapToVolume(NavVolumeSpace space, float tx, float ty, float tz)
+        {
+            var bounds = space.VolumeBounds;
+            return new Vector3(
+                Mathf.Lerp(bounds.min.x, bounds.max.x, tx),
+                Mathf.Lerp(bounds.min.y, bounds.max.y, ty),
+                Mathf.Lerp(bounds.min.z, bounds.max.z, tz)
+            );
         }
 
         static bool TryResolveNavigable(NavVolumeSpace space, Vector3 sample, out Vector3 result)
