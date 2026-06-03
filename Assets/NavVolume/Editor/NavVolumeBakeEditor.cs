@@ -336,24 +336,28 @@ namespace NavVolume.Editor
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
+                EditorGUILayout.Space(2);
                 DrawHeadlineRow(
                     "Voxel Size",
                     $"{stats.VoxelSize:F3} m",
                     keyStyle,
                     valueStyle
                 );
+                DrawHeadlineSeparator();
                 DrawHeadlineRow(
                     "Allocated Voxels",
                     $"{stats.VoxelsCount:N0} / {stats.TheoreticalVoxelsCount:N0}  ({savedPct:F2}% saved)",
                     keyStyle,
                     valueStyle
                 );
+                DrawHeadlineSeparator();
                 DrawHeadlineRow(
                     "Memory (approx.)",
                     $"{memoryKB:N1} KB",
                     keyStyle,
                     valueStyle
                 );
+                EditorGUILayout.Space(2);
             }
 
             EditorGUILayout.Space(4);
@@ -367,11 +371,22 @@ namespace NavVolume.Editor
 
         static void DrawHeadlineRow(string key, string value, GUIStyle keyStyle, GUIStyle valueStyle)
         {
-            using (new EditorGUILayout.HorizontalScope())
+            using (new EditorGUILayout.HorizontalScope(GUILayout.Height(22f)))
             {
                 EditorGUILayout.LabelField(key, keyStyle, GUILayout.Width(EditorGUIUtility.labelWidth));
                 EditorGUILayout.LabelField(value, valueStyle);
+                GUILayout.Space(10f);
             }
+        }
+
+        static readonly Color s_HeadlineSeparatorColor = new(1f, 1f, 1f, 0.08f);
+
+        static void DrawHeadlineSeparator()
+        {
+            EditorGUILayout.Space(2);
+            var rect = EditorGUILayout.GetControlRect(false, 1f);
+            EditorGUI.DrawRect(rect, s_HeadlineSeparatorColor);
+            EditorGUILayout.Space(2);
         }
 
         static readonly Color s_ChartBarColor = new(0.40f, 0.75f, 0.95f, 1f);
