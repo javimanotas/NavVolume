@@ -151,8 +151,7 @@ namespace NavVolume
             NavCtx = builder.Build();
 
             Debug.Log(
-                $"[NavVolume][NavVolumeSpace] NavVolume built in {stopwatch.ElapsedMilliseconds} ms.\n"
-                    + $"Stats: {new SVOStats(NavCtx.Svo)}"
+                $"[NavVolume][NavVolumeSpace] NavVolume built in {stopwatch.ElapsedMilliseconds} ms."
             );
         }
 

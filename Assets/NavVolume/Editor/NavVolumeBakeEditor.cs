@@ -322,42 +322,75 @@ namespace NavVolume.Editor
                     : (1f - (float)stats.VoxelsCount / stats.TheoreticalVoxelsCount) * 100f;
             var memoryKB = stats.MemoryUsedBytes / 1024f;
 
-            EditorGUILayout.LabelField("Num Layers", stats.NumLayers.ToString());
-            EditorGUILayout.LabelField(
-                "Allocated Voxels",
-                $"{stats.VoxelsCount:N0} / {stats.TheoreticalVoxelsCount:N0}"
-            );
-            EditorGUILayout.LabelField("Sparse Savings", $"{savedPct:F2} %");
-            EditorGUILayout.LabelField("Memory (approx.)", $"{memoryKB:N1} KB");
+            var keyStyle = new GUIStyle(EditorStyles.label)
+            {
+                fontStyle = FontStyle.Bold,
+                fontSize = 13,
+            };
+            var valueStyle = new GUIStyle(EditorStyles.label)
+            {
+                fontStyle = FontStyle.Bold,
+                fontSize = 13,
+                alignment = TextAnchor.MiddleRight,
+            };
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                DrawHeadlineRow(
+                    "Allocated Voxels",
+                    $"{stats.VoxelsCount:N0} / {stats.TheoreticalVoxelsCount:N0}  ({savedPct:F2}% saved)",
+                    keyStyle,
+                    valueStyle
+                );
+                DrawHeadlineRow(
+                    "Memory (approx.)",
+                    $"{memoryKB:N1} KB",
+                    keyStyle,
+                    valueStyle
+                );
+            }
 
             EditorGUILayout.Space(4);
             EditorGUILayout.LabelField("Nodes per Layer (log scale)", EditorStyles.boldLabel);
-            DrawNodesPerLayerChart(stats.NodesPerLayer, stats.TheoreticalNodesPerLayer);
+            DrawNodesPerLayerChart(stats.NodesPerLayer);
+
+            EditorGUILayout.Space(6);
+            EditorGUILayout.LabelField("Sparse Savings per Layer", EditorStyles.boldLabel);
+            DrawSavingsHorizontalListHeatmap(stats.NodesPerLayer, stats.TheoreticalNodesPerLayer);
+        }
+
+        static void DrawHeadlineRow(string key, string value, GUIStyle keyStyle, GUIStyle valueStyle)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField(key, keyStyle, GUILayout.Width(EditorGUIUtility.labelWidth));
+                EditorGUILayout.LabelField(value, valueStyle);
+            }
         }
 
         static readonly Color s_ChartBarColor = new(0.40f, 0.75f, 0.95f, 1f);
-        static readonly Color s_ChartDenseBarColor = new(0.85f, 0.30f, 0.30f, 0.55f);
         static readonly Color s_ChartBgColor = new(0.18f, 0.18f, 0.18f, 1f);
+        static readonly Color s_GradientLowColor = new(0.90f, 0.30f, 0.30f, 1f);
+        static readonly Color s_GradientMidColor = new(0.95f, 0.82f, 0.30f, 1f);
+        static readonly Color s_GradientHighColor = new(0.40f, 0.85f, 0.45f, 1f);
 
-        static void DrawNodesPerLayerChart(int[] nodesPerLayer, long[] theoreticalPerLayer)
+        static void DrawNodesPerLayerChart(int[] nodesPerLayer)
         {
             if (nodesPerLayer == null || nodesPerLayer.Length == 0)
             {
                 return;
             }
 
-            // Use the theoretical (dense) maximum as the global axis. Real counts can never exceed it.
-            var maxTheoretical = 1L;
-            foreach (var c in theoreticalPerLayer)
+            var maxSparse = 0;
+            foreach (var c in nodesPerLayer)
             {
-                if (c > maxTheoretical)
+                if (c > maxSparse)
                 {
-                    maxTheoretical = c;
+                    maxSparse = c;
                 }
             }
 
-            // log10(maxTheoretical + 1) gives a stable upper bound that includes the +1 offset used below.
-            var logMax = Mathf.Log10(maxTheoretical + 1f);
+            var logMax = Mathf.Log10(maxSparse + 1f);
             if (logMax <= 0f)
             {
                 EditorGUILayout.LabelField("(no nodes)");
@@ -403,20 +436,13 @@ namespace NavVolume.Editor
 
             for (var i = 0; i < n; i++)
             {
-                var dense = theoreticalPerLayer[i];
                 var sparse = nodesPerLayer[i];
 
                 // log10(x + 1) keeps 0 → 0 and stays monotonic.
-                var denseRatio = Mathf.Log10(dense + 1f) / logMax;
                 var sparseRatio = Mathf.Log10(sparse + 1f) / logMax;
-
-                var denseHeight = denseRatio * (barsRect.height - 2f);
                 var sparseHeight = sparseRatio * (barsRect.height - 2f);
 
                 var barX = barsRect.x + i * (barWidth + _BAR_SPACING);
-
-                var denseBar = new Rect(barX, barsRect.yMax - denseHeight, barWidth, denseHeight);
-                EditorGUI.DrawRect(denseBar, s_ChartDenseBarColor);
 
                 var sparseBar = new Rect(
                     barX,
@@ -429,8 +455,76 @@ namespace NavVolume.Editor
                 var topLabel = new Rect(barX, labelTop.y, barWidth, _LABEL_HEIGHT);
                 var bottomLabel = new Rect(barX, labelBottom.y, barWidth, _LABEL_HEIGHT);
 
-                EditorGUI.LabelField(topLabel, $"{sparse}/{dense}", topStyle);
+                EditorGUI.LabelField(topLabel, sparse.ToString(), topStyle);
                 EditorGUI.LabelField(bottomLabel, LayerName(i, n), bottomStyle);
+            }
+        }
+
+        static float SavingsFraction(int sparse, long dense) =>
+            dense > 0 ? 1f - Mathf.Clamp01((float)sparse / dense) : 0f;
+
+        /// <summary>
+        /// Three-stop red→yellow→green color for a savings fraction in [0, 1].
+        /// </summary>
+        static Color HeatmapColor(float t) =>
+            t < 0.5f
+                ? Color.Lerp(s_GradientLowColor, s_GradientMidColor, t * 2f)
+                : Color.Lerp(s_GradientMidColor, s_GradientHighColor, (t - 0.5f) * 2f);
+
+        /// <summary>
+        /// Horizontal progress-bar list where each bar is a single solid color picked from
+        /// a red→yellow→green heatmap based on the savings value.
+        /// </summary>
+        static void DrawSavingsHorizontalListHeatmap(
+            int[] nodesPerLayer,
+            long[] theoreticalPerLayer
+        )
+        {
+            if (nodesPerLayer == null || nodesPerLayer.Length == 0)
+            {
+                return;
+            }
+
+            const float _ROW_HEIGHT = 18f;
+            const float _LABEL_WIDTH = 50f;
+            const float _PCT_WIDTH = 56f;
+            const float _GAP = 4f;
+
+            var n = nodesPerLayer.Length;
+            var labelStyle = new GUIStyle(EditorStyles.miniLabel)
+            {
+                alignment = TextAnchor.MiddleLeft,
+            };
+            var pctStyle = new GUIStyle(EditorStyles.miniLabel)
+            {
+                alignment = TextAnchor.MiddleRight,
+            };
+
+            for (var i = 0; i < n; i++)
+            {
+                var rowRect = EditorGUILayout.GetControlRect(false, _ROW_HEIGHT);
+
+                var labelRect = new Rect(rowRect.x, rowRect.y, _LABEL_WIDTH, rowRect.height);
+                var barRect = new Rect(
+                    labelRect.xMax + _GAP,
+                    rowRect.y + 2f,
+                    rowRect.width - _LABEL_WIDTH - _PCT_WIDTH - _GAP * 2,
+                    rowRect.height - 4f
+                );
+                var pctRect = new Rect(
+                    barRect.xMax + _GAP,
+                    rowRect.y,
+                    _PCT_WIDTH,
+                    rowRect.height
+                );
+
+                var savings = SavingsFraction(nodesPerLayer[i], theoreticalPerLayer[i]);
+
+                EditorGUI.LabelField(labelRect, LayerName(i, n), labelStyle);
+                EditorGUI.DrawRect(barRect, s_ChartBgColor);
+                var fill = new Rect(barRect.x, barRect.y, barRect.width * savings, barRect.height);
+                EditorGUI.DrawRect(fill, HeatmapColor(savings));
+                EditorGUI.LabelField(pctRect, $"{savings * 100f:F2}%", pctStyle);
             }
         }
 
@@ -677,8 +771,7 @@ namespace NavVolume.Editor
             SceneView.RepaintAll();
 
             Debug.Log(
-                $"[NavVolume][NavVolumeBakeEditor] NavVolume baked in {stopwatch.ElapsedMilliseconds} ms.\n"
-                    + $"Stats: {new SVOStats(navCtx.Svo)}"
+                $"[NavVolume][NavVolumeBakeEditor] NavVolume baked in {stopwatch.ElapsedMilliseconds} ms."
             );
         }
     }
