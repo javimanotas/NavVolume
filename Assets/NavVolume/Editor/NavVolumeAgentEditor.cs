@@ -44,21 +44,103 @@ namespace NavVolume.Editor
             "Locks rotation around the selected world axes. Locked axes stay at the agent's initial rotation."
         );
 
+        static bool s_MovementSettingsFoldout = true;
         static bool s_LastPathStatsFoldout = true;
+
+        public override bool RequiresConstantRepaint() => Application.isPlaying;
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
 
-            DrawPropertiesExcluding(serializedObject, s_HiddenProperties);
-            DrawFreezeRotationRow();
+            var agent = (NavVolumeAgent)target;
+
+            DrawLiveStateLine(agent);
+            DrawMovementSettings();
 
             serializedObject.ApplyModifiedProperties();
 
-            DrawLastPathStats();
+            DrawLastPathStats(agent);
         }
 
-        void DrawLastPathStats()
+        void DrawLiveStateLine(NavVolumeAgent agent)
+        {
+            (string text, Color tint) = GetLiveStateLine(agent);
+
+            var bgStyle = new GUIStyle(EditorStyles.helpBox);
+            using (new EditorGUILayout.VerticalScope(bgStyle))
+            {
+                using (new EditorGUILayout.HorizontalScope(GUILayout.Height(20f)))
+                {
+                    var dot = GUILayoutUtility.GetRect(
+                        10f,
+                        10f,
+                        GUILayout.Width(10f),
+                        GUILayout.Height(20f)
+                    );
+                    var dotRect = new Rect(dot.x, dot.y + dot.height * 0.5f - 4f, 8f, 8f);
+                    EditorGUI.DrawRect(dotRect, tint);
+
+                    GUILayout.Space(4f);
+
+                    var style = new GUIStyle(EditorStyles.label)
+                    {
+                        fontStyle = FontStyle.Bold,
+                        alignment = TextAnchor.MiddleLeft,
+                    };
+                    EditorGUILayout.LabelField(text, style);
+                }
+            }
+
+            EditorGUILayout.Space(2);
+        }
+
+        static (string text, Color tint) GetLiveStateLine(NavVolumeAgent agent)
+        {
+            var lastPath = agent.LastPath;
+
+            if (!lastPath.HasValue)
+            {
+                return ("Idle (no path computed)", new Color(0.65f, 0.65f, 0.65f));
+            }
+
+            if (lastPath.Value.Status != PathResultStatus.Sucess)
+            {
+                return (
+                    $"Path failed: {lastPath.Value.Status}",
+                    EditorGuiHelpers.StatusFailureColor
+                );
+            }
+
+            if (agent.HasActivePath)
+            {
+                var idx = agent.CurrentWaypointIndex + 1;
+                var total = agent.SmoothedWaypoints.Count;
+                return ($"Moving (waypoint {idx} of {total})", EditorGuiHelpers.StatusSuccessColor);
+            }
+
+            return ("Idle (reached goal)", EditorGuiHelpers.StatusSuccessColor);
+        }
+
+        void DrawMovementSettings()
+        {
+            s_MovementSettingsFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(
+                s_MovementSettingsFoldout,
+                "Movement Settings"
+            );
+
+            if (s_MovementSettingsFoldout)
+            {
+                EditorGUI.indentLevel++;
+                DrawPropertiesExcluding(serializedObject, s_HiddenProperties);
+                DrawFreezeRotationRow();
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.EndFoldoutHeaderGroup();
+        }
+
+        void DrawLastPathStats(NavVolumeAgent agent)
         {
             EditorGUILayout.Space(4);
 
@@ -71,7 +153,6 @@ namespace NavVolume.Editor
             {
                 EditorGUI.indentLevel++;
 
-                var agent = (NavVolumeAgent)target;
                 var lastPath = agent.LastPath;
 
                 if (!lastPath.HasValue)
@@ -83,25 +164,57 @@ namespace NavVolume.Editor
                 }
                 else
                 {
-                    var stats = lastPath.Value.Stats;
-                    EditorGUILayout.LabelField("Status", lastPath.Value.Status.ToString());
-                    EditorGUILayout.LabelField("Nodes expanded", stats.NodesExpanded.ToString("N0"));
-                    EditorGUILayout.LabelField("Elapsed", $"{stats.ElapsedMs:F2} ms");
-
-                    var pct =
-                        stats.RawWaypointsCount > 0
-                            ? 100f * stats.WaypointsRemovedByLOS / stats.RawWaypointsCount
-                            : 0f;
-                    EditorGUILayout.LabelField(
-                        "Waypoints removed by LOS",
-                        $"{stats.WaypointsRemovedByLOS:N0} / {stats.RawWaypointsCount:N0}  ({pct:F1}%)"
-                    );
+                    DrawLastPathStatsBox(lastPath.Value);
                 }
 
                 EditorGUI.indentLevel--;
             }
 
             EditorGUILayout.EndFoldoutHeaderGroup();
+        }
+
+        static void DrawLastPathStatsBox(PathResult result)
+        {
+            var stats = result.Stats;
+            var statusTint =
+                result.Status == PathResultStatus.Sucess
+                    ? EditorGuiHelpers.StatusSuccessColor
+                    : EditorGuiHelpers.StatusFailureColor;
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.Space(2);
+                EditorGuiHelpers.DrawHeadlineRow("Status", result.Status.ToString(), statusTint);
+                EditorGuiHelpers.DrawHeadlineSeparator();
+                EditorGuiHelpers.DrawHeadlineRow(
+                    "Nodes expanded",
+                    stats.NodesExpanded.ToString("N0")
+                );
+                EditorGuiHelpers.DrawHeadlineSeparator();
+                EditorGuiHelpers.DrawHeadlineRow("Elapsed", $"{stats.ElapsedMs:F2} ms");
+                EditorGuiHelpers.DrawHeadlineSeparator();
+
+                var pct =
+                    stats.RawWaypointsCount > 0
+                        ? (float)stats.WaypointsRemovedByLOS / stats.RawWaypointsCount
+                        : 0f;
+                EditorGuiHelpers.DrawHeadlineRow(
+                    "Waypoints removed by LOS",
+                    $"{stats.WaypointsRemovedByLOS:N0} / {stats.RawWaypointsCount:N0}  ({pct * 100f:F1}%)"
+                );
+
+                // Visual bar showing the LOS-removed fraction on the same red, yellow, green palette.
+                var barRow = EditorGUILayout.GetControlRect(false, 8f);
+                var barRect = new Rect(
+                    barRow.x + EditorGUIUtility.labelWidth,
+                    barRow.y,
+                    barRow.width - EditorGUIUtility.labelWidth - 10f,
+                    barRow.height
+                );
+                EditorGuiHelpers.DrawHeatmapBar(barRect, pct);
+
+                EditorGUILayout.Space(2);
+            }
         }
 
         void DrawFreezeRotationRow()

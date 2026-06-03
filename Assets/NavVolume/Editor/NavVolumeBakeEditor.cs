@@ -322,41 +322,17 @@ namespace NavVolume.Editor
                     : (1f - (float)stats.VoxelsCount / stats.TheoreticalVoxelsCount) * 100f;
             var memoryKB = stats.MemoryUsedBytes / 1024f;
 
-            var keyStyle = new GUIStyle(EditorStyles.label)
-            {
-                fontStyle = FontStyle.Bold,
-                fontSize = 13,
-            };
-            var valueStyle = new GUIStyle(EditorStyles.label)
-            {
-                fontStyle = FontStyle.Bold,
-                fontSize = 13,
-                alignment = TextAnchor.MiddleRight,
-            };
-
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.Space(2);
-                DrawHeadlineRow(
-                    "Voxel Size",
-                    $"{stats.VoxelSize:F3} m",
-                    keyStyle,
-                    valueStyle
-                );
-                DrawHeadlineSeparator();
-                DrawHeadlineRow(
+                EditorGuiHelpers.DrawHeadlineRow("Voxel Size", $"{stats.VoxelSize:F3} m");
+                EditorGuiHelpers.DrawHeadlineSeparator();
+                EditorGuiHelpers.DrawHeadlineRow(
                     "Allocated Voxels",
-                    $"{stats.VoxelsCount:N0} / {stats.TheoreticalVoxelsCount:N0}  ({savedPct:F2}% saved)",
-                    keyStyle,
-                    valueStyle
+                    $"{stats.VoxelsCount:N0} / {stats.TheoreticalVoxelsCount:N0}  ({savedPct:F2}% saved)"
                 );
-                DrawHeadlineSeparator();
-                DrawHeadlineRow(
-                    "Memory (approx.)",
-                    $"{memoryKB:N1} KB",
-                    keyStyle,
-                    valueStyle
-                );
+                EditorGuiHelpers.DrawHeadlineSeparator();
+                EditorGuiHelpers.DrawHeadlineRow("Memory (approx.)", $"{memoryKB:N1} KB");
                 EditorGUILayout.Space(2);
             }
 
@@ -369,31 +345,8 @@ namespace NavVolume.Editor
             DrawSavingsHorizontalListHeatmap(stats.NodesPerLayer, stats.TheoreticalNodesPerLayer);
         }
 
-        static void DrawHeadlineRow(string key, string value, GUIStyle keyStyle, GUIStyle valueStyle)
-        {
-            using (new EditorGUILayout.HorizontalScope(GUILayout.Height(22f)))
-            {
-                EditorGUILayout.LabelField(key, keyStyle, GUILayout.Width(EditorGUIUtility.labelWidth));
-                EditorGUILayout.LabelField(value, valueStyle);
-                GUILayout.Space(10f);
-            }
-        }
-
-        static readonly Color s_HeadlineSeparatorColor = new(1f, 1f, 1f, 0.08f);
-
-        static void DrawHeadlineSeparator()
-        {
-            EditorGUILayout.Space(2);
-            var rect = EditorGUILayout.GetControlRect(false, 1f);
-            EditorGUI.DrawRect(rect, s_HeadlineSeparatorColor);
-            EditorGUILayout.Space(2);
-        }
-
         static readonly Color s_ChartBarColor = new(0.40f, 0.75f, 0.95f, 1f);
         static readonly Color s_ChartBgColor = new(0.18f, 0.18f, 0.18f, 1f);
-        static readonly Color s_GradientLowColor = new(0.90f, 0.30f, 0.30f, 1f);
-        static readonly Color s_GradientMidColor = new(0.95f, 0.82f, 0.30f, 1f);
-        static readonly Color s_GradientHighColor = new(0.40f, 0.85f, 0.45f, 1f);
 
         static void DrawNodesPerLayerChart(int[] nodesPerLayer)
         {
@@ -459,7 +412,7 @@ namespace NavVolume.Editor
             {
                 var sparse = nodesPerLayer[i];
 
-                // log10(x + 1) keeps 0 → 0 and stays monotonic.
+                // log10(x + 1) keeps 0 => 0 and stays monotonic.
                 var sparseRatio = Mathf.Log10(sparse + 1f) / logMax;
                 var sparseHeight = sparseRatio * (barsRect.height - 2f);
 
@@ -485,16 +438,7 @@ namespace NavVolume.Editor
             dense > 0 ? 1f - Mathf.Clamp01((float)sparse / dense) : 0f;
 
         /// <summary>
-        /// Three-stop red→yellow→green color for a savings fraction in [0, 1].
-        /// </summary>
-        static Color HeatmapColor(float t) =>
-            t < 0.5f
-                ? Color.Lerp(s_GradientLowColor, s_GradientMidColor, t * 2f)
-                : Color.Lerp(s_GradientMidColor, s_GradientHighColor, (t - 0.5f) * 2f);
-
-        /// <summary>
-        /// Horizontal progress-bar list where each bar is a single solid color picked from
-        /// a red→yellow→green heatmap based on the savings value.
+        /// Horizontal progress-bar list where each bar is a single solid color picked from a red, yellow, green heatmap based on the savings value.
         /// </summary>
         static void DrawSavingsHorizontalListHeatmap(
             int[] nodesPerLayer,
@@ -532,19 +476,14 @@ namespace NavVolume.Editor
                     rowRect.width - _LABEL_WIDTH - _PCT_WIDTH - _GAP * 2,
                     rowRect.height - 4f
                 );
-                var pctRect = new Rect(
-                    barRect.xMax + _GAP,
-                    rowRect.y,
-                    _PCT_WIDTH,
-                    rowRect.height
-                );
+                var pctRect = new Rect(barRect.xMax + _GAP, rowRect.y, _PCT_WIDTH, rowRect.height);
 
                 var savings = SavingsFraction(nodesPerLayer[i], theoreticalPerLayer[i]);
 
                 EditorGUI.LabelField(labelRect, LayerName(i, n), labelStyle);
                 EditorGUI.DrawRect(barRect, s_ChartBgColor);
                 var fill = new Rect(barRect.x, barRect.y, barRect.width * savings, barRect.height);
-                EditorGUI.DrawRect(fill, HeatmapColor(savings));
+                EditorGUI.DrawRect(fill, EditorGuiHelpers.HeatmapColor(savings));
                 EditorGUI.LabelField(pctRect, $"{savings * 100f:F2}%", pctStyle);
             }
         }
@@ -556,7 +495,6 @@ namespace NavVolume.Editor
                 return "root";
             }
 
-            // NodesPerLayer is root → L0. chartIndex i maps to layer (total - 1 - i).
             var layer = total - 1 - chartIndex;
             return $"L{layer}";
         }
