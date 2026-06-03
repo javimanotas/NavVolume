@@ -244,10 +244,7 @@ namespace NavVolume.Editor
                 {
                     GUILayout.Label(s_AxisLabels[i], GUILayout.Width(12f));
                     EditorGUI.BeginChangeCheck();
-                    var value = EditorGUILayout.Toggle(
-                        props[i].boolValue,
-                        GUILayout.Width(14f)
-                    );
+                    var value = EditorGUILayout.Toggle(props[i].boolValue, GUILayout.Width(14f));
                     if (EditorGUI.EndChangeCheck())
                     {
                         props[i].boolValue = value;
