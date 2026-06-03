@@ -227,24 +227,35 @@ namespace NavVolume.Editor
 
             using (new EditorGUILayout.HorizontalScope())
             {
+                // Match indentation of sibling property labels rendered by PropertyField.
+                var indentPx = EditorGUI.indentLevel * 15f;
+                GUILayout.Space(indentPx);
                 GUILayout.Label(
                     s_FreezeRotationLabel,
-                    GUILayout.Width(EditorGUIUtility.labelWidth)
+                    GUILayout.Width(EditorGUIUtility.labelWidth - indentPx)
                 );
 
-                var toggleWidth = GUILayout.Width(30f);
-                var labelWidth = GUILayout.Width(15f);
+                // Reset indent locally — EditorGUILayout.Toggle re-applies indentLevel,
+                // which pushes the checkbox 15 px away from its axis label otherwise.
+                var savedIndent = EditorGUI.indentLevel;
+                EditorGUI.indentLevel = 0;
 
                 for (var i = 0; i < props.Length; i++)
                 {
-                    GUILayout.Label(s_AxisLabels[i], labelWidth);
+                    GUILayout.Label(s_AxisLabels[i], GUILayout.Width(12f));
                     EditorGUI.BeginChangeCheck();
-                    var value = EditorGUILayout.Toggle(props[i].boolValue, toggleWidth);
+                    var value = EditorGUILayout.Toggle(
+                        props[i].boolValue,
+                        GUILayout.Width(14f)
+                    );
                     if (EditorGUI.EndChangeCheck())
                     {
                         props[i].boolValue = value;
                     }
+                    GUILayout.Space(16f);
                 }
+
+                EditorGUI.indentLevel = savedIndent;
 
                 GUILayout.FlexibleSpace();
             }
