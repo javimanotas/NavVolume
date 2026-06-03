@@ -27,11 +27,29 @@ namespace NavVolume.Demo
 
         void Update()
         {
-            if (_targetedPosition != _target.position)
+            if (_targetedPosition == _target.position)
             {
-                _targetedPosition = _target.position;
-                _agent.MoveTo(_target.position);
+                return;
             }
+
+            _targetedPosition = _target.position;
+
+            var space = _agent.NavVolumeSpace;
+            var goal = _target.position;
+
+            if (
+                space != null
+                && !space.IsNavigable(goal)
+                && !space.TrySnapToNavigable(goal, float.MaxValue, out goal)
+            )
+            {
+                Debug.LogWarning(
+                    $"[NavVolume][FlyToTarget] Could not snap target {_target.position} to a navigable point."
+                );
+                return;
+            }
+
+            _agent.MoveTo(goal);
         }
     }
 }

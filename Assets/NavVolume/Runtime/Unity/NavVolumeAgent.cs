@@ -39,6 +39,11 @@ namespace NavVolume
 
         NavVolumeSpace _navVolumeSpace;
 
+        /// <summary>
+        /// The <see cref="NavVolumeSpace"/> this agent is bound to.
+        /// </summary>
+        public NavVolumeSpace NavVolumeSpace => _navVolumeSpace;
+
         List<Vector3> _smoothedWaypoints = new();
 
         List<Vector3> _rawWaypoints = new();

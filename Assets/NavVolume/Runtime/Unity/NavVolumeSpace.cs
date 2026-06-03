@@ -261,7 +261,11 @@ namespace NavVolume
             var cy = Mathf.FloorToInt(local.y / voxelSize);
             var cz = Mathf.FloorToInt(local.z / voxelSize);
 
-            var maxShell = Mathf.CeilToInt(maxDistance / voxelSize);
+            var maxShell =
+                maxDistance >= settings.RootSize
+                    ? gridDim
+                    : Mathf.Min(Mathf.CeilToInt(maxDistance / voxelSize), gridDim);
+
             var bestDistSq = float.MaxValue;
             var found = false;
 

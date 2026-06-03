@@ -161,11 +161,28 @@ namespace NavVolume.Runtime.Pathfinding
 
             foreach (var neighbor in _expandBuffer)
             {
+                if (!neighbor.IsValid || _closed.Contains(neighbor))
+                {
+                    continue;
+                }
+
                 if (
-                    !neighbor.IsValid
-                    || _closed.Contains(neighbor)
-                    || IsBlocked(navCtx.Svo, neighbor)
+                    neighbor.IsNode(out var nLayer)
+                    && nLayer == 0
+                    && TryExpandPartialLeaf(
+                        navCtx,
+                        current.Link,
+                        current.GCost,
+                        neighbor,
+                        goalCenter,
+                        request
+                    )
                 )
+                {
+                    continue;
+                }
+
+                if (IsBlocked(navCtx.Svo, neighbor))
                 {
                     continue;
                 }
@@ -340,11 +357,28 @@ namespace NavVolume.Runtime.Pathfinding
             {
                 var childLink = SVOLink.NodeLink(childLayer, firstOffset + c);
 
+                if (!childLink.IsValid || _closed.Contains(childLink))
+                {
+                    continue;
+                }
+
                 if (
-                    !childLink.IsValid
-                    || _closed.Contains(childLink)
-                    || IsBlocked(navCtx.Svo, childLink)
+                    childLink.IsNode(out var cLayerIdx)
+                    && cLayerIdx == 0
+                    && TryExpandPartialLeaf(
+                        navCtx,
+                        incomingLink,
+                        incomingGCost,
+                        childLink,
+                        goalCenter,
+                        request
+                    )
                 )
+                {
+                    continue;
+                }
+
+                if (IsBlocked(navCtx.Svo, childLink))
                 {
                     continue;
                 }
@@ -375,6 +409,54 @@ namespace NavVolume.Runtime.Pathfinding
                 var h = ComputeH(navCtx, childLink, goalCenter, request);
                 _openList.Push(new(childLink, newG), newG + h);
             }
+        }
+
+        bool TryExpandPartialLeaf(
+            NavContext navCtx,
+            SVOLink fromLink,
+            float fromGCost,
+            SVOLink leafLink,
+            Vector3 goalCenter,
+            PathRequest request
+        )
+        {
+            var leaf = navCtx.Svo.LeafNodes[leafLink.Offset];
+            if (leaf.IsEmpty || leaf.IsFull)
+            {
+                return false;
+            }
+
+            var fromCenter = navCtx.LinkToCenter(fromLink);
+
+            for (var i = 0; i < SVOLeaf.NUM_VOXELS; i++)
+            {
+                if (leaf.IsOccupied(i))
+                {
+                    continue;
+                }
+
+                var voxelLink = SVOLink.VoxelLink(leafLink.Offset, (uint)i);
+                if (_closed.Contains(voxelLink))
+                {
+                    continue;
+                }
+
+                var voxelCenter = navCtx.LinkToCenter(voxelLink);
+                var newG = fromGCost + SVOHeuristic.EuclideanCost(fromCenter, voxelCenter);
+
+                if (_gCost.TryGetValue(voxelLink, out var existingG) && newG >= existingG)
+                {
+                    continue;
+                }
+
+                _gCost[voxelLink] = newG;
+                _cameFrom[voxelLink] = fromLink;
+
+                var h = ComputeH(navCtx, voxelLink, goalCenter, request);
+                _openList.Push(new(voxelLink, newG), newG + h);
+            }
+
+            return true;
         }
 
         #region Cost functions
