@@ -305,7 +305,7 @@ namespace NavVolume.Editor
                 }
                 else
                 {
-                    DrawStatsRows(new SVOStats(navCtx.Svo));
+                    DrawStatsRows(new SVOStats(navCtx));
                 }
 
                 EditorGUI.indentLevel--;
@@ -336,6 +336,12 @@ namespace NavVolume.Editor
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
+                DrawHeadlineRow(
+                    "Voxel Size",
+                    $"{stats.VoxelSize:F3} m",
+                    keyStyle,
+                    valueStyle
+                );
                 DrawHeadlineRow(
                     "Allocated Voxels",
                     $"{stats.VoxelsCount:N0} / {stats.TheoreticalVoxelsCount:N0}  ({savedPct:F2}% saved)",

@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Runtime.CompilerServices;
+using NavVolume.Runtime.Builder;
 using UnityEngine;
 
 namespace NavVolume.Runtime.Core
@@ -20,6 +21,8 @@ namespace NavVolume.Runtime.Core
 
         #endregion
 
+        public readonly float VoxelSize;
+
         public readonly int TheoreticalVoxelsCount;
 
         public readonly int VoxelsCount;
@@ -36,8 +39,12 @@ namespace NavVolume.Runtime.Core
         /// </summary>
         public readonly long[] TheoreticalNodesPerLayer;
 
-        public SVOStats(SVO svo)
+        public SVOStats(NavContext ctx)
         {
+            var svo = ctx.Svo;
+
+            VoxelSize = ctx.BuildSettings.VoxelSize;
+
             TheoreticalVoxelsCount = (int)(
                 Mathf.Pow(8, svo.Layers.Length - 1) * SVOLeaf.NUM_VOXELS
             );
