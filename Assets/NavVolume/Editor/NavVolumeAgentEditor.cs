@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using NavVolume.Runtime.Pathfinding;
 using UnityEditor;
 using UnityEngine;
 
@@ -43,6 +44,8 @@ namespace NavVolume.Editor
             "Locks rotation around the selected world axes. Locked axes stay at the agent's initial rotation."
         );
 
+        static bool s_LastPathStatsFoldout = true;
+
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
@@ -51,6 +54,49 @@ namespace NavVolume.Editor
             DrawFreezeRotationRow();
 
             serializedObject.ApplyModifiedProperties();
+
+            DrawLastPathStats();
+        }
+
+        void DrawLastPathStats()
+        {
+            EditorGUILayout.Space(4);
+
+            s_LastPathStatsFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(
+                s_LastPathStatsFoldout,
+                "Last Path Stats"
+            );
+
+            if (s_LastPathStatsFoldout)
+            {
+                EditorGUI.indentLevel++;
+
+                var agent = (NavVolumeAgent)target;
+                var lastPath = agent.LastPath;
+
+                if (!lastPath.HasValue)
+                {
+                    EditorGUILayout.HelpBox(
+                        "No path computed yet. Call MoveTo to populate stats.",
+                        MessageType.Info
+                    );
+                }
+                else
+                {
+                    var stats = lastPath.Value.Stats;
+                    EditorGUILayout.LabelField("Status", lastPath.Value.Status.ToString());
+                    EditorGUILayout.LabelField("Nodes expanded", stats.NodesExpanded.ToString("N0"));
+                    EditorGUILayout.LabelField("Elapsed", $"{stats.ElapsedMs:F2} ms");
+                    EditorGUILayout.LabelField(
+                        "Waypoints removed by LOS",
+                        stats.WaypointsRemovedByLOS.ToString("N0")
+                    );
+                }
+
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.EndFoldoutHeaderGroup();
         }
 
         void DrawFreezeRotationRow()

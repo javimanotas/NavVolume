@@ -49,13 +49,16 @@ namespace NavVolume.Runtime.Pathfinding
                 || IsBlocked(navCtx.Svo, goalLink)
             )
             {
-                return PathResult.Failure(PathResultStatus.InvalidEndpoint);
+                return PathResult.Failure(
+                    PathResultStatus.InvalidEndpoint,
+                    new PathStats(0, 0d, 0)
+                );
             }
 
             if (startLink == goalLink)
             {
                 var trivial = new List<Vector3> { request.Start, request.Goal };
-                return PathResult.Success(trivial);
+                return PathResult.Success(trivial, new PathStats(0, 0d, 0));
             }
 
             ClearState();
@@ -73,7 +76,10 @@ namespace NavVolume.Runtime.Pathfinding
             {
                 if (request.MaxNodesBudget > 0 && expanded >= request.MaxNodesBudget)
                 {
-                    return PathResult.Failure(PathResultStatus.BudgetExceeded);
+                    return PathResult.Failure(
+                        PathResultStatus.BudgetExceeded,
+                        new PathStats(expanded, 0d, 0)
+                    );
                 }
 
                 var current = _openList.Pop();
@@ -93,13 +99,16 @@ namespace NavVolume.Runtime.Pathfinding
                         && current.Link.Offset == goalLink.Offset
                 )
                 {
-                    return ReconstructPath(navCtx, current.Link, request);
+                    return ReconstructPath(navCtx, current.Link, request, expanded);
                 }
 
                 ExpandNeighbors(navCtx, current, goalCenter, request);
             }
 
-            return PathResult.Failure(PathResultStatus.NoPathFound);
+            return PathResult.Failure(
+                PathResultStatus.NoPathFound,
+                new PathStats(expanded, 0d, 0)
+            );
         }
 
         /// <summary>
@@ -129,10 +138,16 @@ namespace NavVolume.Runtime.Pathfinding
 
             if (!startInside || !goalInside)
             {
-                return PathResult.Failure(PathResultStatus.InvalidEndpoint);
+                return PathResult.Failure(
+                    PathResultStatus.InvalidEndpoint,
+                    new PathStats(0, 0d, 0)
+                );
             }
 
-            return PathResult.Success(new List<Vector3> { request.Start, request.Goal });
+            return PathResult.Success(
+                new List<Vector3> { request.Start, request.Goal },
+                new PathStats(0, 0d, 0)
+            );
         }
 
         void ExpandNeighbors(
@@ -412,7 +427,12 @@ namespace NavVolume.Runtime.Pathfinding
             return leaf.IsOccupied((int)subnodeIdx);
         }
 
-        PathResult ReconstructPath(NavContext navCtx, SVOLink reachedLink, PathRequest request)
+        PathResult ReconstructPath(
+            NavContext navCtx,
+            SVOLink reachedLink,
+            PathRequest request,
+            int nodesExpanded
+        )
         {
             var rawPath = new List<Vector3>();
 
@@ -432,7 +452,7 @@ namespace NavVolume.Runtime.Pathfinding
             rawPath[0] = request.Start;
             rawPath.Add(request.Goal);
 
-            return PathResult.Success(rawPath);
+            return PathResult.Success(rawPath, new PathStats(nodesExpanded, 0d, 0));
         }
     }
 }

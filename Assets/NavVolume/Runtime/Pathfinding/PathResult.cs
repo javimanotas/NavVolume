@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace NavVolume.Runtime.Pathfinding
@@ -8,12 +8,19 @@ namespace NavVolume.Runtime.Pathfinding
     /// </summary>
     internal readonly struct PathResult
     {
-        public static PathResult Success(List<Vector3> waypoints) => new(waypoints, null);
+        public static PathResult Success(List<Vector3> waypoints, PathStats stats) =>
+            new(waypoints, null, stats);
 
-        public static PathResult Success(List<Vector3> waypoints, List<Vector3> rawWaypoints) =>
-            new(waypoints, rawWaypoints);
+        public static PathResult Success(
+            List<Vector3> waypoints,
+            List<Vector3> rawWaypoints,
+            PathStats stats
+        ) => new(waypoints, rawWaypoints, stats);
 
-        public static PathResult Failure(PathResultStatus status) => new(status);
+        public static PathResult Failure(PathResultStatus status) => new(status, default);
+
+        public static PathResult Failure(PathResultStatus status, PathStats stats) =>
+            new(status, stats);
 
         public readonly PathResultStatus Status;
 
@@ -21,22 +28,24 @@ namespace NavVolume.Runtime.Pathfinding
 
         public readonly List<Vector3> RawWaypoints;
 
+        public readonly PathStats Stats;
+
         public bool Succeeded => Status == PathResultStatus.Sucess;
 
-        // TODO: implement stats
-
-        PathResult(PathResultStatus rawStatus)
+        PathResult(PathResultStatus rawStatus, PathStats stats)
         {
             Status = rawStatus;
             Waypoints = null;
             RawWaypoints = null;
+            Stats = stats;
         }
 
-        PathResult(List<Vector3> waypoints, List<Vector3> rawWaypoints)
+        PathResult(List<Vector3> waypoints, List<Vector3> rawWaypoints, PathStats stats)
         {
             Status = PathResultStatus.Sucess;
             Waypoints = waypoints;
             RawWaypoints = rawWaypoints;
+            Stats = stats;
         }
     }
 }
