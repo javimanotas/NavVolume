@@ -4,7 +4,7 @@ using NavVolume.Runtime.Builder;
 using NavVolume.Runtime.Core;
 using UnityEngine;
 
-namespace NavVolume.Runtime.Validation
+namespace NavVolume.Tests.PlayMode
 {
     /// <summary>
     /// Static inspection utility that validates a fully built <see cref="NavContext"/>.
