@@ -305,7 +305,7 @@ namespace NavVolume.Editor
                 }
                 else
                 {
-                    DrawStatsRows(new SVOStats(navCtx.Svo));
+                    DrawStatsRows(new SVOStats(navCtx));
                 }
 
                 EditorGUI.indentLevel--;
@@ -322,17 +322,27 @@ namespace NavVolume.Editor
                     : (1f - (float)stats.VoxelsCount / stats.TheoreticalVoxelsCount) * 100f;
             var memoryKB = stats.MemoryUsedBytes / 1024f;
 
-            EditorGUILayout.LabelField("Num Layers", stats.NumLayers.ToString());
-            EditorGUILayout.LabelField(
-                "Allocated Voxels",
-                $"{stats.VoxelsCount:N0} / {stats.TheoreticalVoxelsCount:N0}"
-            );
-            EditorGUILayout.LabelField("Sparse Savings", $"{savedPct:F2} %");
-            EditorGUILayout.LabelField("Memory (approx.)", $"{memoryKB:N1} KB");
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.Space(2);
+                EditorGuiHelpers.DrawHeadlineRow("Voxel Size", $"{stats.VoxelSize:F3} m");
+                EditorGuiHelpers.DrawHeadlineSeparator();
+                EditorGuiHelpers.DrawHeadlineRow(
+                    "Allocated Voxels",
+                    $"{stats.VoxelsCount:N0} / {stats.TheoreticalVoxelsCount:N0}  ({savedPct:F2}% saved)"
+                );
+                EditorGuiHelpers.DrawHeadlineSeparator();
+                EditorGuiHelpers.DrawHeadlineRow("Memory (approx.)", $"{memoryKB:N1} KB");
+                EditorGUILayout.Space(2);
+            }
 
             EditorGUILayout.Space(4);
-            EditorGUILayout.LabelField("Nodes per Layer", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Nodes per Layer (log scale)", EditorStyles.boldLabel);
             DrawNodesPerLayerChart(stats.NodesPerLayer);
+
+            EditorGUILayout.Space(6);
+            EditorGUILayout.LabelField("Sparse Savings per Layer", EditorStyles.boldLabel);
+            DrawSavingsHorizontalListHeatmap(stats.NodesPerLayer, stats.TheoreticalNodesPerLayer);
         }
 
         static readonly Color s_ChartBarColor = new(0.40f, 0.75f, 0.95f, 1f);
@@ -345,22 +355,23 @@ namespace NavVolume.Editor
                 return;
             }
 
-            var maxCount = 0;
+            var maxSparse = 0;
             foreach (var c in nodesPerLayer)
             {
-                if (c > maxCount)
+                if (c > maxSparse)
                 {
-                    maxCount = c;
+                    maxSparse = c;
                 }
             }
 
-            if (maxCount == 0)
+            var logMax = Mathf.Log10(maxSparse + 1f);
+            if (logMax <= 0f)
             {
                 EditorGUILayout.LabelField("(no nodes)");
                 return;
             }
 
-            const float _CHART_HEIGHT = 64f;
+            const float _CHART_HEIGHT = 80f;
             const float _LABEL_HEIGHT = 14f;
             const float _BAR_SPACING = 2f;
 
@@ -399,33 +410,81 @@ namespace NavVolume.Editor
 
             for (var i = 0; i < n; i++)
             {
-                var count = nodesPerLayer[i];
-                var ratio = (float)count / maxCount;
-                var barHeight = ratio * (barsRect.height - 2f);
+                var sparse = nodesPerLayer[i];
 
-                var bar = new Rect(
-                    barsRect.x + i * (barWidth + _BAR_SPACING),
-                    barsRect.yMax - barHeight,
-                    barWidth,
-                    barHeight
-                );
-                EditorGUI.DrawRect(bar, s_ChartBarColor);
+                // log10(x + 1) keeps 0 => 0 and stays monotonic.
+                var sparseRatio = Mathf.Log10(sparse + 1f) / logMax;
+                var sparseHeight = sparseRatio * (barsRect.height - 2f);
 
-                var topLabel = new Rect(
-                    barsRect.x + i * (barWidth + _BAR_SPACING),
-                    labelTop.y,
-                    barWidth,
-                    _LABEL_HEIGHT
-                );
-                var bottomLabel = new Rect(
-                    barsRect.x + i * (barWidth + _BAR_SPACING),
-                    labelBottom.y,
-                    barWidth,
-                    _LABEL_HEIGHT
-                );
+                var barX = barsRect.x + i * (barWidth + _BAR_SPACING);
 
-                EditorGUI.LabelField(topLabel, count.ToString(), topStyle);
+                var sparseBar = new Rect(
+                    barX,
+                    barsRect.yMax - sparseHeight,
+                    barWidth,
+                    sparseHeight
+                );
+                EditorGUI.DrawRect(sparseBar, s_ChartBarColor);
+
+                var topLabel = new Rect(barX, labelTop.y, barWidth, _LABEL_HEIGHT);
+                var bottomLabel = new Rect(barX, labelBottom.y, barWidth, _LABEL_HEIGHT);
+
+                EditorGUI.LabelField(topLabel, sparse.ToString(), topStyle);
                 EditorGUI.LabelField(bottomLabel, LayerName(i, n), bottomStyle);
+            }
+        }
+
+        static float SavingsFraction(int sparse, long dense) =>
+            dense > 0 ? 1f - Mathf.Clamp01((float)sparse / dense) : 0f;
+
+        /// <summary>
+        /// Horizontal progress-bar list where each bar is a single solid color picked from a red, yellow, green heatmap based on the savings value.
+        /// </summary>
+        static void DrawSavingsHorizontalListHeatmap(
+            int[] nodesPerLayer,
+            long[] theoreticalPerLayer
+        )
+        {
+            if (nodesPerLayer == null || nodesPerLayer.Length == 0)
+            {
+                return;
+            }
+
+            const float _ROW_HEIGHT = 18f;
+            const float _LABEL_WIDTH = 50f;
+            const float _PCT_WIDTH = 56f;
+            const float _GAP = 4f;
+
+            var n = nodesPerLayer.Length;
+            var labelStyle = new GUIStyle(EditorStyles.miniLabel)
+            {
+                alignment = TextAnchor.MiddleLeft,
+            };
+            var pctStyle = new GUIStyle(EditorStyles.miniLabel)
+            {
+                alignment = TextAnchor.MiddleRight,
+            };
+
+            for (var i = 0; i < n; i++)
+            {
+                var rowRect = EditorGUILayout.GetControlRect(false, _ROW_HEIGHT);
+
+                var labelRect = new Rect(rowRect.x, rowRect.y, _LABEL_WIDTH, rowRect.height);
+                var barRect = new Rect(
+                    labelRect.xMax + _GAP,
+                    rowRect.y + 2f,
+                    rowRect.width - _LABEL_WIDTH - _PCT_WIDTH - _GAP * 2,
+                    rowRect.height - 4f
+                );
+                var pctRect = new Rect(barRect.xMax + _GAP, rowRect.y, _PCT_WIDTH, rowRect.height);
+
+                var savings = SavingsFraction(nodesPerLayer[i], theoreticalPerLayer[i]);
+
+                EditorGUI.LabelField(labelRect, LayerName(i, n), labelStyle);
+                EditorGUI.DrawRect(barRect, s_ChartBgColor);
+                var fill = new Rect(barRect.x, barRect.y, barRect.width * savings, barRect.height);
+                EditorGUI.DrawRect(fill, EditorGuiHelpers.HeatmapColor(savings));
+                EditorGUI.LabelField(pctRect, $"{savings * 100f:F2}%", pctStyle);
             }
         }
 
@@ -436,13 +495,7 @@ namespace NavVolume.Editor
                 return "root";
             }
 
-            if (chartIndex == total - 1)
-            {
-                return "leaves";
-            }
-
-            // chartIndex maps to layer (total-2 - chartIndex) when 1 <= chartIndex <= total-2
-            var layer = total - 2 - chartIndex;
+            var layer = total - 1 - chartIndex;
             return $"L{layer}";
         }
 
@@ -677,8 +730,7 @@ namespace NavVolume.Editor
             SceneView.RepaintAll();
 
             Debug.Log(
-                $"[NavVolume][NavVolumeBakeEditor] NavVolume baked in {stopwatch.ElapsedMilliseconds} ms.\n"
-                    + $"Stats: {new SVOStats(navCtx.Svo)}"
+                $"[NavVolume][NavVolumeBakeEditor] NavVolume baked in {stopwatch.ElapsedMilliseconds} ms."
             );
         }
     }

@@ -45,6 +45,8 @@ namespace NavVolume
 
         int _currentWaypointIndex;
 
+        PathResult? _lastPath;
+
         internal IReadOnlyList<Vector3> SmoothedWaypoints => _smoothedWaypoints;
 
         internal IReadOnlyList<Vector3> RawWaypoints => _rawWaypoints;
@@ -52,6 +54,8 @@ namespace NavVolume
         internal int CurrentWaypointIndex => _currentWaypointIndex;
 
         internal bool HasActivePath => _currentWaypointIndex < _smoothedWaypoints.Count;
+
+        internal PathResult? LastPath => _lastPath;
 
         void Start()
         {
@@ -89,6 +93,8 @@ namespace NavVolume
             );
 
             var result = _navVolumeSpace.FindPath(request);
+            _lastPath = result;
+
             if (!result.Succeeded)
             {
                 Debug.LogError($"[NavVolume][NavVolumeAgent] Pathfinding failed: {result.Status} ");

@@ -151,8 +151,7 @@ namespace NavVolume
             NavCtx = builder.Build();
 
             Debug.Log(
-                $"[NavVolume][NavVolumeSpace] NavVolume built in {stopwatch.ElapsedMilliseconds} ms.\n"
-                    + $"Stats: {new SVOStats(NavCtx.Svo)}"
+                $"[NavVolume][NavVolumeSpace] NavVolume built in {stopwatch.ElapsedMilliseconds} ms."
             );
         }
 
@@ -166,18 +165,36 @@ namespace NavVolume
                 return PathResult.Failure(PathResultStatus.NoTree);
             }
 
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
             var raw = new SVOPathfinder().FindPath(NavCtx, request);
 
             if (!raw.Succeeded)
             {
-                return raw;
+                stopwatch.Stop();
+                var failStats = new PathStats(
+                    raw.Stats.NodesExpanded,
+                    stopwatch.Elapsed.TotalMilliseconds,
+                    0,
+                    0
+                );
+                return PathResult.Failure(raw.Status, failStats);
             }
 
             var rawWaypoints = raw.Waypoints;
             var shortcut = PathSmoother.GreedyShortcut(rawWaypoints, in NavCtx);
             var smoothed = PathSmoother.CatmullRomSpline(shortcut);
 
-            return PathResult.Success(smoothed, rawWaypoints);
+            stopwatch.Stop();
+
+            var stats = new PathStats(
+                raw.Stats.NodesExpanded,
+                stopwatch.Elapsed.TotalMilliseconds,
+                Mathf.Max(0, rawWaypoints.Count - shortcut.Count),
+                rawWaypoints.Count
+            );
+
+            return PathResult.Success(smoothed, rawWaypoints, stats);
         }
     }
 }
