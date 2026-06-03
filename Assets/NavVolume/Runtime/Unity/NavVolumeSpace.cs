@@ -176,6 +176,7 @@ namespace NavVolume
                 var failStats = new PathStats(
                     raw.Stats.NodesExpanded,
                     stopwatch.Elapsed.TotalMilliseconds,
+                    0,
                     0
                 );
                 return PathResult.Failure(raw.Status, failStats);
@@ -190,7 +191,8 @@ namespace NavVolume
             var stats = new PathStats(
                 raw.Stats.NodesExpanded,
                 stopwatch.Elapsed.TotalMilliseconds,
-                Mathf.Max(0, rawWaypoints.Count - shortcut.Count)
+                Mathf.Max(0, rawWaypoints.Count - shortcut.Count),
+                rawWaypoints.Count
             );
 
             return PathResult.Success(smoothed, rawWaypoints, stats);

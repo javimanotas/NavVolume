@@ -51,14 +51,14 @@ namespace NavVolume.Runtime.Pathfinding
             {
                 return PathResult.Failure(
                     PathResultStatus.InvalidEndpoint,
-                    new PathStats(0, 0d, 0)
+                    new PathStats(0, 0d, 0, 0)
                 );
             }
 
             if (startLink == goalLink)
             {
                 var trivial = new List<Vector3> { request.Start, request.Goal };
-                return PathResult.Success(trivial, new PathStats(0, 0d, 0));
+                return PathResult.Success(trivial, new PathStats(0, 0d, 0, 0));
             }
 
             ClearState();
@@ -78,7 +78,7 @@ namespace NavVolume.Runtime.Pathfinding
                 {
                     return PathResult.Failure(
                         PathResultStatus.BudgetExceeded,
-                        new PathStats(expanded, 0d, 0)
+                        new PathStats(expanded, 0d, 0, 0)
                     );
                 }
 
@@ -107,7 +107,7 @@ namespace NavVolume.Runtime.Pathfinding
 
             return PathResult.Failure(
                 PathResultStatus.NoPathFound,
-                new PathStats(expanded, 0d, 0)
+                new PathStats(expanded, 0d, 0, 0)
             );
         }
 
@@ -140,13 +140,13 @@ namespace NavVolume.Runtime.Pathfinding
             {
                 return PathResult.Failure(
                     PathResultStatus.InvalidEndpoint,
-                    new PathStats(0, 0d, 0)
+                    new PathStats(0, 0d, 0, 0)
                 );
             }
 
             return PathResult.Success(
                 new List<Vector3> { request.Start, request.Goal },
-                new PathStats(0, 0d, 0)
+                new PathStats(0, 0d, 0, 0)
             );
         }
 
@@ -452,7 +452,7 @@ namespace NavVolume.Runtime.Pathfinding
             rawPath[0] = request.Start;
             rawPath.Add(request.Goal);
 
-            return PathResult.Success(rawPath, new PathStats(nodesExpanded, 0d, 0));
+            return PathResult.Success(rawPath, new PathStats(nodesExpanded, 0d, 0, 0));
         }
     }
 }

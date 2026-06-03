@@ -20,11 +20,23 @@ namespace NavVolume.Runtime.Pathfinding
         /// </summary>
         public readonly int WaypointsRemovedByLOS;
 
-        public PathStats(int nodesExpanded, double elapsedMs, int waypointsRemovedByLOS)
+        /// <summary>
+        /// Waypoint count of the raw A* path before smoothing. Acts as the denominator for
+        /// <see cref="WaypointsRemovedByLOS"/>.
+        /// </summary>
+        public readonly int RawWaypointsCount;
+
+        public PathStats(
+            int nodesExpanded,
+            double elapsedMs,
+            int waypointsRemovedByLOS,
+            int rawWaypointsCount
+        )
         {
             NodesExpanded = nodesExpanded;
             ElapsedMs = elapsedMs;
             WaypointsRemovedByLOS = waypointsRemovedByLOS;
+            RawWaypointsCount = rawWaypointsCount;
         }
     }
 }

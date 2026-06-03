@@ -87,9 +87,14 @@ namespace NavVolume.Editor
                     EditorGUILayout.LabelField("Status", lastPath.Value.Status.ToString());
                     EditorGUILayout.LabelField("Nodes expanded", stats.NodesExpanded.ToString("N0"));
                     EditorGUILayout.LabelField("Elapsed", $"{stats.ElapsedMs:F2} ms");
+
+                    var pct =
+                        stats.RawWaypointsCount > 0
+                            ? 100f * stats.WaypointsRemovedByLOS / stats.RawWaypointsCount
+                            : 0f;
                     EditorGUILayout.LabelField(
                         "Waypoints removed by LOS",
-                        stats.WaypointsRemovedByLOS.ToString("N0")
+                        $"{stats.WaypointsRemovedByLOS:N0} / {stats.RawWaypointsCount:N0}  ({pct:F1}%)"
                     );
                 }
 
