@@ -29,6 +29,8 @@ namespace NavVolume.Tests.PlayMode
             [Random(0f, 1f, 3)] float tz
         )
         {
+            Assert.IsTrue(false);
+
             var space = Object.FindFirstObjectByType<NavVolumeSpace>();
             Assert.IsNotNull(space, "Scene must contain a NavVolumeSpace.");
             Assert.IsTrue(space.IsReady, "NavVolumeSpace failed to build.");
