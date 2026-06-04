@@ -54,22 +54,24 @@ namespace NavVolume.Runtime.Builder
             svo.LeafNodes = leafNodes;
         }
 
-        SortedSet<MortonCode> CalculateL0Codes(List<MortonCode> l1Codes)
+        List<MortonCode> CalculateL0Codes(List<MortonCode> l1Codes)
         {
-            var l0Codes = new SortedSet<MortonCode>();
+            var dedup = new HashSet<MortonCode>(l1Codes.Count * 8);
 
             foreach (var l1Code in l1Codes)
             {
                 for (var c = 0u; c < 8; c++)
                 {
-                    l0Codes.Add(l1Code.ChildCode(c));
+                    dedup.Add(l1Code.ChildCode(c));
                 }
             }
 
+            var l0Codes = new List<MortonCode>(dedup);
+            l0Codes.Sort();
             return l0Codes;
         }
 
-        void AllocateL0(SVO svo, SortedSet<MortonCode> l0Codes)
+        void AllocateL0(SVO svo, List<MortonCode> l0Codes)
         {
             foreach (var code in l0Codes)
             {
@@ -80,17 +82,15 @@ namespace NavVolume.Runtime.Builder
             }
         }
 
-        SVOLeaf[] CalculateLeafNodes(SortedSet<MortonCode> l0Codes)
+        SVOLeaf[] CalculateLeafNodes(List<MortonCode> l0Codes)
         {
             var l0NodeSize = _settings.NodeSizeForLayer(0);
             var corners = new Vector3[l0Codes.Count];
-            var i = 0;
 
-            foreach (var code in l0Codes)
+            for (var i = 0; i < l0Codes.Count; i++)
             {
-                var (x, y, z) = code.Decoded;
+                var (x, y, z) = l0Codes[i].Decoded;
                 corners[i] = _settings.Origin + new Vector3(x, y, z) * l0NodeSize;
-                i++;
             }
 
             return SVORasterizer.RasterizeLeaves(_settings, corners);
@@ -109,21 +109,22 @@ namespace NavVolume.Runtime.Builder
             AllocateParentNodes(svo, layer, parentCodes);
         }
 
-        SortedSet<MortonCode> CalculateParentCodes(SVO svo, uint childLayer)
+        List<MortonCode> CalculateParentCodes(SVO svo, uint childLayer)
         {
             var children = svo.Layers[childLayer];
-
-            var parentCodes = new SortedSet<MortonCode>();
+            var dedup = new HashSet<MortonCode>(children.Count);
 
             foreach (var child in children)
             {
-                parentCodes.Add(child.MortonCode.ParentCode);
+                dedup.Add(child.MortonCode.ParentCode);
             }
 
+            var parentCodes = new List<MortonCode>(dedup);
+            parentCodes.Sort();
             return parentCodes;
         }
 
-        void AllocateMissingSiblings(SVO svo, uint childLayer, SortedSet<MortonCode> parentCodes)
+        void AllocateMissingSiblings(SVO svo, uint childLayer, List<MortonCode> parentCodes)
         {
             var someSiblingMissed = false;
 
@@ -154,7 +155,7 @@ namespace NavVolume.Runtime.Builder
         {
             var list = svo.Layers[layer];
 
-            list.Sort((a, b) => a.MortonCode.CompareTo(b.MortonCode));
+            list.Sort();
 
             var lookup = svo.MortonToIndex[layer];
             lookup.Clear();
@@ -165,7 +166,7 @@ namespace NavVolume.Runtime.Builder
             }
         }
 
-        void AllocateParentNodes(SVO svo, uint layer, SortedSet<MortonCode> parentCodes)
+        void AllocateParentNodes(SVO svo, uint layer, List<MortonCode> parentCodes)
         {
             foreach (var pCode in parentCodes)
             {

@@ -34,21 +34,17 @@ namespace NavVolume.Runtime.Builder
         /// <summary>
         /// Sweeps the navigation volume with layer 1 resolution while checking for geometry.
         /// </summary>
+        /// <remarks>
+        /// Uses a coarse-to-fine hierarchical traversal: starts at a layer just below the root
+        /// (typically 8 candidate cells) and only subdivides candidates that contain geometry,
+        /// skipping entire empty subtrees. For sparse scenes (the common case for nav volumes)
+        /// this is orders of magnitude faster than a dense L1 sweep.
+        /// </remarks>
         /// <returns>
-        /// A sorted list of morton codes for every cell that contains geometry.
+        /// A sorted list of morton codes for every L1 cell that contains geometry.
         /// </returns>
         public static List<MortonCode> RasterizeL1(BuildSettings settings)
         {
-            var cellSize = settings.NodeSizeForLayer(1);
-            var gridSize = Mathf.RoundToInt(settings.RootSize / cellSize);
-            var totalCells = gridSize * gridSize * gridSize;
-
-            if (totalCells == 0)
-            {
-                return new List<MortonCode>();
-            }
-
-            var halfExtent = cellSize * 0.5f - _OVERLAP_BOX_SHRINK + settings.AgentRadius;
             var queryParams = new QueryParameters(
                 settings.CollisionMask,
                 hitMultipleFaces: false,
@@ -56,58 +52,39 @@ namespace NavVolume.Runtime.Builder
                 hitBackfaces: false
             );
 
-            var commands = new NativeArray<OverlapBoxCommand>(
-                totalCells,
-                Allocator.TempJob,
-                NativeArrayOptions.UninitializedMemory
-            );
-            var results = new NativeArray<ColliderHit>(
-                totalCells,
-                Allocator.TempJob,
-                NativeArrayOptions.ClearMemory
-            );
+            // Start at the layer just below root (8 seed cells = a 2x2x2 grid).
+            // For very shallow trees (NumLayers < 3) we fall back to seeding at layer 1
+            // directly, which is equivalent to the old dense sweep.
+            var topLayer = Mathf.Max(1, settings.NumLayers - 2);
 
-            var fillHandle = new BuildGridCommandsJob
+            var candidates = BuildSeedCandidates(settings, topLayer);
+
+            for (var currentLayer = topLayer; currentLayer >= 1; currentLayer--)
             {
-                Commands = commands,
-                Origin = settings.Origin,
-                CellSize = cellSize,
-                GridSize = gridSize,
-                HalfExtents = new Vector3(halfExtent, halfExtent, halfExtent),
-                QueryParams = queryParams,
-            }.Schedule(totalCells, _PARALLEL_FOR_BATCH);
+                candidates = OverlapAtLayer(settings, currentLayer, candidates, queryParams);
 
-            var overlapHandle = OverlapBoxCommand.ScheduleBatch(
-                commands,
-                results,
-                _OVERLAP_BATCH_MIN,
-                1,
-                fillHandle
-            );
-            overlapHandle.Complete();
-
-            var occupied = new List<MortonCode>();
-            for (var i = 0u; i < (uint)gridSize; i++)
-            {
-                for (var j = 0u; j < (uint)gridSize; j++)
+                if (currentLayer == 1)
                 {
-                    for (var k = 0u; k < (uint)gridSize; k++)
+                    candidates.Sort();
+                    return candidates;
+                }
+
+                // Subdivide every occupied cell into its 8 children at the next finer layer.
+                var subdivided = new List<MortonCode>(candidates.Count * 8);
+                foreach (var occ in candidates)
+                {
+                    for (var c = 0u; c < 8; c++)
                     {
-                        var idx = (int)((i * (uint)gridSize + j) * (uint)gridSize + k);
-                        if (results[idx].instanceID != 0)
-                        {
-                            occupied.Add(new MortonCode(i, j, k));
-                        }
+                        subdivided.Add(occ.ChildCode(c));
                     }
                 }
+                candidates = subdivided;
             }
 
-            commands.Dispose();
-            results.Dispose();
-
-            // (i, j, k) iteration is not Morton-sorted, so we still need to sort.
-            occupied.Sort();
-            return occupied;
+            // Unreachable because the loop returns when currentLayer == 1, but keeps the
+            // compiler happy and guards against future refactors of the loop bounds.
+            candidates.Sort();
+            return candidates;
         }
 
         /// <summary>
@@ -186,30 +163,129 @@ namespace NavVolume.Runtime.Builder
             return leaves;
         }
 
+        /// <summary>
+        /// Builds the seed set for the hierarchical sweep: every cell of the regular grid
+        /// at <paramref name="topLayer"/>.
+        /// </summary>
+        static List<MortonCode> BuildSeedCandidates(BuildSettings settings, int topLayer)
+        {
+            // gridSize at layer L is 2^(NumLayers - 1 - L). At topLayer = NumLayers - 2 this is 2.
+            var gridSize = 1 << (settings.NumLayers - 1 - topLayer);
+            var total = gridSize * gridSize * gridSize;
+
+            var seeds = new List<MortonCode>(total);
+            for (var i = 0u; i < (uint)gridSize; i++)
+            {
+                for (var j = 0u; j < (uint)gridSize; j++)
+                {
+                    for (var k = 0u; k < (uint)gridSize; k++)
+                    {
+                        seeds.Add(new MortonCode(i, j, k));
+                    }
+                }
+            }
+            return seeds;
+        }
+
+        /// <summary>
+        /// Runs a batched OverlapBox over <paramref name="candidates"/> at the given layer's
+        /// cell size and returns the subset that hit geometry.
+        /// </summary>
+        static List<MortonCode> OverlapAtLayer(
+            BuildSettings settings,
+            int layer,
+            List<MortonCode> candidates,
+            QueryParameters queryParams
+        )
+        {
+            if (candidates.Count == 0)
+            {
+                return candidates;
+            }
+
+            var cellSize = settings.NodeSizeForLayer(layer);
+            var halfExtent = cellSize * 0.5f - _OVERLAP_BOX_SHRINK + settings.AgentRadius;
+
+            var candidateArr = new NativeArray<MortonCode>(
+                candidates.Count,
+                Allocator.TempJob,
+                NativeArrayOptions.UninitializedMemory
+            );
+            for (var i = 0; i < candidates.Count; i++)
+            {
+                candidateArr[i] = candidates[i];
+            }
+
+            var commands = new NativeArray<OverlapBoxCommand>(
+                candidates.Count,
+                Allocator.TempJob,
+                NativeArrayOptions.UninitializedMemory
+            );
+            var results = new NativeArray<ColliderHit>(
+                candidates.Count,
+                Allocator.TempJob,
+                NativeArrayOptions.ClearMemory
+            );
+
+            var fillHandle = new BuildLayerCommandsJob
+            {
+                Commands = commands,
+                Candidates = candidateArr,
+                Origin = settings.Origin,
+                CellSize = cellSize,
+                HalfExtents = new Vector3(halfExtent, halfExtent, halfExtent),
+                QueryParams = queryParams,
+            }.Schedule(candidates.Count, _PARALLEL_FOR_BATCH);
+
+            var overlapHandle = OverlapBoxCommand.ScheduleBatch(
+                commands,
+                results,
+                _OVERLAP_BATCH_MIN,
+                1,
+                fillHandle
+            );
+            overlapHandle.Complete();
+
+            var occupied = new List<MortonCode>();
+            for (var i = 0; i < candidates.Count; i++)
+            {
+                if (results[i].instanceID != 0)
+                {
+                    occupied.Add(candidates[i]);
+                }
+            }
+
+            candidateArr.Dispose();
+            commands.Dispose();
+            results.Dispose();
+
+            return occupied;
+        }
+
         [BurstCompile]
-        struct BuildGridCommandsJob : IJobParallelFor
+        struct BuildLayerCommandsJob : IJobParallelFor
         {
             [WriteOnly]
             public NativeArray<OverlapBoxCommand> Commands;
 
+            [ReadOnly]
+            public NativeArray<MortonCode> Candidates;
+
             public Vector3 Origin;
             public float CellSize;
-            public int GridSize;
             public Vector3 HalfExtents;
             public QueryParameters QueryParams;
 
             public void Execute(int index)
             {
-                var k = index % GridSize;
-                var j = (index / GridSize) % GridSize;
-                var i = index / (GridSize * GridSize);
+                var (x, y, z) = Candidates[index].Decoded;
 
                 var center =
                     Origin
                     + new Vector3(
-                        (i + 0.5f) * CellSize,
-                        (j + 0.5f) * CellSize,
-                        (k + 0.5f) * CellSize
+                        (x + 0.5f) * CellSize,
+                        (y + 0.5f) * CellSize,
+                        (z + 0.5f) * CellSize
                     );
 
                 Commands[index] = new OverlapBoxCommand(
