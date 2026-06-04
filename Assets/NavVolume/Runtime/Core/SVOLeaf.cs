@@ -11,6 +11,8 @@ namespace NavVolume.Runtime.Core
     {
         public static SVOLeaf Empty => new() { _occupiedSubnodes = 0 };
 
+        public static SVOLeaf FromRawBits(ulong rawBits) => new() { _occupiedSubnodes = rawBits };
+
         /// <summary>
         /// Bitset of the occupied subnodes.
         /// </summary>

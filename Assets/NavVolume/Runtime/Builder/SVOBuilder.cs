@@ -82,21 +82,18 @@ namespace NavVolume.Runtime.Builder
 
         SVOLeaf[] CalculateLeafNodes(SortedSet<MortonCode> l0Codes)
         {
-            var leafNodes = new SVOLeaf[l0Codes.Count];
             var l0NodeSize = _settings.NodeSizeForLayer(0);
+            var corners = new Vector3[l0Codes.Count];
             var i = 0;
 
             foreach (var code in l0Codes)
             {
                 var (x, y, z) = code.Decoded;
-                var nodeWorld = _settings.Origin + new Vector3(x, y, z) * l0NodeSize;
-
-                var leaf = SVORasterizer.RasterizeLeaf(_settings, nodeWorld);
-                leafNodes[i] = leaf;
+                corners[i] = _settings.Origin + new Vector3(x, y, z) * l0NodeSize;
                 i++;
             }
 
-            return leafNodes;
+            return SVORasterizer.RasterizeLeaves(_settings, corners);
         }
 
         #endregion
