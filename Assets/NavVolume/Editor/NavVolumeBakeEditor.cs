@@ -735,19 +735,42 @@ namespace NavVolume.Editor
             // (serialize + disk save) phases so the whole bake is reported as one unified log.
             var profiler = new BakeProfiler();
 
-            var navCtx = new SVOBuilder(space.CurrentSettings).Build(profiler);
+            // Cancelable progress bar. The reporter throws on cancel so the in-flight bake unwinds
+            // at the next phase boundary without writing a partial asset.
+            static void Report(string phase, float fraction)
+            {
+                if (EditorUtility.DisplayCancelableProgressBar("Baking NavVolume", phase, fraction))
+                {
+                    throw new System.OperationCanceledException();
+                }
+            }
 
-            bakedData.PopulateData(navCtx);
-            profiler.Lap("PopulateData");
+            try
+            {
+                var navCtx = new SVOBuilder(space.CurrentSettings).Build(profiler, Report);
 
-            EditorUtility.SetDirty(bakedData);
-            AssetDatabase.SaveAssetIfDirty(bakedData);
-            profiler.Lap("SaveAsset");
+                Report("Serializing data", 0.90f);
+                bakedData.PopulateData(navCtx);
+                profiler.Lap("PopulateData");
 
-            InvalidateNavContextCache(space);
-            SceneView.RepaintAll();
+                Report("Saving asset", 0.95f);
+                EditorUtility.SetDirty(bakedData);
+                AssetDatabase.SaveAssetIfDirty(bakedData);
+                profiler.Lap("SaveAsset");
 
-            BakeStatsWindow.Show(profiler.ToReport());
+                InvalidateNavContextCache(space);
+                SceneView.RepaintAll();
+
+                BakeStatsWindow.Show(profiler.ToReport());
+            }
+            catch (System.OperationCanceledException)
+            {
+                Debug.Log("[NavVolume][NavVolumeBakeEditor] Bake cancelled.");
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
         }
     }
 }

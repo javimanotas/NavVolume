@@ -12,13 +12,12 @@ namespace NavVolume.Runtime.Builder
         readonly BuildSettings _settings;
 
         BakeProfiler _profiler;
+        BakeProgress _progress;
 
         public SVOBuilder(BuildSettings settings)
         {
             _settings = settings;
         }
-
-        // TODO: implement an async builder that can be cancelled and reports progress.
 
         /// <summary>
         /// Builds the SVO and logs its own phase timings. Used by runtime (non-editor) callers.
@@ -26,34 +25,39 @@ namespace NavVolume.Runtime.Builder
         public NavContext Build() => Build(new());
 
         /// <summary>
-        /// Builds the SVO, recording per-phase timings into <paramref name="profiler"/>. When
-        /// <paramref name="report"/> is false the caller owns reporting, so it can append its own
-        /// post-build phases (e.g. asset serialization) and emit a single unified log.
+        /// Builds the SVO, recording per-phase timings into <paramref name="profiler"/> and, when
+        /// supplied, reporting coarse progress through <paramref name="progress"/>. The host's
+        /// reporter may throw at a phase boundary to cancel the bake.
         /// </summary>
-        internal NavContext Build(BakeProfiler profiler)
+        internal NavContext Build(BakeProfiler profiler, BakeProgress progress = null)
         {
             _profiler = profiler;
+            _progress = progress;
             _profiler.Start();
 
             var svo = new SVO(_settings.NumLayers);
 
+            _progress?.Invoke("Rasterizing volume", 0.05f);
             var occupiedL1 = SVORasterizer.RasterizeL1(_settings);
             _profiler.Lap($"RasterizeL1 ({occupiedL1.Count} cells)");
 
             AllocateLowerLayers(svo, occupiedL1);
 
+            _progress?.Invoke("Building upper layers", 0.68f);
             for (var layer = 1u; layer < svo.Layers.Length; layer++)
             {
                 BuildUpperLayer(svo, layer);
             }
             _profiler.Lap("BuildUpperLayers");
 
+            _progress?.Invoke("Linking parents and children", 0.74f);
             for (var layer = 1u; layer < svo.Layers.Length; layer++)
             {
                 LinkParentAndChildren(svo, layer, layer - 1);
             }
             _profiler.Lap("LinkParentAndChildren");
 
+            _progress?.Invoke("Linking neighbors", 0.80f);
             SVONeighborLinker.FillNeighborLinks(svo, _settings);
             _profiler.Lap("FillNeighborLinks");
 
@@ -67,6 +71,8 @@ namespace NavVolume.Runtime.Builder
 
         void AllocateLowerLayers(SVO svo, List<MortonCode> l1Codes)
         {
+            _progress?.Invoke("Rasterizing leaf voxels", 0.12f);
+
             var l0Codes = CalculateL0Codes(l1Codes);
             _profiler.Lap($"CalculateL0Codes ({l0Codes.Count})");
 

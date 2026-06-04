@@ -3,6 +3,15 @@ using System.Collections.Generic;
 namespace NavVolume.Runtime.Builder
 {
     /// <summary>
+    /// Reports coarse bake progress to the host (e.g. an editor progress bar). The builder invokes
+    /// this only at phase boundaries, where no jobs or native allocations are in flight, so the host
+    /// is free to throw (e.g. on user cancel) to unwind the bake cleanly.
+    /// </summary>
+    /// <param name="phase">Human-readable name of the phase about to run.</param>
+    /// <param name="fraction">Approximate overall completion, in [0, 1].</param>
+    internal delegate void BakeProgress(string phase, float fraction);
+
+    /// <summary>
     /// A single timed phase of a bake.
     /// </summary>
     internal readonly struct BakePhase
