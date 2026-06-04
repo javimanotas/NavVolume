@@ -124,45 +124,52 @@ namespace NavVolume.Runtime.Builder
             return parentCodes;
         }
 
+        /// <summary>
+        /// Ensures every parent in <paramref name="parentCodes"/> has all 8 of its children
+        /// present in <c>Layer[childLayer]</c>, in Morton-sorted order.
+        /// </summary>
+        /// <remarks>
+        /// Instead of appending missing padding nodes and re-sorting the whole layer (an extra
+        /// O(N log N) sort every time a sibling is missing), this generates the complete
+        /// expected child set, sorts it once, and rebuilds the layer + lookup in a single pass.
+        /// Short-circuits cheaply when nothing is missing.
+        /// </remarks>
         void AllocateMissingSiblings(SVO svo, uint childLayer, List<MortonCode> parentCodes)
         {
-            var someSiblingMissed = false;
+            var layer = svo.Layers[childLayer];
+            var expectedCount = parentCodes.Count * 8;
 
+            // Every existing child's parent is by construction in parentCodes, so the layer
+            // size can only be <= expectedCount. Equality means no siblings are missing and
+            // the layer is already sorted from the previous build step.
+            if (layer.Count == expectedCount)
+            {
+                return;
+            }
+
+            var allChildren = new List<MortonCode>(expectedCount);
             foreach (var pCode in parentCodes)
             {
                 for (var c = 0u; c < 8; c++)
                 {
-                    var childCode = pCode.ChildCode(c);
-
-                    if (!svo.MortonToIndex[childLayer].ContainsKey(childCode))
-                    {
-                        someSiblingMissed = true;
-
-                        var paddingIdx = svo.Layers[childLayer].Count;
-                        svo.Layers[childLayer].Add(new(childCode));
-                        svo.MortonToIndex[childLayer][childCode] = paddingIdx;
-                    }
+                    allChildren.Add(pCode.ChildCode(c));
                 }
             }
+            allChildren.Sort();
 
-            if (someSiblingMissed)
-            {
-                ResortLayer(svo, childLayer);
-            }
-        }
-
-        void ResortLayer(SVO svo, uint layer)
-        {
-            var list = svo.Layers[layer];
-
-            list.Sort();
-
-            var lookup = svo.MortonToIndex[layer];
+            var lookup = svo.MortonToIndex[childLayer];
+            layer.Clear();
             lookup.Clear();
-
-            for (var i = 0; i < list.Count; i++)
+            if (layer.Capacity < expectedCount)
             {
-                lookup[list[i].MortonCode] = i;
+                layer.Capacity = expectedCount;
+            }
+
+            for (var i = 0; i < allChildren.Count; i++)
+            {
+                var code = allChildren[i];
+                layer.Add(new(code));
+                lookup[code] = i;
             }
         }
 
