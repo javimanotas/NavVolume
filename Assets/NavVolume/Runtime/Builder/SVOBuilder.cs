@@ -23,14 +23,14 @@ namespace NavVolume.Runtime.Builder
         /// <summary>
         /// Builds the SVO and logs its own phase timings. Used by runtime (non-editor) callers.
         /// </summary>
-        public NavContext Build() => Build(new BakeProfiler(), report: true);
+        public NavContext Build() => Build(new());
 
         /// <summary>
         /// Builds the SVO, recording per-phase timings into <paramref name="profiler"/>. When
         /// <paramref name="report"/> is false the caller owns reporting, so it can append its own
         /// post-build phases (e.g. asset serialization) and emit a single unified log.
         /// </summary>
-        internal NavContext Build(BakeProfiler profiler, bool report)
+        internal NavContext Build(BakeProfiler profiler)
         {
             _profiler = profiler;
             _profiler.Start();
@@ -60,12 +60,6 @@ namespace NavVolume.Runtime.Builder
             _profiler.MarkBuildComplete();
 
             var navCtx = new NavContext(svo, _settings);
-
-            if (report)
-            {
-                _profiler.Report();
-            }
-
             return navCtx;
         }
 
@@ -283,27 +277,6 @@ namespace NavVolume.Runtime.Builder
             }
 
             return new BakeReport(total, buildMs, total - buildMs, phases);
-        }
-
-        public void Report()
-        {
-            var total = Sum();
-            var buildMs = _buildMs >= 0 ? _buildMs : total;
-            var saveMs = total - buildMs;
-
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine(
-                saveMs > 0.05
-                    ? $"[NavVolume] Bake: {total:F1} ms  (build {buildMs:F1} ms + save {saveMs:F1} ms)"
-                    : $"[NavVolume] Bake: {total:F1} ms"
-            );
-
-            foreach (var (label, ms) in _laps)
-            {
-                sb.AppendLine($"    {label,-26} {ms,8:F1} ms");
-            }
-
-            UnityEngine.Debug.Log(sb.ToString());
         }
 
         double Sum()

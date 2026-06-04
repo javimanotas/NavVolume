@@ -163,7 +163,10 @@ namespace NavVolume.Editor
                 {
                     _hovered = i;
                     // White top accent to mark the hovered segment.
-                    EditorGUI.DrawRect(new Rect(segment.x, segment.y, segment.width, 2f), Color.white);
+                    EditorGUI.DrawRect(
+                        new Rect(segment.x, segment.y, segment.width, 2f),
+                        Color.white
+                    );
                 }
 
                 x += width;
@@ -202,7 +205,12 @@ namespace NavVolume.Editor
                     EditorGUI.DrawRect(row, s_RowHighlight);
                 }
 
-                var swatch = new Rect(row.x + 2f, row.y + (row.height - _SWATCH) * 0.5f, _SWATCH, _SWATCH);
+                var swatch = new Rect(
+                    row.x + 2f,
+                    row.y + (row.height - _SWATCH) * 0.5f,
+                    _SWATCH,
+                    _SWATCH
+                );
                 EditorGUI.DrawRect(swatch, PhaseColor(i));
 
                 var nameRect = new Rect(
@@ -211,7 +219,12 @@ namespace NavVolume.Editor
                     row.width - _SWATCH - _MS_WIDTH - _PCT_WIDTH - 18f,
                     row.height
                 );
-                var msRect = new Rect(row.xMax - _MS_WIDTH - _PCT_WIDTH, row.y, _MS_WIDTH, row.height);
+                var msRect = new Rect(
+                    row.xMax - _MS_WIDTH - _PCT_WIDTH,
+                    row.y,
+                    _MS_WIDTH,
+                    row.height
+                );
                 var pctRect = new Rect(row.xMax - _PCT_WIDTH, row.y, _PCT_WIDTH, row.height);
 
                 var nameStyle = i == _hovered ? EditorStyles.boldLabel : EditorStyles.label;
@@ -222,7 +235,9 @@ namespace NavVolume.Editor
         }
 
         double Percent(int orderedIndex) =>
-            _report.TotalMs > 0 ? _ordered[orderedIndex].Milliseconds / _report.TotalMs * 100.0 : 0.0;
+            _report.TotalMs > 0
+                ? _ordered[orderedIndex].Milliseconds / _report.TotalMs * 100.0
+                : 0.0;
 
         Color PhaseColor(int orderedIndex)
         {

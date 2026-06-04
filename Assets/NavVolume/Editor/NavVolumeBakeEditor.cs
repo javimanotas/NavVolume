@@ -594,11 +594,7 @@ namespace NavVolume.Editor
                         using (new EditorGUI.DisabledScope(!BakeStatsWindow.HasReport))
                         {
                             if (
-                                GUILayout.Button(
-                                    "Stats",
-                                    GUILayout.Height(28),
-                                    GUILayout.Width(60)
-                                )
+                                GUILayout.Button("Stats", GUILayout.Height(28), GUILayout.Width(60))
                             )
                             {
                                 BakeStatsWindow.ShowLast();
@@ -739,7 +735,7 @@ namespace NavVolume.Editor
             // (serialize + disk save) phases so the whole bake is reported as one unified log.
             var profiler = new BakeProfiler();
 
-            var navCtx = new SVOBuilder(space.CurrentSettings).Build(profiler, report: false);
+            var navCtx = new SVOBuilder(space.CurrentSettings).Build(profiler);
 
             bakedData.PopulateData(navCtx);
             profiler.Lap("PopulateData");
@@ -751,7 +747,6 @@ namespace NavVolume.Editor
             InvalidateNavContextCache(space);
             SceneView.RepaintAll();
 
-            profiler.Report();
             BakeStatsWindow.Show(profiler.ToReport());
         }
     }

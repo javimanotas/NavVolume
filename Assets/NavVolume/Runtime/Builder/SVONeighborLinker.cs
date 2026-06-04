@@ -49,9 +49,7 @@ namespace NavVolume.Runtime.Builder
                     // Parent's neighbors are inherited on any side without a same-layer neighbor.
                     // Fetch them once per node rather than re-copying the parent for all six sides.
                     var hasParent = node.Parent.IsValid;
-                    var parentNeighbors = hasParent
-                        ? svo.GetNode(node.Parent).Neighbors
-                        : default;
+                    var parentNeighbors = hasParent ? svo.GetNode(node.Parent).Neighbors : default;
 
                     for (var d = 0; d < 6; d++)
                     {
