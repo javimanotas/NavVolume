@@ -73,12 +73,15 @@ namespace NavVolume.Runtime.Builder
 
         void AllocateL0(SVO svo, List<MortonCode> l0Codes)
         {
+            var layer = svo.Layers[0];
+            if (layer.Capacity < l0Codes.Count)
+            {
+                layer.Capacity = l0Codes.Count;
+            }
+
             foreach (var code in l0Codes)
             {
-                var nodeIdx = svo.Layers[0].Count;
-
-                svo.Layers[0].Add(new(code));
-                svo.MortonToIndex[0][code] = nodeIdx;
+                layer.Add(new(code));
             }
         }
 
@@ -157,9 +160,7 @@ namespace NavVolume.Runtime.Builder
             }
             allChildren.Sort();
 
-            var lookup = svo.MortonToIndex[childLayer];
             layer.Clear();
-            lookup.Clear();
             if (layer.Capacity < expectedCount)
             {
                 layer.Capacity = expectedCount;
@@ -167,19 +168,21 @@ namespace NavVolume.Runtime.Builder
 
             for (var i = 0; i < allChildren.Count; i++)
             {
-                var code = allChildren[i];
-                layer.Add(new(code));
-                lookup[code] = i;
+                layer.Add(new(allChildren[i]));
             }
         }
 
         void AllocateParentNodes(SVO svo, uint layer, List<MortonCode> parentCodes)
         {
+            var parentLayer = svo.Layers[layer];
+            if (parentLayer.Capacity < parentLayer.Count + parentCodes.Count)
+            {
+                parentLayer.Capacity = parentLayer.Count + parentCodes.Count;
+            }
+
             foreach (var pCode in parentCodes)
             {
-                var parentIdx = svo.Layers[layer].Count;
-                svo.Layers[layer].Add(new(pCode));
-                svo.MortonToIndex[layer][pCode] = parentIdx;
+                parentLayer.Add(new(pCode));
             }
         }
 

@@ -109,7 +109,7 @@ namespace NavVolume.Runtime.Builder
                 var z = (uint)(local.z / nodeSize);
                 var code = new MortonCode(x, y, z);
 
-                if (!Svo.MortonToIndex[layer].TryGetValue(code, out var offset))
+                if (!Svo.TryFindNodeIndex((uint)layer, code, out var offset))
                 {
                     continue;
                 }
