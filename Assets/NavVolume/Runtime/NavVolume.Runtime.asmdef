@@ -1,7 +1,7 @@
 {
     "name": "NavVolume.Runtime",
     "rootNamespace": "NavVolume.Runtime",
-    "references": ["Unity.Burst"],
+    "references": ["Unity.Burst", "Unity.Mathematics"],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

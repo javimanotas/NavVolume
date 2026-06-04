@@ -3,6 +3,7 @@ using NavVolume.Runtime.Core;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace NavVolume.Runtime.Builder
@@ -107,7 +108,15 @@ namespace NavVolume.Runtime.Builder
                 hitBackfaces: false
             );
 
-            var corners = new NativeArray<Vector3>(leafCorners, Allocator.TempJob);
+            var corners = new NativeArray<float3>(
+                leafCount,
+                Allocator.TempJob,
+                NativeArrayOptions.UninitializedMemory
+            );
+            for (var i = 0; i < leafCount; i++)
+            {
+                corners[i] = leafCorners[i];
+            }
             var commands = new NativeArray<OverlapBoxCommand>(
                 totalCells,
                 Allocator.TempJob,
@@ -129,7 +138,7 @@ namespace NavVolume.Runtime.Builder
                 Commands = commands,
                 Corners = corners,
                 VoxelSize = settings.VoxelSize,
-                HalfExtents = new Vector3(halfExtent, halfExtent, halfExtent),
+                HalfExtents = new float3(halfExtent),
                 QueryParams = queryParams,
             }.Schedule(totalCells, _PARALLEL_FOR_BATCH);
 
@@ -233,7 +242,7 @@ namespace NavVolume.Runtime.Builder
                 Candidates = candidateArr,
                 Origin = settings.Origin,
                 CellSize = cellSize,
-                HalfExtents = new Vector3(halfExtent, halfExtent, halfExtent),
+                HalfExtents = new float3(halfExtent),
                 QueryParams = queryParams,
             }.Schedule(candidates.Count, _PARALLEL_FOR_BATCH);
 
@@ -271,27 +280,22 @@ namespace NavVolume.Runtime.Builder
             [ReadOnly]
             public NativeArray<MortonCode> Candidates;
 
-            public Vector3 Origin;
+            public float3 Origin;
             public float CellSize;
-            public Vector3 HalfExtents;
+            public float3 HalfExtents;
             public QueryParameters QueryParams;
 
             public void Execute(int index)
             {
                 var (x, y, z) = Candidates[index].Decoded;
 
-                var center =
-                    Origin
-                    + new Vector3(
-                        (x + 0.5f) * CellSize,
-                        (y + 0.5f) * CellSize,
-                        (z + 0.5f) * CellSize
-                    );
+                var ijk = new float3(x, y, z);
+                var center = Origin + (ijk + 0.5f) * CellSize;
 
                 Commands[index] = new OverlapBoxCommand(
                     center,
                     HalfExtents,
-                    Quaternion.identity,
+                    quaternion.identity,
                     QueryParams
                 );
             }
@@ -304,10 +308,10 @@ namespace NavVolume.Runtime.Builder
             public NativeArray<OverlapBoxCommand> Commands;
 
             [ReadOnly]
-            public NativeArray<Vector3> Corners;
+            public NativeArray<float3> Corners;
 
             public float VoxelSize;
-            public Vector3 HalfExtents;
+            public float3 HalfExtents;
             public QueryParameters QueryParams;
 
             public void Execute(int index)
@@ -319,18 +323,13 @@ namespace NavVolume.Runtime.Builder
                 var j = (sub / SVOLeaf.GRID_SIZE) % SVOLeaf.GRID_SIZE;
                 var i = sub / (SVOLeaf.GRID_SIZE * SVOLeaf.GRID_SIZE);
 
-                var center =
-                    Corners[leafIdx]
-                    + new Vector3(
-                        (i + 0.5f) * VoxelSize,
-                        (j + 0.5f) * VoxelSize,
-                        (k + 0.5f) * VoxelSize
-                    );
+                var ijk = new float3(i, j, k);
+                var center = Corners[leafIdx] + (ijk + 0.5f) * VoxelSize;
 
                 Commands[index] = new OverlapBoxCommand(
                     center,
                     HalfExtents,
-                    Quaternion.identity,
+                    quaternion.identity,
                     QueryParams
                 );
             }
