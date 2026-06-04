@@ -11,6 +11,8 @@ namespace NavVolume.Runtime.Builder
     {
         readonly BuildSettings _settings;
 
+        BakeProfiler _profiler;
+
         public SVOBuilder(BuildSettings settings)
         {
             _settings = settings;
@@ -18,11 +20,25 @@ namespace NavVolume.Runtime.Builder
 
         // TODO: implement an async builder that can be cancelled and reports progress.
 
-        public NavContext Build()
+        /// <summary>
+        /// Builds the SVO and logs its own phase timings. Used by runtime (non-editor) callers.
+        /// </summary>
+        public NavContext Build() => Build(new BakeProfiler(), report: true);
+
+        /// <summary>
+        /// Builds the SVO, recording per-phase timings into <paramref name="profiler"/>. When
+        /// <paramref name="report"/> is false the caller owns reporting, so it can append its own
+        /// post-build phases (e.g. asset serialization) and emit a single unified log.
+        /// </summary>
+        internal NavContext Build(BakeProfiler profiler, bool report)
         {
+            _profiler = profiler;
+            _profiler.Start();
+
             var svo = new SVO(_settings.NumLayers);
 
             var occupiedL1 = SVORasterizer.RasterizeL1(_settings);
+            _profiler.Lap($"RasterizeL1 ({occupiedL1.Count} cells)");
 
             AllocateLowerLayers(svo, occupiedL1);
 
@@ -30,15 +46,26 @@ namespace NavVolume.Runtime.Builder
             {
                 BuildUpperLayer(svo, layer);
             }
+            _profiler.Lap("BuildUpperLayers");
 
             for (var layer = 1u; layer < svo.Layers.Length; layer++)
             {
                 LinkParentAndChildren(svo, layer, layer - 1);
             }
+            _profiler.Lap("LinkParentAndChildren");
 
             SVONeighborLinker.FillNeighborLinks(svo, _settings);
+            _profiler.Lap("FillNeighborLinks");
+
+            _profiler.MarkBuildComplete();
 
             var navCtx = new NavContext(svo, _settings);
+
+            if (report)
+            {
+                _profiler.Report();
+            }
+
             return navCtx;
         }
 
@@ -47,11 +74,14 @@ namespace NavVolume.Runtime.Builder
         void AllocateLowerLayers(SVO svo, List<MortonCode> l1Codes)
         {
             var l0Codes = CalculateL0Codes(l1Codes);
+            _profiler.Lap($"CalculateL0Codes ({l0Codes.Count})");
 
             AllocateL0(svo, l0Codes);
+            _profiler.Lap("AllocateL0");
 
             var leafNodes = CalculateLeafNodes(l0Codes);
             svo.LeafNodes = leafNodes;
+            _profiler.Lap("RasterizeLeaves");
         }
 
         List<MortonCode> CalculateL0Codes(List<MortonCode> l1Codes)
@@ -209,6 +239,81 @@ namespace NavVolume.Runtime.Builder
                     svo.SetNode(parentLink, parentNode);
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Lightweight per-phase bake timer. Collects named laps and emits a single unified log: a
+    /// header with the total split into build vs. save (post-build) time, then every phase below.
+    /// </summary>
+    internal sealed class BakeProfiler
+    {
+        readonly List<(string Label, double Ms)> _laps = new();
+        readonly System.Diagnostics.Stopwatch _phase = new();
+
+        // Running total (ms) captured when the build finished; -1 until then.
+        double _buildMs = -1;
+
+        public void Start()
+        {
+            _laps.Clear();
+            _buildMs = -1;
+            _phase.Restart();
+        }
+
+        public void Lap(string label)
+        {
+            _laps.Add((label, _phase.Elapsed.TotalMilliseconds));
+            _phase.Restart();
+        }
+
+        /// <summary>Marks where the build ends and post-build (save) phases begin.</summary>
+        public void MarkBuildComplete() => _buildMs = Sum();
+
+        /// <summary>Snapshots the collected laps into a transient <see cref="BakeReport"/>.</summary>
+        public BakeReport ToReport()
+        {
+            var total = Sum();
+            var buildMs = _buildMs >= 0 ? _buildMs : total;
+
+            var phases = new BakePhase[_laps.Count];
+            for (var i = 0; i < _laps.Count; i++)
+            {
+                phases[i] = new BakePhase(_laps[i].Label, _laps[i].Ms);
+            }
+
+            return new BakeReport(total, buildMs, total - buildMs, phases);
+        }
+
+        public void Report()
+        {
+            var total = Sum();
+            var buildMs = _buildMs >= 0 ? _buildMs : total;
+            var saveMs = total - buildMs;
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine(
+                saveMs > 0.05
+                    ? $"[NavVolume] Bake: {total:F1} ms  (build {buildMs:F1} ms + save {saveMs:F1} ms)"
+                    : $"[NavVolume] Bake: {total:F1} ms"
+            );
+
+            foreach (var (label, ms) in _laps)
+            {
+                sb.AppendLine($"    {label,-26} {ms,8:F1} ms");
+            }
+
+            UnityEngine.Debug.Log(sb.ToString());
+        }
+
+        double Sum()
+        {
+            var sum = 0.0;
+            foreach (var (_, ms) in _laps)
+            {
+                sum += ms;
+            }
+            return sum;
         }
     }
 }

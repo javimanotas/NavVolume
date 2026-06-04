@@ -91,6 +91,13 @@ namespace NavVolume.Runtime.Builder
         /// <summary>
         /// Rasterizes the geometry for a batch of leaf nodes in parallel.
         /// </summary>
+        /// <remarks>
+        /// Runs in two stages. A coarse pass fires a single <see cref="OverlapBoxCommand"/> covering
+        /// each whole L0 node and discards the ones that hit nothing. Only the survivors get the
+        /// expensive fine pass of 64 voxel queries each. Because the lower-layer allocation pads
+        /// every occupied parent with all eight children, most nodes are empty padding, so this cull
+        /// removes the bulk of the physics queries.
+        /// </remarks>
         public static SVOLeaf[] RasterizeLeaves(BuildSettings settings, Vector3[] leafCorners)
         {
             var leafCount = leafCorners.Length;
@@ -99,8 +106,6 @@ namespace NavVolume.Runtime.Builder
                 return System.Array.Empty<SVOLeaf>();
             }
 
-            var totalCells = leafCount * SVOLeaf.NUM_VOXELS;
-            var halfExtent = settings.VoxelSize * 0.5f - _OVERLAP_BOX_SHRINK + settings.AgentRadius;
             var queryParams = new QueryParameters(
                 settings.CollisionMask,
                 hitMultipleFaces: false,
@@ -117,57 +122,124 @@ namespace NavVolume.Runtime.Builder
             {
                 corners[i] = leafCorners[i];
             }
-            var commands = new NativeArray<OverlapBoxCommand>(
-                totalCells,
-                Allocator.TempJob,
-                NativeArrayOptions.UninitializedMemory
-            );
-            var results = new NativeArray<ColliderHit>(
-                totalCells,
-                Allocator.TempJob,
-                NativeArrayOptions.ClearMemory
-            );
-            var bitmasks = new NativeArray<ulong>(
+
+            // --- Coarse cull pass: one OverlapBox covering the whole L0 node ---
+            // The coarse box is the exact bounding box of the 64 agent-radius-expanded voxel boxes,
+            // so a node that misses here cannot contain any occupied voxel and is left empty without
+            // ever running its fine pass.
+            var nodeSize = settings.NodeSizeForLayer(0);
+            var coarseHalfExtent = nodeSize * 0.5f - _OVERLAP_BOX_SHRINK + settings.AgentRadius;
+
+            var coarseCommands = new NativeArray<OverlapBoxCommand>(
                 leafCount,
                 Allocator.TempJob,
                 NativeArrayOptions.UninitializedMemory
             );
-
-            var fillHandle = new BuildLeafCommandsJob
-            {
-                Commands = commands,
-                Corners = corners,
-                VoxelSize = settings.VoxelSize,
-                HalfExtents = new float3(halfExtent),
-                QueryParams = queryParams,
-            }.Schedule(totalCells, _PARALLEL_FOR_BATCH);
-
-            var overlapHandle = OverlapBoxCommand.ScheduleBatch(
-                commands,
-                results,
-                _OVERLAP_BATCH_MIN,
-                1,
-                fillHandle
+            var coarseResults = new NativeArray<ColliderHit>(
+                leafCount,
+                Allocator.TempJob,
+                NativeArrayOptions.ClearMemory
             );
 
-            var reduceHandle = new ReduceLeafBitmasksJob
+            var coarseFill = new BuildCoarseLeafCommandsJob
             {
-                Results = results,
-                Bitmasks = bitmasks,
-            }.Schedule(leafCount, _PARALLEL_FOR_BATCH, overlapHandle);
+                Commands = coarseCommands,
+                Corners = corners,
+                NodeCenterOffset = nodeSize * 0.5f,
+                HalfExtents = new float3(coarseHalfExtent),
+                QueryParams = queryParams,
+            }.Schedule(leafCount, _PARALLEL_FOR_BATCH);
 
-            reduceHandle.Complete();
+            OverlapBoxCommand
+                .ScheduleBatch(coarseCommands, coarseResults, _OVERLAP_BATCH_MIN, 1, coarseFill)
+                .Complete();
 
-            var leaves = new SVOLeaf[leafCount];
+            // Compact the indices of surviving nodes for the fine pass. A managed list keeps this
+            // off the Unity.Collections package (only the built-in NativeArray is used in jobs).
+            var occupiedIndices = new List<int>();
             for (var i = 0; i < leafCount; i++)
             {
-                leaves[i] = SVOLeaf.FromRawBits(bitmasks[i]);
+                if (coarseResults[i].instanceID != 0)
+                {
+                    occupiedIndices.Add(i);
+                }
+            }
+
+            var leaves = new SVOLeaf[leafCount]; // default(SVOLeaf) is empty
+            var occupiedCount = occupiedIndices.Count;
+
+            if (occupiedCount > 0)
+            {
+                // --- Fine pass: 64 voxel OverlapBoxes per surviving node ---
+                var totalCells = occupiedCount * SVOLeaf.NUM_VOXELS;
+                var fineHalfExtent =
+                    settings.VoxelSize * 0.5f - _OVERLAP_BOX_SHRINK + settings.AgentRadius;
+
+                var occupiedCorners = new NativeArray<float3>(
+                    occupiedCount,
+                    Allocator.TempJob,
+                    NativeArrayOptions.UninitializedMemory
+                );
+                for (var j = 0; j < occupiedCount; j++)
+                {
+                    occupiedCorners[j] = corners[occupiedIndices[j]];
+                }
+
+                var commands = new NativeArray<OverlapBoxCommand>(
+                    totalCells,
+                    Allocator.TempJob,
+                    NativeArrayOptions.UninitializedMemory
+                );
+                var results = new NativeArray<ColliderHit>(
+                    totalCells,
+                    Allocator.TempJob,
+                    NativeArrayOptions.ClearMemory
+                );
+                var bitmasks = new NativeArray<ulong>(
+                    occupiedCount,
+                    Allocator.TempJob,
+                    NativeArrayOptions.UninitializedMemory
+                );
+
+                var fillHandle = new BuildLeafCommandsJob
+                {
+                    Commands = commands,
+                    Corners = occupiedCorners,
+                    VoxelSize = settings.VoxelSize,
+                    HalfExtents = new float3(fineHalfExtent),
+                    QueryParams = queryParams,
+                }.Schedule(totalCells, _PARALLEL_FOR_BATCH);
+
+                var overlapHandle = OverlapBoxCommand.ScheduleBatch(
+                    commands,
+                    results,
+                    _OVERLAP_BATCH_MIN,
+                    1,
+                    fillHandle
+                );
+
+                var reduceHandle = new ReduceLeafBitmasksJob
+                {
+                    Results = results,
+                    Bitmasks = bitmasks,
+                }.Schedule(occupiedCount, _PARALLEL_FOR_BATCH, overlapHandle);
+
+                reduceHandle.Complete();
+
+                for (var j = 0; j < occupiedCount; j++)
+                {
+                    leaves[occupiedIndices[j]] = SVOLeaf.FromRawBits(bitmasks[j]);
+                }
+
+                occupiedCorners.Dispose();
+                commands.Dispose();
+                results.Dispose();
+                bitmasks.Dispose();
             }
 
             corners.Dispose();
-            commands.Dispose();
-            results.Dispose();
-            bitmasks.Dispose();
+            coarseCommands.Dispose();
+            coarseResults.Dispose();
 
             return leaves;
         }
@@ -291,6 +363,32 @@ namespace NavVolume.Runtime.Builder
 
                 var ijk = new float3(x, y, z);
                 var center = Origin + (ijk + 0.5f) * CellSize;
+
+                Commands[index] = new OverlapBoxCommand(
+                    center,
+                    HalfExtents,
+                    quaternion.identity,
+                    QueryParams
+                );
+            }
+        }
+
+        [BurstCompile]
+        struct BuildCoarseLeafCommandsJob : IJobParallelFor
+        {
+            [WriteOnly]
+            public NativeArray<OverlapBoxCommand> Commands;
+
+            [ReadOnly]
+            public NativeArray<float3> Corners;
+
+            public float NodeCenterOffset;
+            public float3 HalfExtents;
+            public QueryParameters QueryParams;
+
+            public void Execute(int index)
+            {
+                var center = Corners[index] + NodeCenterOffset;
 
                 Commands[index] = new OverlapBoxCommand(
                     center,

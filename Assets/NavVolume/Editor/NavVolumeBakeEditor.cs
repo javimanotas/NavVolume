@@ -584,9 +584,26 @@ namespace NavVolume.Editor
 
                     EditorGUILayout.Space(4);
 
-                    if (GUILayout.Button("Bake", GUILayout.Height(28)))
+                    using (new EditorGUILayout.HorizontalScope())
                     {
-                        Bake(space, dataProp);
+                        if (GUILayout.Button("Bake", GUILayout.Height(28)))
+                        {
+                            Bake(space, dataProp);
+                        }
+
+                        using (new EditorGUI.DisabledScope(!BakeStatsWindow.HasReport))
+                        {
+                            if (
+                                GUILayout.Button(
+                                    "Stats",
+                                    GUILayout.Height(28),
+                                    GUILayout.Width(60)
+                                )
+                            )
+                            {
+                                BakeStatsWindow.ShowLast();
+                            }
+                        }
                     }
                 }
 
@@ -718,20 +735,24 @@ namespace NavVolume.Editor
                 return;
             }
 
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            // Shared profiler: the builder records its phases, then we append the post-build
+            // (serialize + disk save) phases so the whole bake is reported as one unified log.
+            var profiler = new BakeProfiler();
 
-            var navCtx = new SVOBuilder(space.CurrentSettings).Build();
+            var navCtx = new SVOBuilder(space.CurrentSettings).Build(profiler, report: false);
+
             bakedData.PopulateData(navCtx);
+            profiler.Lap("PopulateData");
 
             EditorUtility.SetDirty(bakedData);
             AssetDatabase.SaveAssetIfDirty(bakedData);
+            profiler.Lap("SaveAsset");
 
             InvalidateNavContextCache(space);
             SceneView.RepaintAll();
 
-            Debug.Log(
-                $"[NavVolume][NavVolumeBakeEditor] NavVolume baked in {stopwatch.ElapsedMilliseconds} ms."
-            );
+            profiler.Report();
+            BakeStatsWindow.Show(profiler.ToReport());
         }
     }
 }

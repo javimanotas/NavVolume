@@ -291,21 +291,16 @@ namespace NavVolume.Runtime.Pathfinding
             ny = WrapVoxelCoord(ny);
             nz = WrapVoxelCoord(nz);
 
-            if (leafNeighbor.IsNode(out var layerIdx))
+            leafNeighbor.IsNode(out var layerIdx);
+
+            if (layerIdx == 0)
             {
-                if (layerIdx == 0)
-                {
-                    var entrySubnode = SVOLeaf.SubnodeCoordsToIndex(nx, ny, nz);
-                    buffer.Add(SVOLink.VoxelLink(leafNeighbor.Offset, (uint)entrySubnode));
-                }
-                else
-                {
-                    buffer.Add(leafNeighbor);
-                }
+                var entrySubnode = SVOLeaf.SubnodeCoordsToIndex(nx, ny, nz);
+                buffer.Add(SVOLink.VoxelLink(leafNeighbor.Offset, (uint)entrySubnode));
             }
             else
             {
-                Debug.LogError("[NavVolume][SVOPathfinder] This code should be unreachable.");
+                buffer.Add(leafNeighbor);
             }
         }
 
@@ -344,12 +339,7 @@ namespace NavVolume.Runtime.Pathfinding
                 return;
             }
 
-            if (coarseNeighbor.IsNode(out var coarseNeighborLIdx)) { }
-            else
-            {
-                Debug.LogError("[NavVolume][SVOPathfinder] This code should be unreachable.");
-                return;
-            }
+            coarseNeighbor.IsNode(out var coarseNeighborLIdx);
             var childLayer = coarseNeighborLIdx - 1;
             var firstOffset = coarse.FirstChild.Offset;
 

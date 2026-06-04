@@ -43,28 +43,14 @@ namespace NavVolume.Runtime.Core
 
         public SVONode GetNode(SVOLink link)
         {
-            if (link.IsNode(out var layerIdx))
-            {
-                return Layers[layerIdx][(int)link.Offset];
-            }
-
-            Debug.LogError(
-                "[NavVolume][SVO] This code should be never reached. Link is not a node link."
-            );
+            link.IsNode(out var layerIdx);
             return Layers[layerIdx][(int)link.Offset];
         }
 
         public void SetNode(SVOLink link, in SVONode node)
         {
-            if (link.IsNode(out var layerIdx))
-            {
-                Layers[layerIdx][(int)link.Offset] = node;
-                return;
-            }
-
-            Debug.LogError(
-                "[NavVolume][SVO] This code should be never reached. Link is not a node link."
-            );
+            link.IsNode(out var layerIdx);
+            Layers[layerIdx][(int)link.Offset] = node;
         }
 
         /// <summary>

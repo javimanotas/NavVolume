@@ -23,6 +23,11 @@ namespace NavVolume.Runtime.Core
 
         public const int NUM_VOXELS = GRID_SIZE * GRID_SIZE * GRID_SIZE;
 
+        /// <summary>
+        /// Raw occupancy bitset. Inverse of <see cref="FromRawBits"/>; used for compact serialization.
+        /// </summary>
+        public readonly ulong RawBits => _occupiedSubnodes;
+
         public static int SubnodeCoordsToIndex(int x, int y, int z) => (x << 4) | (y << 2) | z;
 
         public static (int, int, int) IndexToSubnodeCoords(int n)
