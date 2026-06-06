@@ -52,7 +52,8 @@ namespace NavVolume.Runtime.Core
 
         public MortonCode(int x, int y, int z)
         {
-            _code = Interleave00((uint)x) | (Interleave00((uint)y) << 1) | (Interleave00((uint)z) << 2);
+            _code =
+                Interleave00((uint)x) | (Interleave00((uint)y) << 1) | (Interleave00((uint)z) << 2);
         }
 
         public (int, int, int) Decoded =>
