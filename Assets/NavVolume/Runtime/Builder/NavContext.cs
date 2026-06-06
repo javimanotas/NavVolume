@@ -52,8 +52,8 @@ namespace NavVolume.Runtime.Builder
         Bounds NodeBounds(SVOLink nodelink)
         {
             nodelink.IsNode(out var layer);
-            var mortonCode = Svo.Layers[layer][(int)nodelink.Offset].MortonCode;
-            return NodeBounds((int)layer, mortonCode);
+            var mortonCode = Svo.Layers[layer][nodelink.Offset].MortonCode;
+            return NodeBounds(layer, mortonCode);
         }
 
         /// <summary>
@@ -75,8 +75,8 @@ namespace NavVolume.Runtime.Builder
         {
             if (link.IsVoxel(out var subnodeIdx))
             {
-                var nodeMin = NodeMin((int)link.Offset);
-                return VoxelCenter(nodeMin, (int)subnodeIdx);
+                var nodeMin = NodeMin(link.Offset);
+                return VoxelCenter(nodeMin, subnodeIdx);
             }
 
             return NodeBounds(link).center;
@@ -104,17 +104,17 @@ namespace NavVolume.Runtime.Builder
             for (var layer = 0; layer < Svo.Layers.Length; layer++)
             {
                 var nodeSize = BuildSettings.NodeSizeForLayer(layer);
-                var x = (uint)(local.x / nodeSize);
-                var y = (uint)(local.y / nodeSize);
-                var z = (uint)(local.z / nodeSize);
+                var x = (int)(local.x / nodeSize);
+                var y = (int)(local.y / nodeSize);
+                var z = (int)(local.z / nodeSize);
                 var code = new MortonCode(x, y, z);
 
-                if (!Svo.MortonToIndex[layer].TryGetValue(code, out var offset))
+                if (!Svo.TryFindNodeIndex(layer, code, out var offset))
                 {
                     continue;
                 }
 
-                var link = SVOLink.NodeLink((uint)layer, (uint)offset);
+                var link = SVOLink.NodeLink(layer, offset);
 
                 if (layer == 0)
                 {
@@ -128,10 +128,7 @@ namespace NavVolume.Runtime.Builder
                     var vy = Mathf.Clamp((int)(localVoxel.y / BuildSettings.VoxelSize), 0, 3);
                     var vz = Mathf.Clamp((int)(localVoxel.z / BuildSettings.VoxelSize), 0, 3);
 
-                    return SVOLink.VoxelLink(
-                        (uint)offset,
-                        (uint)SVOLeaf.SubnodeCoordsToIndex(vx, vy, vz)
-                    );
+                    return SVOLink.VoxelLink(offset, SVOLeaf.SubnodeCoordsToIndex(vx, vy, vz));
                 }
 
                 return link;

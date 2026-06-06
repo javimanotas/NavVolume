@@ -1,9 +1,11 @@
+using System;
+
 namespace NavVolume.Runtime.Core
 {
     /// <summary>
     /// A non-leaf node in the Sparse Voxel Octree.
     /// </summary>
-    internal struct SVONode
+    internal struct SVONode : IComparable<SVONode>
     {
         public readonly MortonCode MortonCode;
 
@@ -50,6 +52,8 @@ namespace NavVolume.Runtime.Core
         }
 
         public readonly bool HasChildren => FirstChild.IsValid;
+
+        public readonly int CompareTo(SVONode other) => MortonCode.CompareTo(other.MortonCode);
 
         #region Operators and overrides
 

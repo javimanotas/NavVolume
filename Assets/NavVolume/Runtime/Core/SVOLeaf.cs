@@ -11,6 +11,8 @@ namespace NavVolume.Runtime.Core
     {
         public static SVOLeaf Empty => new() { _occupiedSubnodes = 0 };
 
+        public static SVOLeaf FromRawBits(ulong rawBits) => new() { _occupiedSubnodes = rawBits };
+
         /// <summary>
         /// Bitset of the occupied subnodes.
         /// </summary>
@@ -20,6 +22,11 @@ namespace NavVolume.Runtime.Core
         public const int GRID_SIZE = 4;
 
         public const int NUM_VOXELS = GRID_SIZE * GRID_SIZE * GRID_SIZE;
+
+        /// <summary>
+        /// Raw occupancy bitset. Inverse of <see cref="FromRawBits"/>; used for compact serialization.
+        /// </summary>
+        public readonly ulong RawBits => _occupiedSubnodes;
 
         public static int SubnodeCoordsToIndex(int x, int y, int z) => (x << 4) | (y << 2) | z;
 

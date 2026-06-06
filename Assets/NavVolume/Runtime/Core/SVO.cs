@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NavVolume.Runtime.Builder;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 namespace NavVolume.Runtime.Core
 {
@@ -15,9 +14,11 @@ namespace NavVolume.Runtime.Core
         /// <summary>
         /// Lower layers of the octree are the ones containing higher resolution data.
         /// </summary>
+        /// <remarks>
+        /// Each layer is kept sorted by <see cref="MortonCode"/>; lookups use
+        /// <see cref="TryFindNodeIndex"/> (binary search) rather than a hash table.
+        /// </remarks>
         public readonly List<SVONode>[] Layers;
-
-        public readonly Dictionary<MortonCode, int>[] MortonToIndex;
 
         /// <summary>
         /// Raw constructor.
@@ -26,32 +27,15 @@ namespace NavVolume.Runtime.Core
         {
             LeafNodes = leafNodes;
             Layers = layers;
-
-            MortonToIndex = new Dictionary<MortonCode, int>[Layers.Length];
-
-            for (var layerIndex = 0; layerIndex < Layers.Length; layerIndex++)
-            {
-                var layer = Layers[layerIndex];
-                var dict = new Dictionary<MortonCode, int>(layer.Count);
-
-                for (var i = 0; i < layer.Count; i++)
-                {
-                    dict[layer[i].MortonCode] = i;
-                }
-
-                MortonToIndex[layerIndex] = dict;
-            }
         }
 
         public SVO(int numLayers)
         {
             Layers = new List<SVONode>[numLayers];
-            MortonToIndex = new Dictionary<MortonCode, int>[numLayers];
 
             for (var i = 0; i < numLayers; i++)
             {
                 Layers[i] = new();
-                MortonToIndex[i] = new();
             }
         }
 
@@ -59,35 +43,57 @@ namespace NavVolume.Runtime.Core
 
         public SVONode GetNode(SVOLink link)
         {
-            if (link.IsNode(out var layerIdx))
-            {
-                return Layers[layerIdx][(int)link.Offset];
-            }
-
-            Debug.LogError(
-                "[NavVolume][SVO] This code should be never reached. Link is not a node link."
-            );
-            return Layers[layerIdx][(int)link.Offset];
+            link.IsNode(out var layerIdx);
+            return Layers[layerIdx][link.Offset];
         }
 
         public void SetNode(SVOLink link, in SVONode node)
         {
-            if (link.IsNode(out var layerIdx))
-            {
-                Layers[layerIdx][(int)link.Offset] = node;
-                return;
-            }
-
-            Debug.LogError(
-                "[NavVolume][SVO] This code should be never reached. Link is not a node link."
-            );
+            link.IsNode(out var layerIdx);
+            Layers[layerIdx][link.Offset] = node;
         }
 
-        public bool TryGetLink(uint layer, MortonCode mortonCode, out SVOLink link)
+        /// <summary>
+        /// Binary-searches the (sorted) layer for the node carrying <paramref name="mortonCode"/>.
+        /// </summary>
+        /// <returns>true and the node's offset when found, false and -1 otherwise.</returns>
+        public bool TryFindNodeIndex(int layer, MortonCode mortonCode, out int idx)
         {
-            if (MortonToIndex[layer].TryGetValue(mortonCode, out var idx))
+            var nodes = Layers[layer];
+            var target = (uint)mortonCode;
+            var lo = 0;
+            var hi = nodes.Count - 1;
+
+            while (lo <= hi)
             {
-                link = SVOLink.NodeLink(layer, (uint)idx);
+                var mid = (lo + hi) >> 1;
+                var midCode = (uint)nodes[mid].MortonCode;
+
+                if (midCode == target)
+                {
+                    idx = mid;
+                    return true;
+                }
+
+                if (midCode < target)
+                {
+                    lo = mid + 1;
+                }
+                else
+                {
+                    hi = mid - 1;
+                }
+            }
+
+            idx = -1;
+            return false;
+        }
+
+        public bool TryGetLink(int layer, MortonCode mortonCode, out SVOLink link)
+        {
+            if (TryFindNodeIndex(layer, mortonCode, out var idx))
+            {
+                link = SVOLink.NodeLink(layer, idx);
                 return true;
             }
 
@@ -100,8 +106,8 @@ namespace NavVolume.Runtime.Core
             var (nodeX, nodeY, nodeZ) = (x >> 2, y >> 2, z >> 2);
             var (subNodeX, subNodeY, subNodeZ) = (x & 0b11, y & 0b11, z & 0b11);
 
-            var morton = new MortonCode((uint)nodeX, (uint)nodeY, (uint)nodeZ);
-            if (!MortonToIndex[0].TryGetValue(morton, out var nodeIdx))
+            var morton = new MortonCode(nodeX, nodeY, nodeZ);
+            if (!TryFindNodeIndex(0, morton, out var nodeIdx))
             {
                 return false;
             }

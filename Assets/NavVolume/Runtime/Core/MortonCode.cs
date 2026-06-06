@@ -50,13 +50,14 @@ namespace NavVolume.Runtime.Core
             _code = rawCode;
         }
 
-        public MortonCode(uint x, uint y, uint z)
+        public MortonCode(int x, int y, int z)
         {
-            _code = Interleave00(x) | (Interleave00(y) << 1) | (Interleave00(z) << 2);
+            _code =
+                Interleave00((uint)x) | (Interleave00((uint)y) << 1) | (Interleave00((uint)z) << 2);
         }
 
-        public (uint, uint, uint) Decoded =>
-            (CompactBits(_code), CompactBits(_code >> 1), CompactBits(_code >> 2));
+        public (int, int, int) Decoded =>
+            ((int)CompactBits(_code), (int)CompactBits(_code >> 1), (int)CompactBits(_code >> 2));
 
         public MortonCode ParentCode
         {
@@ -67,7 +68,7 @@ namespace NavVolume.Runtime.Core
             }
         }
 
-        public MortonCode ChildCode(uint childIdx)
+        public MortonCode ChildCode(int childIdx)
         {
             var (x, y, z) = Decoded;
             return new(

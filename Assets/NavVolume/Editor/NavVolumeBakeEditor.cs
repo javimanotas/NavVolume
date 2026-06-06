@@ -135,14 +135,14 @@ namespace NavVolume.Editor
         static void DrawSvoHierarchy(NavContext navCtx, Vector3 camPos)
         {
             var svo = navCtx.Svo;
-            var rootLayer = (uint)(svo.Layers.Length - 1);
-            var rootCount = svo.Layers[(int)rootLayer].Count;
+            var rootLayer = svo.Layers.Length - 1;
+            var rootCount = svo.Layers[rootLayer].Count;
 
             var drawn = 0;
 
             for (var i = 0; i < rootCount; i++)
             {
-                DrawNodeRecursive(navCtx, rootLayer, (uint)i, camPos, ref drawn);
+                DrawNodeRecursive(navCtx, rootLayer, i, camPos, ref drawn);
 
                 if (drawn >= _SVO_GIZMO_DRAW_BUDGET)
                 {
@@ -153,8 +153,8 @@ namespace NavVolume.Editor
 
         static void DrawNodeRecursive(
             NavContext navCtx,
-            uint layer,
-            uint offset,
+            int layer,
+            int offset,
             Vector3 camPos,
             ref int drawn
         )
@@ -165,21 +165,21 @@ namespace NavVolume.Editor
             }
 
             var svo = navCtx.Svo;
-            if ((int)layer >= svo.Layers.Length)
+            if (layer >= svo.Layers.Length)
             {
                 return;
             }
 
-            var layerList = svo.Layers[(int)layer];
-            if ((int)offset >= layerList.Count)
+            var layerList = svo.Layers[layer];
+            if (offset >= layerList.Count)
             {
                 return;
             }
 
-            var node = layerList[(int)offset];
-            var bounds = navCtx.NodeBounds((int)layer, node.MortonCode);
+            var node = layerList[offset];
+            var bounds = navCtx.NodeBounds(layer, node.MortonCode);
 
-            var nodeSize = navCtx.BuildSettings.NodeSizeForLayer((int)layer);
+            var nodeSize = navCtx.BuildSettings.NodeSizeForLayer(layer);
             var cullRadius = _SVO_GIZMO_LAYER_RADIUS_FACTOR * nodeSize;
 
             if (Vector3.Distance(bounds.center, camPos) > cullRadius + bounds.extents.magnitude)
@@ -191,7 +191,7 @@ namespace NavVolume.Editor
 
             if (layer == 0)
             {
-                DrawLeafNode(navCtx, (int)offset, bounds, ref drawn);
+                DrawLeafNode(navCtx, offset, bounds, ref drawn);
                 return;
             }
 
@@ -208,7 +208,7 @@ namespace NavVolume.Editor
             }
 
             var firstChild = node.FirstChild.Offset;
-            for (var c = 0u; c < 8; c++)
+            for (var c = 0; c < 8; c++)
             {
                 DrawNodeRecursive(navCtx, layer - 1, firstChild + c, camPos, ref drawn);
 
@@ -584,9 +584,22 @@ namespace NavVolume.Editor
 
                     EditorGUILayout.Space(4);
 
-                    if (GUILayout.Button("Bake", GUILayout.Height(28)))
+                    using (new EditorGUILayout.HorizontalScope())
                     {
-                        Bake(space, dataProp);
+                        if (GUILayout.Button("Bake", GUILayout.Height(28)))
+                        {
+                            Bake(space, dataProp);
+                        }
+
+                        using (new EditorGUI.DisabledScope(!BakeStatsWindow.HasReport))
+                        {
+                            if (
+                                GUILayout.Button("Stats", GUILayout.Height(28), GUILayout.Width(60))
+                            )
+                            {
+                                BakeStatsWindow.ShowLast();
+                            }
+                        }
                     }
                 }
 
@@ -718,20 +731,46 @@ namespace NavVolume.Editor
                 return;
             }
 
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            // Shared profiler: the builder records its phases, then we append the post-build
+            // (serialize + disk save) phases so the whole bake is reported as one unified log.
+            var profiler = new BakeProfiler();
 
-            var navCtx = new SVOBuilder(space.CurrentSettings).Build();
-            bakedData.PopulateData(navCtx);
+            // Cancelable progress bar. The reporter throws on cancel so the in-flight bake unwinds
+            // at the next phase boundary without writing a partial asset.
+            static void Report(string phase, float fraction)
+            {
+                if (EditorUtility.DisplayCancelableProgressBar("Baking NavVolume", phase, fraction))
+                {
+                    throw new System.OperationCanceledException();
+                }
+            }
 
-            EditorUtility.SetDirty(bakedData);
-            AssetDatabase.SaveAssetIfDirty(bakedData);
+            try
+            {
+                var navCtx = new SVOBuilder(space.CurrentSettings).Build(profiler, Report);
 
-            InvalidateNavContextCache(space);
-            SceneView.RepaintAll();
+                Report("Serializing data", 0.90f);
+                bakedData.PopulateData(navCtx);
+                profiler.Lap("PopulateData");
 
-            Debug.Log(
-                $"[NavVolume][NavVolumeBakeEditor] NavVolume baked in {stopwatch.ElapsedMilliseconds} ms."
-            );
+                Report("Saving asset", 0.95f);
+                EditorUtility.SetDirty(bakedData);
+                AssetDatabase.SaveAssetIfDirty(bakedData);
+                profiler.Lap("SaveAsset");
+
+                InvalidateNavContextCache(space);
+                SceneView.RepaintAll();
+
+                BakeStatsWindow.Show(profiler.ToReport());
+            }
+            catch (System.OperationCanceledException)
+            {
+                Debug.Log("[NavVolume][NavVolumeBakeEditor] Bake cancelled.");
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
         }
     }
 }

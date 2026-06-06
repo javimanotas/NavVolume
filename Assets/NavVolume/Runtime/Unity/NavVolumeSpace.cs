@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NavVolume.Runtime;
 using NavVolume.Runtime.Builder;
-using NavVolume.Runtime.Core;
 using NavVolume.Runtime.Pathfinding;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -126,8 +125,6 @@ namespace NavVolume
             }
             else
             {
-                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
                 if (_bakedData.HasSceneBeenModifiedSinceBake(CurrentSettings))
                 {
                     Debug.LogWarning(
@@ -137,10 +134,6 @@ namespace NavVolume
                 }
 
                 NavCtx = _bakedData.RetrieveBakedData();
-
-                Debug.Log(
-                    $"[NavVolume][NavVolumeSpace] Baked data retrieved in {stopwatch.ElapsedMilliseconds} ms."
-                );
             }
         }
 
@@ -149,14 +142,8 @@ namespace NavVolume
         /// </summary>
         public void Build()
         {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
             var builder = new SVOBuilder(CurrentSettings);
             NavCtx = builder.Build();
-
-            Debug.Log(
-                $"[NavVolume][NavVolumeSpace] NavVolume built in {stopwatch.ElapsedMilliseconds} ms."
-            );
         }
 
         /// <summary>

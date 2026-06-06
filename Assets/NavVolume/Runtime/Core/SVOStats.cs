@@ -15,8 +15,6 @@ namespace NavVolume.Runtime.Core
         const int _OBJECT_HEADER_BYTES = 24; // Sync block / object header + method table pointer + padding to align to 8 bytes
         const int _ARRAY_HEADER_BYTES = 24; // Sync block / object header + method table pointer + length + padding to align to 8 bytes
         const int _LIST_FIELDS_BYTES = 16; // Items ref + Count + Version (mutation counter for enumeration)
-        const int _DICT_FIELDS_BYTES = 56; // Buckets ref + Entries ref + Count + freeList + freeCount + version + comparer ref + fastModMultiplier
-        const int _DICT_BUCKET_BYTES = 4;
         const int _REFERENCE_BYTES = 8;
 
         #endregion
@@ -73,14 +71,6 @@ namespace NavVolume.Runtime.Core
             {
                 total += _OBJECT_HEADER_BYTES + _LIST_FIELDS_BYTES;
                 total += _ARRAY_HEADER_BYTES + Unsafe.SizeOf<SVONode>() * layer.Capacity;
-            }
-
-            var dictEntrySize = sizeof(int) * 2 + Unsafe.SizeOf<MortonCode>() + sizeof(int);
-            total += _ARRAY_HEADER_BYTES + _REFERENCE_BYTES * svo.MortonToIndex.Length;
-            foreach (var dict in svo.MortonToIndex)
-            {
-                total += _OBJECT_HEADER_BYTES + _DICT_FIELDS_BYTES;
-                total += _ARRAY_HEADER_BYTES + (dictEntrySize + _DICT_BUCKET_BYTES) * dict.Count;
             }
 
             return total;
