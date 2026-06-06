@@ -44,14 +44,14 @@ namespace NavVolume.Runtime.Builder
             AllocateLowerLayers(svo, occupiedL1);
 
             _progress?.Invoke("Building upper layers", 0.68f);
-            for (var layer = 1u; layer < svo.Layers.Length; layer++)
+            for (var layer = 1; layer < svo.Layers.Length; layer++)
             {
                 BuildUpperLayer(svo, layer);
             }
             _profiler.Lap("BuildUpperLayers");
 
             _progress?.Invoke("Linking parents and children", 0.74f);
-            for (var layer = 1u; layer < svo.Layers.Length; layer++)
+            for (var layer = 1; layer < svo.Layers.Length; layer++)
             {
                 LinkParentAndChildren(svo, layer, layer - 1);
             }
@@ -90,7 +90,7 @@ namespace NavVolume.Runtime.Builder
 
             foreach (var l1Code in l1Codes)
             {
-                for (var c = 0u; c < 8; c++)
+                for (var c = 0; c < 8; c++)
                 {
                     dedup.Add(l1Code.ChildCode(c));
                 }
@@ -133,7 +133,7 @@ namespace NavVolume.Runtime.Builder
 
         #region Upper layer build
 
-        void BuildUpperLayer(SVO svo, uint layer)
+        void BuildUpperLayer(SVO svo, int layer)
         {
             var childLayer = layer - 1;
             var parentCodes = CalculateParentCodes(svo, childLayer);
@@ -142,7 +142,7 @@ namespace NavVolume.Runtime.Builder
             AllocateParentNodes(svo, layer, parentCodes);
         }
 
-        List<MortonCode> CalculateParentCodes(SVO svo, uint childLayer)
+        List<MortonCode> CalculateParentCodes(SVO svo, int childLayer)
         {
             var children = svo.Layers[childLayer];
             var dedup = new HashSet<MortonCode>(children.Count);
@@ -167,7 +167,7 @@ namespace NavVolume.Runtime.Builder
         /// expected child set, sorts it once, and rebuilds the layer + lookup in a single pass.
         /// Short-circuits cheaply when nothing is missing.
         /// </remarks>
-        void AllocateMissingSiblings(SVO svo, uint childLayer, List<MortonCode> parentCodes)
+        void AllocateMissingSiblings(SVO svo, int childLayer, List<MortonCode> parentCodes)
         {
             var layer = svo.Layers[childLayer];
             var expectedCount = parentCodes.Count * 8;
@@ -183,7 +183,7 @@ namespace NavVolume.Runtime.Builder
             var allChildren = new List<MortonCode>(expectedCount);
             foreach (var pCode in parentCodes)
             {
-                for (var c = 0u; c < 8; c++)
+                for (var c = 0; c < 8; c++)
                 {
                     allChildren.Add(pCode.ChildCode(c));
                 }
@@ -202,7 +202,7 @@ namespace NavVolume.Runtime.Builder
             }
         }
 
-        void AllocateParentNodes(SVO svo, uint layer, List<MortonCode> parentCodes)
+        void AllocateParentNodes(SVO svo, int layer, List<MortonCode> parentCodes)
         {
             var parentLayer = svo.Layers[layer];
             if (parentLayer.Capacity < parentLayer.Count + parentCodes.Count)
@@ -218,7 +218,7 @@ namespace NavVolume.Runtime.Builder
 
         #endregion
 
-        void LinkParentAndChildren(SVO svo, uint layer, uint childLayer)
+        void LinkParentAndChildren(SVO svo, int layer, int childLayer)
         {
             var sortedChildren = svo.Layers[childLayer];
 
@@ -235,7 +235,7 @@ namespace NavVolume.Runtime.Builder
                 var parentNode = svo.GetNode(parentLink);
                 if (!parentNode.HasChildren)
                 {
-                    parentNode.FirstChild = SVOLink.NodeLink(childLayer, (uint)childIdx);
+                    parentNode.FirstChild = SVOLink.NodeLink(childLayer, childIdx);
                     svo.SetNode(parentLink, parentNode);
                 }
             }

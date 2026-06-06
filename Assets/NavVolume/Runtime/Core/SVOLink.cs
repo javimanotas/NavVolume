@@ -36,11 +36,11 @@ namespace NavVolume.Runtime.Core
 
         const uint _CONCRETE_DATA_MASK = 0x3F;
 
-        public const uint MAX_OFFSET_ALLOWED = _OFFSET_MASK >> _OFFSET_MASK_SHIFT;
+        public const int MAX_OFFSET_ALLOWED = (int)(_OFFSET_MASK >> _OFFSET_MASK_SHIFT);
 
-        public const uint MAX_LAYER_ALLOWED = _CONCRETE_DATA_MASK;
+        public const int MAX_LAYER_ALLOWED = (int)_CONCRETE_DATA_MASK;
 
-        public const uint MAX_SUBNODE_ALLOWED = _CONCRETE_DATA_MASK;
+        public const int MAX_SUBNODE_ALLOWED = (int)_CONCRETE_DATA_MASK;
 
         #endregion
 
@@ -52,29 +52,29 @@ namespace NavVolume.Runtime.Core
         /// <summary>
         /// Creates a link to a node in the SVO with the given layer and offset on the layer.
         /// </summary>
-        public static SVOLink NodeLink(uint layer, uint nodeOffset) =>
-            new(_IS_NODE_MASK | (nodeOffset << _OFFSET_MASK_SHIFT) | layer);
+        public static SVOLink NodeLink(int layer, int nodeOffset) =>
+            new(_IS_NODE_MASK | ((uint)nodeOffset << _OFFSET_MASK_SHIFT) | (uint)layer);
 
         /// <summary>
         /// Creates a link to a voxel in the SVO with the given offset of the leaf and subnode index.
         /// </summary>
-        public static SVOLink VoxelLink(uint leafOffset, uint subnodeIndex) =>
-            new((leafOffset << _OFFSET_MASK_SHIFT) | subnodeIndex);
+        public static SVOLink VoxelLink(int leafOffset, int subnodeIndex) =>
+            new(((uint)leafOffset << _OFFSET_MASK_SHIFT) | (uint)subnodeIndex);
 
         /// <summary>
         /// Returns the same as comparing equality with <see cref="SVOLink.Invalid"/>.
         /// </summary>
         public bool IsValid => _link != uint.MaxValue;
 
-        public uint Offset => (_link & _OFFSET_MASK) >> _OFFSET_MASK_SHIFT;
+        public int Offset => (int)((_link & _OFFSET_MASK) >> _OFFSET_MASK_SHIFT);
 
         /// <summary>
         /// Returns true if this link points to a node and outputs its layer.
         /// If it returns false the value of layerIdx is undefined and SHOULD NOT be used.
         /// </summary>
-        public bool IsNode(out uint layerIdx)
+        public bool IsNode(out int layerIdx)
         {
-            layerIdx = _link & _CONCRETE_DATA_MASK;
+            layerIdx = (int)(_link & _CONCRETE_DATA_MASK);
             return (_link & _IS_NODE_MASK) != 0;
         }
 
@@ -82,9 +82,9 @@ namespace NavVolume.Runtime.Core
         /// Returns true if this link points to a voxel and outputs its subnode index.
         /// If it returns false the value of subnodeIdx is undefined and SHOULD NOT be used.
         /// </summary>
-        public bool IsVoxel(out uint subnodeIdx)
+        public bool IsVoxel(out int subnodeIdx)
         {
-            subnodeIdx = _link & _CONCRETE_DATA_MASK;
+            subnodeIdx = (int)(_link & _CONCRETE_DATA_MASK);
             return (_link & _IS_NODE_MASK) == 0;
         }
 

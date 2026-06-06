@@ -135,14 +135,14 @@ namespace NavVolume.Editor
         static void DrawSvoHierarchy(NavContext navCtx, Vector3 camPos)
         {
             var svo = navCtx.Svo;
-            var rootLayer = (uint)(svo.Layers.Length - 1);
-            var rootCount = svo.Layers[(int)rootLayer].Count;
+            var rootLayer = svo.Layers.Length - 1;
+            var rootCount = svo.Layers[rootLayer].Count;
 
             var drawn = 0;
 
             for (var i = 0; i < rootCount; i++)
             {
-                DrawNodeRecursive(navCtx, rootLayer, (uint)i, camPos, ref drawn);
+                DrawNodeRecursive(navCtx, rootLayer, i, camPos, ref drawn);
 
                 if (drawn >= _SVO_GIZMO_DRAW_BUDGET)
                 {
@@ -153,8 +153,8 @@ namespace NavVolume.Editor
 
         static void DrawNodeRecursive(
             NavContext navCtx,
-            uint layer,
-            uint offset,
+            int layer,
+            int offset,
             Vector3 camPos,
             ref int drawn
         )
@@ -165,21 +165,21 @@ namespace NavVolume.Editor
             }
 
             var svo = navCtx.Svo;
-            if ((int)layer >= svo.Layers.Length)
+            if (layer >= svo.Layers.Length)
             {
                 return;
             }
 
-            var layerList = svo.Layers[(int)layer];
-            if ((int)offset >= layerList.Count)
+            var layerList = svo.Layers[layer];
+            if (offset >= layerList.Count)
             {
                 return;
             }
 
-            var node = layerList[(int)offset];
-            var bounds = navCtx.NodeBounds((int)layer, node.MortonCode);
+            var node = layerList[offset];
+            var bounds = navCtx.NodeBounds(layer, node.MortonCode);
 
-            var nodeSize = navCtx.BuildSettings.NodeSizeForLayer((int)layer);
+            var nodeSize = navCtx.BuildSettings.NodeSizeForLayer(layer);
             var cullRadius = _SVO_GIZMO_LAYER_RADIUS_FACTOR * nodeSize;
 
             if (Vector3.Distance(bounds.center, camPos) > cullRadius + bounds.extents.magnitude)
@@ -191,7 +191,7 @@ namespace NavVolume.Editor
 
             if (layer == 0)
             {
-                DrawLeafNode(navCtx, (int)offset, bounds, ref drawn);
+                DrawLeafNode(navCtx, offset, bounds, ref drawn);
                 return;
             }
 
@@ -208,7 +208,7 @@ namespace NavVolume.Editor
             }
 
             var firstChild = node.FirstChild.Offset;
-            for (var c = 0u; c < 8; c++)
+            for (var c = 0; c < 8; c++)
             {
                 DrawNodeRecursive(navCtx, layer - 1, firstChild + c, camPos, ref drawn);
 

@@ -74,7 +74,7 @@ namespace NavVolume.Runtime.Builder
                 var subdivided = new List<MortonCode>(candidates.Count * 8);
                 foreach (var occ in candidates)
                 {
-                    for (var c = 0u; c < 8; c++)
+                    for (var c = 0; c < 8; c++)
                     {
                         subdivided.Add(occ.ChildCode(c));
                     }
@@ -255,11 +255,11 @@ namespace NavVolume.Runtime.Builder
             var total = gridSize * gridSize * gridSize;
 
             var seeds = new List<MortonCode>(total);
-            for (var i = 0u; i < (uint)gridSize; i++)
+            for (var i = 0; i < gridSize; i++)
             {
-                for (var j = 0u; j < (uint)gridSize; j++)
+                for (var j = 0; j < gridSize; j++)
                 {
-                    for (var k = 0u; k < (uint)gridSize; k++)
+                    for (var k = 0; k < gridSize; k++)
                     {
                         seeds.Add(new MortonCode(i, j, k));
                     }

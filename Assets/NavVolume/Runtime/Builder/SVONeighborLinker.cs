@@ -62,7 +62,7 @@ namespace NavVolume.Runtime.Builder
                             && TryFindIndex(mortons, nCode, out var nIdx)
                         )
                         {
-                            node.Neighbors[dir] = SVOLink.NodeLink((uint)layer, (uint)nIdx);
+                            node.Neighbors[dir] = SVOLink.NodeLink(layer, nIdx);
                             continue;
                         }
 

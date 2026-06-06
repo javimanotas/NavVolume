@@ -9,9 +9,9 @@ namespace NavVolume.Tests.EditMode.Core
     {
         #region Auxiliary
 
-        const uint _MAX_COORD = 0xFF;
+        const int _MAX_COORD = 0xFF;
 
-        const uint _NUM_CHILDS = 8;
+        const int _NUM_CHILDS = 8;
 
         const int _RESOLUTION = 8;
 
@@ -46,9 +46,9 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void DecodedAfterConstruction_ReturnsOriginalCoords(
-            [Random(0u, _MAX_COORD, 3)] uint x,
-            [Random(0u, _MAX_COORD, 3)] uint y,
-            [Random(0u, _MAX_COORD, 3)] uint z
+            [Random(0, _MAX_COORD, 3)] int x,
+            [Random(0, _MAX_COORD, 3)] int y,
+            [Random(0, _MAX_COORD, 3)] int z
         )
         {
             var (dx, dy, dz) = new MortonCode(x, y, z).Decoded;
@@ -58,9 +58,9 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void ConstructionAfterDecoded_ReturnsOriginalCode(
-            [Random(0u, _MAX_COORD, 3)] uint x,
-            [Random(0u, _MAX_COORD, 3)] uint y,
-            [Random(0u, _MAX_COORD, 3)] uint z
+            [Random(0, _MAX_COORD, 3)] int x,
+            [Random(0, _MAX_COORD, 3)] int y,
+            [Random(0, _MAX_COORD, 3)] int z
         )
         {
             var original = new MortonCode(x, y, z);
@@ -71,14 +71,14 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void ParentCodeOfChild_IsOriginal(
-            [Random(0u, _MAX_COORD, 3)] uint x,
-            [Random(0u, _MAX_COORD, 3)] uint y,
-            [Random(0u, _MAX_COORD, 3)] uint z
+            [Random(0, _MAX_COORD, 3)] int x,
+            [Random(0, _MAX_COORD, 3)] int y,
+            [Random(0, _MAX_COORD, 3)] int z
         )
         {
             var code = new MortonCode(x, y, z);
 
-            for (var i = 0u; i < _NUM_CHILDS; i++)
+            for (var i = 0; i < _NUM_CHILDS; i++)
             {
                 Assert.AreEqual(code, code.ChildCode(i).ParentCode);
             }
@@ -86,15 +86,15 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void ChildCodes_AreAllDistinct(
-            [Random(0u, _MAX_COORD, 3)] uint x,
-            [Random(0u, _MAX_COORD, 3)] uint y,
-            [Random(0u, _MAX_COORD, 3)] uint z
+            [Random(0, _MAX_COORD, 3)] int x,
+            [Random(0, _MAX_COORD, 3)] int y,
+            [Random(0, _MAX_COORD, 3)] int z
         )
         {
             var code = new MortonCode(x, y, z);
             var children = new HashSet<MortonCode>();
 
-            for (var i = 0u; i < 8; i++)
+            for (var i = 0; i < 8; i++)
             {
                 children.Add(code.ChildCode(i));
             }
@@ -104,9 +104,9 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void TryGetNeighborCode_OnCentralNode_AllDirectionsValid(
-            [Random(1u, _RESOLUTION - 2, 3)] uint x,
-            [Random(1u, _RESOLUTION - 2, 3)] uint y,
-            [Random(1u, _RESOLUTION - 2, 3)] uint z
+            [Random(1, _RESOLUTION - 2, 3)] int x,
+            [Random(1, _RESOLUTION - 2, 3)] int y,
+            [Random(1, _RESOLUTION - 2, 3)] int z
         )
         {
             var code = new MortonCode(x, y, z);
@@ -121,9 +121,9 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void TryGetNeighborCode_Twice_ReturnsOriginalCode(
-            [Random(0u, _RESOLUTION - 1, 3)] uint x,
-            [Random(0u, _RESOLUTION - 1, 3)] uint y,
-            [Random(0u, _RESOLUTION - 1, 3)] uint z
+            [Random(0, _RESOLUTION - 1, 3)] int x,
+            [Random(0, _RESOLUTION - 1, 3)] int y,
+            [Random(0, _RESOLUTION - 1, 3)] int z
         )
         {
             var original = new MortonCode(x, y, z);
@@ -165,8 +165,8 @@ namespace NavVolume.Tests.EditMode.Core
             var (ox, oy, oz) = code.Decoded;
             var (nx, ny, nz) = neighbor.Decoded;
 
-            var origin = new uint[] { ox, oy, oz };
-            var result = new uint[] { nx, ny, nz };
+            var origin = new int[] { ox, oy, oz };
+            var result = new int[] { nx, ny, nz };
 
             for (var axis = 0; axis < 3; axis++)
             {
@@ -190,10 +190,10 @@ namespace NavVolume.Tests.EditMode.Core
                 return;
             }
 
-            var maxCoord = _RESOLUTION - 1u;
-            var x = axisIndex == 0 ? maxCoord : 1u;
-            var y = axisIndex == 1 ? maxCoord : 1u;
-            var z = axisIndex == 2 ? maxCoord : 1u;
+            var maxCoord = _RESOLUTION - 1;
+            var x = axisIndex == 0 ? maxCoord : 1;
+            var y = axisIndex == 1 ? maxCoord : 1;
+            var z = axisIndex == 2 ? maxCoord : 1;
 
             var code = new MortonCode(x, y, z);
             var result = code.TryGetNeighborCode((NeighborDirection)dir, _RESOLUTION, out _);
@@ -215,9 +215,9 @@ namespace NavVolume.Tests.EditMode.Core
                 return;
             }
 
-            var x = axisIndex == 0 ? 0u : 1u;
-            var y = axisIndex == 1 ? 0u : 1u;
-            var z = axisIndex == 2 ? 0u : 1u;
+            var x = axisIndex == 0 ? 0 : 1;
+            var y = axisIndex == 1 ? 0 : 1;
+            var z = axisIndex == 2 ? 0 : 1;
 
             var code = new MortonCode(x, y, z);
             var result = code.TryGetNeighborCode((NeighborDirection)dir, _RESOLUTION, out _);
@@ -227,9 +227,9 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void EqualityOperators_OnEqualCodes_ReturnTrue(
-            [Random(0u, _MAX_COORD, 3)] uint x,
-            [Random(0u, _MAX_COORD, 3)] uint y,
-            [Random(0u, _MAX_COORD, 3)] uint z
+            [Random(0, _MAX_COORD, 3)] int x,
+            [Random(0, _MAX_COORD, 3)] int y,
+            [Random(0, _MAX_COORD, 3)] int z
         )
         {
             var code1 = new MortonCode(x, y, z);

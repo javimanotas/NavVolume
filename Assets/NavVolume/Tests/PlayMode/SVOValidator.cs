@@ -128,7 +128,7 @@ namespace NavVolume.Tests.PlayMode
                     }
 
                     // Round-trip: binary search must find this node at this index.
-                    if (!svo.TryFindNodeIndex((uint)layerIdx, code, out var foundIdx))
+                    if (!svo.TryFindNodeIndex(layerIdx, code, out var foundIdx))
                     {
                         report.Add(
                             $"{prefix}, node {nodeIdx}: MortonCode 0x{(uint)code:X8} not found by binary search."
@@ -198,7 +198,7 @@ namespace NavVolume.Tests.PlayMode
                             return;
                         }
 
-                        var expectedParentLayer = (uint)(layerIdx + 1);
+                        var expectedParentLayer = layerIdx + 1;
 
                         if (parentLayerIdx != expectedParentLayer)
                         {
@@ -210,11 +210,11 @@ namespace NavVolume.Tests.PlayMode
 
                         #endregion
 
-                        var parentOffset = (int)node.Parent.Offset;
+                        var parentOffset = node.Parent.Offset;
                         var parentLayer = svo.Layers[parentLayerIdx];
                         var parent = parentLayer[parentOffset];
                         var parentFirstOffset = parent.FirstChild.IsValid
-                            ? (int)parent.FirstChild.Offset
+                            ? parent.FirstChild.Offset
                             : -1;
 
                         // Parent's 8 child range contains this node.
@@ -256,7 +256,7 @@ namespace NavVolume.Tests.PlayMode
                 for (var nodeIdx = 0; nodeIdx < layer.Count; nodeIdx++)
                 {
                     var node = layer[nodeIdx];
-                    var selfLink = SVOLink.NodeLink((uint)layerIdx, (uint)nodeIdx);
+                    var selfLink = SVOLink.NodeLink(layerIdx, nodeIdx);
                     var nodePfx = $"{prefix}, node {nodeIdx} (Morton 0x{(uint)node.MortonCode:X8})";
 
                     if (isLeaf || !node.FirstChild.IsValid)
@@ -266,7 +266,7 @@ namespace NavVolume.Tests.PlayMode
 
                     node.FirstChild.IsNode(out var childLayerIdx);
 
-                    var expectedChildLayer = (uint)(layerIdx - 1);
+                    var expectedChildLayer = layerIdx - 1;
 
                     // Child links point to the next coarser layer.
                     if (childLayerIdx != expectedChildLayer)
@@ -278,7 +278,7 @@ namespace NavVolume.Tests.PlayMode
                     }
 
                     var childLayer = svo.Layers[childLayerIdx];
-                    var firstChildOff = (int)node.FirstChild.Offset;
+                    var firstChildOff = node.FirstChild.Offset;
                     var lastChildOff = firstChildOff + 7;
 
                     // All 8 child offsets must be in range.
@@ -308,7 +308,7 @@ namespace NavVolume.Tests.PlayMode
                         }
 
                         // Each child's MortonCode matches the expected ChildCode of the parent.
-                        var expectedCode = node.MortonCode.ChildCode((uint)slot);
+                        var expectedCode = node.MortonCode.ChildCode(slot);
 
                         if (child.MortonCode != expectedCode)
                         {
@@ -350,7 +350,7 @@ namespace NavVolume.Tests.PlayMode
                     var parentOffset = (int)node.Parent.Offset;
                     var parent = svo.Layers[parentLayerIdx][parentOffset];
 
-                    var firstSiblingOffset = (int)parent.FirstChild.Offset;
+                    var firstSiblingOffset = parent.FirstChild.Offset;
                     var siblingLayer = svo.Layers[layerIdx];
                     var isSiblingLeaf = layerIdx == 0;
 
@@ -409,7 +409,7 @@ namespace NavVolume.Tests.PlayMode
                 for (var nodeIdx = 0; nodeIdx < layer.Count; nodeIdx++)
                 {
                     var node = layer[nodeIdx];
-                    var selfLink = SVOLink.NodeLink((uint)layerIdx, (uint)nodeIdx);
+                    var selfLink = SVOLink.NodeLink(layerIdx, nodeIdx);
                     var nodePfx = $"{prefix}, node {nodeIdx} (Morton 0x{(uint)node.MortonCode:X8})";
 
                     foreach (var dir in AllDirections)
@@ -431,7 +431,7 @@ namespace NavVolume.Tests.PlayMode
                             }
 
                             // There cant be unliked direct neighbors.
-                            if (svo.TryFindNodeIndex((uint)layerIdx, adjCode, out _))
+                            if (svo.TryFindNodeIndex(layerIdx, adjCode, out _))
                             {
                                 report.Add(
                                     $"{nodePfx}, dir {dir}: Neighbor link is invalid but an adjacent "
@@ -453,7 +453,7 @@ namespace NavVolume.Tests.PlayMode
                             continue;
                         }
 
-                        var neighborOffset = (int)neighborLink.Offset;
+                        var neighborOffset = neighborLink.Offset;
                         var neighborLayer = svo.Layers[neighborLayerIdx];
 
                         // Neighbor must not link to itself.
@@ -467,7 +467,7 @@ namespace NavVolume.Tests.PlayMode
 
                         var neighbor = neighborLayer[neighborOffset];
                         var backLink = neighbor.Neighbors[opp];
-                        var isSameLayer = neighborLayerIdx == (uint)layerIdx;
+                        var isSameLayer = neighborLayerIdx == layerIdx;
 
                         if (isSameLayer)
                         {

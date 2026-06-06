@@ -9,8 +9,8 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void NodeLink_IsNode_ReturnsTrueAndOutputsLayer(
-            [Random(0u, SVOLink.MAX_LAYER_ALLOWED, 3)] uint layer,
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint offset
+            [Random(0, SVOLink.MAX_LAYER_ALLOWED, 3)] int layer,
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int offset
         )
         {
             var link = SVOLink.NodeLink(layer, offset);
@@ -21,8 +21,8 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void NodeLink_IsVoxel_ReturnsFalse(
-            [Random(0u, SVOLink.MAX_LAYER_ALLOWED, 3)] uint layer,
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint offset
+            [Random(0, SVOLink.MAX_LAYER_ALLOWED, 3)] int layer,
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int offset
         )
         {
             var link = SVOLink.NodeLink(layer, offset);
@@ -32,8 +32,8 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void NodeLink_Offset_ReturnsNodeOffset(
-            [Random(0u, SVOLink.MAX_LAYER_ALLOWED, 3)] uint layer,
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint offset
+            [Random(0, SVOLink.MAX_LAYER_ALLOWED, 3)] int layer,
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int offset
         )
         {
             var link = SVOLink.NodeLink(layer, offset);
@@ -43,8 +43,8 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void NodeLink_IsValid_ReturnsTrue(
-            [Random(0u, SVOLink.MAX_LAYER_ALLOWED, 3)] uint layer,
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint offset
+            [Random(0, SVOLink.MAX_LAYER_ALLOWED, 3)] int layer,
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int offset
         )
         {
             Assert.IsTrue(SVOLink.NodeLink(layer, offset).IsValid);
@@ -56,20 +56,20 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void VoxelLink_IsVoxel_ReturnsTrueAndOutputsSubnodeIndex(
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint leafOffset,
-            [Random(0u, SVOLink.MAX_SUBNODE_ALLOWED, 3)] uint subnodeIndex
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int leafOffset,
+            [Random(0, SVOLink.MAX_SUBNODE_ALLOWED, 3)] int subnodeIndex
         )
         {
             var link = SVOLink.VoxelLink(leafOffset, subnodeIndex);
 
-            Assert.IsTrue(link.IsVoxel(out uint outSubnode));
+            Assert.IsTrue(link.IsVoxel(out int outSubnode));
             Assert.AreEqual(subnodeIndex, outSubnode);
         }
 
         [Test]
         public void VoxelLink_IsNode_ReturnsFalse(
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint leafOffset,
-            [Random(0u, SVOLink.MAX_SUBNODE_ALLOWED, 3)] uint subnodeIndex
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int leafOffset,
+            [Random(0, SVOLink.MAX_SUBNODE_ALLOWED, 3)] int subnodeIndex
         )
         {
             var link = SVOLink.VoxelLink(leafOffset, subnodeIndex);
@@ -79,8 +79,8 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void VoxelLink_Offset_ReturnsLeafOffset(
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint leafOffset,
-            [Random(0u, SVOLink.MAX_SUBNODE_ALLOWED, 3)] uint subnodeIndex
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int leafOffset,
+            [Random(0, SVOLink.MAX_SUBNODE_ALLOWED, 3)] int subnodeIndex
         )
         {
             var link = SVOLink.VoxelLink(leafOffset, subnodeIndex);
@@ -90,8 +90,8 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void VoxelLink_IsValid_ReturnsTrue(
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint leafOffset,
-            [Random(0u, SVOLink.MAX_SUBNODE_ALLOWED, 3)] uint subnodeIndex
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int leafOffset,
+            [Random(0, SVOLink.MAX_SUBNODE_ALLOWED, 3)] int subnodeIndex
         )
         {
             Assert.IsTrue(SVOLink.VoxelLink(leafOffset, subnodeIndex).IsValid);
@@ -103,7 +103,7 @@ namespace NavVolume.Tests.EditMode.Core
             var link = SVOLink.VoxelLink(SVOLink.MAX_OFFSET_ALLOWED, SVOLink.MAX_SUBNODE_ALLOWED);
 
             Assert.IsTrue(link.IsValid);
-            Assert.IsTrue(link.IsVoxel(out uint outSubnode));
+            Assert.IsTrue(link.IsVoxel(out int outSubnode));
             Assert.AreEqual(SVOLink.MAX_SUBNODE_ALLOWED, outSubnode);
             Assert.AreEqual(SVOLink.MAX_OFFSET_ALLOWED, link.Offset);
         }
@@ -112,11 +112,11 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void NodeLink_AndVoxelLink_WithSameOffset_AreNotEqual(
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint offset
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int offset
         )
         {
-            var nodeLink = SVOLink.NodeLink(0u, offset);
-            var voxelLink = SVOLink.VoxelLink(offset, 0u);
+            var nodeLink = SVOLink.NodeLink(0, offset);
+            var voxelLink = SVOLink.VoxelLink(offset, 0);
 
             Assert.AreNotEqual(nodeLink, voxelLink);
         }
@@ -131,8 +131,8 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void Invalid_IsNotEqualToValidNodeLink(
-            [Random(0u, SVOLink.MAX_LAYER_ALLOWED, 3)] uint layer,
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint offset
+            [Random(0, SVOLink.MAX_LAYER_ALLOWED, 3)] int layer,
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int offset
         )
         {
             Assert.AreNotEqual(SVOLink.Invalid, SVOLink.NodeLink(layer, offset));
@@ -140,8 +140,8 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void Invalid_IsNotEqualToValidVoxelLink(
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint leafOffset,
-            [Random(0u, SVOLink.MAX_SUBNODE_ALLOWED, 3)] uint subnodeIndex
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int leafOffset,
+            [Random(0, SVOLink.MAX_SUBNODE_ALLOWED, 3)] int subnodeIndex
         )
         {
             Assert.AreNotEqual(SVOLink.Invalid, SVOLink.VoxelLink(leafOffset, subnodeIndex));
@@ -159,8 +159,8 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void EqualityOperator_SameNodeLinks_AreEqual(
-            [Random(0u, SVOLink.MAX_LAYER_ALLOWED, 3)] uint layer,
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint offset
+            [Random(0, SVOLink.MAX_LAYER_ALLOWED, 3)] int layer,
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int offset
         )
         {
             var a = SVOLink.NodeLink(layer, offset);
@@ -172,8 +172,8 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void EqualityOperator_SameVoxelLinks_AreEqual(
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint leafOffset,
-            [Random(0u, SVOLink.MAX_SUBNODE_ALLOWED, 3)] uint subnodeIndex
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int leafOffset,
+            [Random(0, SVOLink.MAX_SUBNODE_ALLOWED, 3)] int subnodeIndex
         )
         {
             var a = SVOLink.VoxelLink(leafOffset, subnodeIndex);
@@ -185,8 +185,8 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void EqualityOperator_AndEqualsOverride_AreConsistent(
-            [Random(0u, SVOLink.MAX_LAYER_ALLOWED, 3)] uint layer,
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint offset
+            [Random(0, SVOLink.MAX_LAYER_ALLOWED, 3)] int layer,
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int offset
         )
         {
             var a = SVOLink.NodeLink(layer, offset);
@@ -197,8 +197,8 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void GetHashCode_EqualLinks_ReturnSameValue(
-            [Random(0u, SVOLink.MAX_LAYER_ALLOWED, 3)] uint layer,
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint offset
+            [Random(0, SVOLink.MAX_LAYER_ALLOWED, 3)] int layer,
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int offset
         )
         {
             var a = SVOLink.NodeLink(layer, offset);
@@ -209,8 +209,8 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void ImplicitConversion_NodeLink_RoundTripsToUintAndBack(
-            [Random(0u, SVOLink.MAX_LAYER_ALLOWED, 3)] uint layer,
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint offset
+            [Random(0, SVOLink.MAX_LAYER_ALLOWED, 3)] int layer,
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int offset
         )
         {
             var original = SVOLink.NodeLink(layer, offset);
@@ -222,8 +222,8 @@ namespace NavVolume.Tests.EditMode.Core
 
         [Test]
         public void ImplicitConversion_VoxelLink_RoundTripsToUintAndBack(
-            [Random(0u, SVOLink.MAX_OFFSET_ALLOWED, 3)] uint leafOffset,
-            [Random(0u, SVOLink.MAX_SUBNODE_ALLOWED, 3)] uint subnodeIndex
+            [Random(0, SVOLink.MAX_OFFSET_ALLOWED, 3)] int leafOffset,
+            [Random(0, SVOLink.MAX_SUBNODE_ALLOWED, 3)] int subnodeIndex
         )
         {
             var original = SVOLink.VoxelLink(leafOffset, subnodeIndex);
