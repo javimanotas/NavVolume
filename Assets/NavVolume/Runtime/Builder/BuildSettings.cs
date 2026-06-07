@@ -92,7 +92,8 @@ namespace NavVolume.Runtime.Builder
 
         public static bool operator !=(BuildSettings lhs, BuildSettings rhs) => !(lhs == rhs);
 
-        public override readonly bool Equals(object obj) => this == (BuildSettings)obj;
+        public override readonly bool Equals(object obj) =>
+            obj is BuildSettings other && this == other;
 
         public override readonly int GetHashCode() =>
             (Origin, RootSize, NumLayers, CollisionMask, AgentRadius).GetHashCode();
