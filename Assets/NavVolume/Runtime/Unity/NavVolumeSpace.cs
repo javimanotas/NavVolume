@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NavVolume.Runtime;
 using NavVolume.Runtime.Builder;
+using NavVolume.Runtime.Core;
 using NavVolume.Runtime.Pathfinding;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -31,10 +32,21 @@ namespace NavVolume
         [Min(0)]
         float _rootSize = 100f;
 
+        /// <summary>
+        /// Number of layers in the octree (the higher the value means the finer the detail).
+        /// <para>
+        /// Minimum 2: the coarse-to-fine sweep in <see cref="SVORasterizer"/> seeds one layer below the root.
+        /// A tree needs at least a leaf layer plus a root layer.
+        /// </para>
+        /// <para>
+        /// Maximum 9: the layer-0 node count grows as <c>8^(NumLayers - 1)</c>.
+        /// A 10th layer with 8^9 = 134,217,728 nodes could overflow the <see cref="SVOLink.MAX_OFFSET_ALLOWED"/>.
+        /// </para>
+        /// </summary>
         [SerializeField]
         [Tooltip("The detail of the navigable space.")]
-        [Range(1, 9)]
-        int _numLayers = 5;
+        [Range(2, 9)]
+        int _numLayers = 6;
 
         [SerializeField]
         [Tooltip("Physics layers that count as solid obstacles.")]

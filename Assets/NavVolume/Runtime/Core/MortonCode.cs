@@ -6,7 +6,7 @@ namespace NavVolume.Runtime.Core
     /// <summary>
     /// Encoding of a 3D grid position into a Z-order space filling curve.
     /// </summary>
-    internal readonly struct MortonCode : IComparable<MortonCode>
+    internal readonly struct MortonCode : IComparable<MortonCode>, IEquatable<MortonCode>
     {
         public static MortonCode Invalid => new(uint.MaxValue);
 
@@ -145,7 +145,9 @@ namespace NavVolume.Runtime.Core
 
         public static bool operator !=(MortonCode lhs, MortonCode rhs) => lhs._code != rhs._code;
 
-        public override bool Equals(object obj) => this == (MortonCode)obj;
+        public bool Equals(MortonCode other) => _code == other._code;
+
+        public override bool Equals(object obj) => obj is MortonCode other && Equals(other);
 
         public override int GetHashCode() => _code.GetHashCode();
 

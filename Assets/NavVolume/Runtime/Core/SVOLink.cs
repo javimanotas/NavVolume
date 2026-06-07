@@ -94,7 +94,7 @@ namespace NavVolume.Runtime.Core
 
         public static bool operator !=(SVOLink lhs, SVOLink rhs) => lhs._link != rhs._link;
 
-        public override bool Equals(object obj) => this == (SVOLink)obj;
+        public override bool Equals(object obj) => obj is SVOLink other && this == other;
 
         public override int GetHashCode() => _link.GetHashCode();
 
