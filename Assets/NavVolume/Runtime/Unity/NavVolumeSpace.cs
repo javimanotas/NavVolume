@@ -247,6 +247,21 @@ namespace NavVolume
         }
 
         /// <summary>
+        /// Clamps <paramref name="worldPos"/> to the closest point that lies inside volume AABB.
+        /// </summary>
+        public Vector3 ClampToVolume(Vector3 worldPos)
+        {
+            var bounds = VolumeBounds;
+            var clamped = new Vector3(
+                Mathf.Clamp(worldPos.x, bounds.min.x, bounds.max.x),
+                Mathf.Clamp(worldPos.y, bounds.min.y, bounds.max.y),
+                Mathf.Clamp(worldPos.z, bounds.min.z, bounds.max.z)
+            );
+
+            return clamped;
+        }
+
+        /// <summary>
         /// Finds the closest navigable voxel center to <paramref name="worldPos"/> within <paramref name="maxDistance"/> meters.
         /// </summary>
         /// <remarks>
@@ -260,6 +275,8 @@ namespace NavVolume
             {
                 return false;
             }
+
+            worldPos = ClampToVolume(worldPos);
 
             var settings = NavCtx.BuildSettings;
             var voxelSize = settings.VoxelSize;
@@ -349,30 +366,6 @@ namespace NavVolume
             }
 
             return found;
-        }
-
-        /// <summary>
-        /// Clamps <paramref name="worldPos"/> to the closest navigable point that lies inside volume AABB.
-        /// </summary>
-        /// <remarks>
-        /// Fails only when no free voxel can be found inside the volume.
-        /// </remarks>
-        public bool TryClampToVolume(Vector3 worldPos, out Vector3 result)
-        {
-            var bounds = VolumeBounds;
-            var clamped = new Vector3(
-                Mathf.Clamp(worldPos.x, bounds.min.x, bounds.max.x),
-                Mathf.Clamp(worldPos.y, bounds.min.y, bounds.max.y),
-                Mathf.Clamp(worldPos.z, bounds.min.z, bounds.max.z)
-            );
-
-            if (IsNavigable(clamped))
-            {
-                result = clamped;
-                return true;
-            }
-
-            return TrySnapToNavigable(clamped, _rootSize * Mathf.Sqrt(3f), out result);
         }
 
         /// <summary>
