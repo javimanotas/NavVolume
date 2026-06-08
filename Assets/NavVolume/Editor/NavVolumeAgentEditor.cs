@@ -195,9 +195,11 @@ namespace NavVolume.Editor
 
                 foreach (var phase in stats.Phases)
                 {
+                    var phasePct =
+                        stats.ElapsedMs > 0 ? phase.Milliseconds / stats.ElapsedMs * 100.0 : 0.0;
                     EditorGuiHelpers.DrawHeadlineRow(
                         $"     {phase.Label}",
-                        $"{phase.Milliseconds:F2} ms"
+                        $"{phase.Milliseconds:F2} ms  ({phasePct:F1}%)"
                     );
                 }
 
