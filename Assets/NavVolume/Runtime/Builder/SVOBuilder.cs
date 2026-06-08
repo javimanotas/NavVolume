@@ -103,16 +103,13 @@ namespace NavVolume.Runtime.Builder
 
         void AllocateL0(SVO svo, List<MortonCode> l0Codes)
         {
-            var layer = svo.Layers[0];
-            if (layer.Capacity < l0Codes.Count)
+            var layer = new SVONode[l0Codes.Count];
+            for (var i = 0; i < l0Codes.Count; i++)
             {
-                layer.Capacity = l0Codes.Count;
+                layer[i] = new SVONode(l0Codes[i]);
             }
 
-            foreach (var code in l0Codes)
-            {
-                layer.Add(new(code));
-            }
+            svo.Layers[0] = layer;
         }
 
         SVOLeaf[] CalculateLeafNodes(List<MortonCode> l0Codes)
@@ -145,11 +142,11 @@ namespace NavVolume.Runtime.Builder
         List<MortonCode> CalculateParentCodes(SVO svo, int childLayer)
         {
             var children = svo.Layers[childLayer];
-            var dedup = new HashSet<MortonCode>(children.Count);
+            var dedup = new HashSet<MortonCode>(children.Length);
 
-            foreach (var child in children)
+            for (var i = 0; i < children.Length; i++)
             {
-                dedup.Add(child.MortonCode.ParentCode);
+                dedup.Add(children[i].MortonCode.ParentCode);
             }
 
             var parentCodes = new List<MortonCode>(dedup);
@@ -175,7 +172,7 @@ namespace NavVolume.Runtime.Builder
             // Every existing child's parent is by construction in parentCodes, so the layer
             // size can only be <= expectedCount. Equality means no siblings are missing and
             // the layer is already sorted from the previous build step.
-            if (layer.Count == expectedCount)
+            if (layer.Length == expectedCount)
             {
                 return;
             }
@@ -190,109 +187,85 @@ namespace NavVolume.Runtime.Builder
             }
             allChildren.Sort();
 
-            layer.Clear();
-            if (layer.Capacity < expectedCount)
-            {
-                layer.Capacity = expectedCount;
-            }
-
+            var rebuilt = new SVONode[expectedCount];
             for (var i = 0; i < allChildren.Count; i++)
             {
-                layer.Add(new(allChildren[i]));
+                rebuilt[i] = new SVONode(allChildren[i]);
             }
+
+            svo.Layers[childLayer] = rebuilt;
         }
 
         void AllocateParentNodes(SVO svo, int layer, List<MortonCode> parentCodes)
         {
-            var parentLayer = svo.Layers[layer];
-            if (parentLayer.Capacity < parentLayer.Count + parentCodes.Count)
+            var parentLayer = new SVONode[parentCodes.Count];
+            for (var i = 0; i < parentCodes.Count; i++)
             {
-                parentLayer.Capacity = parentLayer.Count + parentCodes.Count;
+                parentLayer[i] = new SVONode(parentCodes[i]);
             }
 
-            foreach (var pCode in parentCodes)
-            {
-                parentLayer.Add(new(pCode));
-            }
+            svo.Layers[layer] = parentLayer;
         }
 
         #endregion
 
         void LinkParentAndChildren(SVO svo, int layer, int childLayer)
         {
-            var sortedChildren = svo.Layers[childLayer];
+            var children = svo.Layers[childLayer];
+            var parents = svo.Layers[layer];
 
-            for (var childIdx = 0; childIdx < sortedChildren.Count; childIdx++)
+            for (var childIdx = 0; childIdx < children.Length; childIdx++)
             {
-                var child = sortedChildren[childIdx];
-                var parentCode = child.MortonCode.ParentCode;
+                var parentCode = children[childIdx].MortonCode.ParentCode;
+                svo.TryFindNodeIndex(layer, parentCode, out var parentIdx);
 
-                svo.TryGetLink(layer, parentCode, out var parentLink);
+                children[childIdx].Parent = SVOLink.NodeLink(layer, parentIdx);
 
-                child.Parent = parentLink;
-                svo.Layers[childLayer][childIdx] = child;
-
-                var parentNode = svo.GetNode(parentLink);
-                if (!parentNode.HasChildren)
+                ref var parent = ref parents[parentIdx];
+                if (!parent.HasChildren)
                 {
-                    parentNode.FirstChild = SVOLink.NodeLink(childLayer, childIdx);
-                    svo.SetNode(parentLink, parentNode);
+                    parent.FirstChild = SVOLink.NodeLink(childLayer, childIdx);
                 }
             }
         }
     }
 
     /// <summary>
-    /// Lightweight per-phase bake timer. Collects named laps and emits a single unified log: a
-    /// header with the total split into build vs. save (post-build) time, then every phase below.
+    /// Bake-specific front end over a shared <see cref="StepProfiler"/>. Adds the build-vs-save split
+    /// and snapshots the collected laps into a transient <see cref="BakeReport"/>.
     /// </summary>
     internal sealed class BakeProfiler
     {
-        readonly List<(string Label, double Ms)> _laps = new();
-        readonly System.Diagnostics.Stopwatch _phase = new();
+        readonly StepProfiler _profiler = new();
 
         // Running total (ms) captured when the build finished; -1 until then.
         double _buildMs = -1;
 
         public void Start()
         {
-            _laps.Clear();
+            _profiler.Start();
             _buildMs = -1;
-            _phase.Restart();
         }
 
-        public void Lap(string label)
-        {
-            _laps.Add((label, _phase.Elapsed.TotalMilliseconds));
-            _phase.Restart();
-        }
+        public void Lap(string label) => _profiler.Lap(label);
 
         /// <summary>Marks where the build ends and post-build (save) phases begin.</summary>
-        public void MarkBuildComplete() => _buildMs = Sum();
+        public void MarkBuildComplete() => _buildMs = _profiler.TotalMs;
 
         /// <summary>Snapshots the collected laps into a transient <see cref="BakeReport"/>.</summary>
         public BakeReport ToReport()
         {
-            var total = Sum();
+            var total = _profiler.TotalMs;
             var buildMs = _buildMs >= 0 ? _buildMs : total;
 
-            var phases = new BakePhase[_laps.Count];
-            for (var i = 0; i < _laps.Count; i++)
+            // Copy so the report stays independent of the (reusable) profiler's live phase list.
+            var phases = new TimedPhase[_profiler.Phases.Count];
+            for (var i = 0; i < phases.Length; i++)
             {
-                phases[i] = new BakePhase(_laps[i].Label, _laps[i].Ms);
+                phases[i] = _profiler.Phases[i];
             }
 
             return new BakeReport(total, buildMs, total - buildMs, phases);
-        }
-
-        double Sum()
-        {
-            var sum = 0.0;
-            foreach (var (_, ms) in _laps)
-            {
-                sum += ms;
-            }
-            return sum;
         }
     }
 }

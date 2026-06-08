@@ -25,8 +25,8 @@ namespace NavVolume.Runtime.Builder
             for (var layer = 0; layer < layerCount; layer++)
             {
                 var nodes = svo.Layers[layer];
-                var mortons = new uint[nodes.Count];
-                for (var i = 0; i < nodes.Count; i++)
+                var mortons = new uint[nodes.Length];
+                for (var i = 0; i < nodes.Length; i++)
                 {
                     mortons[i] = nodes[i].MortonCode;
                 }
@@ -42,7 +42,7 @@ namespace NavVolume.Runtime.Builder
                 var nodes = svo.Layers[layer];
                 var mortons = mortonByLayer[layer];
 
-                for (var nodeIdx = 0; nodeIdx < nodes.Count; nodeIdx++)
+                for (var nodeIdx = 0; nodeIdx < nodes.Length; nodeIdx++)
                 {
                     var node = nodes[nodeIdx];
 

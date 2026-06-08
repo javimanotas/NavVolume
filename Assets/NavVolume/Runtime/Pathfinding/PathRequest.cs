@@ -26,17 +26,27 @@ namespace NavVolume.Runtime.Pathfinding
         /// </summary>
         public readonly int MaxNodesBudget;
 
+        /// <summary>
+        /// How the g-cost and heuristic are measured.
+        /// </summary>
+        /// <remarks>
+        /// See <see cref="PathCostMode"/> for details.
+        /// </remarks>
+        public readonly PathCostMode CostMode;
+
         public PathRequest(
             Vector3 start,
             Vector3 goal,
             float heuristicWeight,
-            int maxNodesBudget = 0
+            int maxNodesBudget = 0,
+            PathCostMode costMode = PathCostMode.NodeCount
         )
         {
             Start = start;
             Goal = goal;
             HeuristicWeight = heuristicWeight;
             MaxNodesBudget = maxNodesBudget;
+            CostMode = costMode;
         }
     }
 }

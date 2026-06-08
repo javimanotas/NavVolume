@@ -192,6 +192,17 @@ namespace NavVolume.Editor
                 );
                 EditorGuiHelpers.DrawHeadlineSeparator();
                 EditorGuiHelpers.DrawHeadlineRow("Elapsed", $"{stats.ElapsedMs:F2} ms");
+
+                foreach (var phase in stats.Phases)
+                {
+                    var phasePct =
+                        stats.ElapsedMs > 0 ? phase.Milliseconds / stats.ElapsedMs * 100.0 : 0.0;
+                    EditorGuiHelpers.DrawHeadlineRow(
+                        $"     {phase.Label}",
+                        $"{phase.Milliseconds:F2} ms  ({phasePct:F1}%)"
+                    );
+                }
+
                 EditorGuiHelpers.DrawHeadlineSeparator();
 
                 var pct =

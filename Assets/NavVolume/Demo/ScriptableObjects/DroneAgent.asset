@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65788c7e52900354cbd0a65719a35af4, type: 3}
   m_Name: DroneAgent
   m_EditorClassIdentifier: NavVolume.Runtime::NavVolume.Runtime.AgentType
-  <Radius>k__BackingField: 0
-  <WaypointTolerance>k__BackingField: 0.1
-  <HeuristicWeight>k__BackingField: 1.5
-  <MaxNodesBudget>k__BackingField: 100000
+  <Radius>k__BackingField: 1
+  <CostMode>k__BackingField: 0
+  <HeuristicWeight>k__BackingField: 1.92
