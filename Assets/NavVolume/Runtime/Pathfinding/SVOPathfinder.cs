@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using NavVolume.Runtime.Builder;
 using NavVolume.Runtime.Core;
 using UnityEngine;
@@ -34,6 +35,11 @@ namespace NavVolume.Runtime.Pathfinding
         float _hScale;
         bool _euclidean;
 
+        /// <summary>
+        /// This prevents from checking the cancellation token on every single expansion, which would be expensive.
+        /// </summary>
+        const int _CANCEL_CHECK_MASK = 1023;
+
         void ClearState()
         {
             _openList.Clear();
@@ -44,7 +50,11 @@ namespace NavVolume.Runtime.Pathfinding
         /// <summary>
         /// Find a path synchronously.
         /// </summary>
-        public PathResult FindPath(NavContext navCtx, PathRequest request)
+        public PathResult FindPath(
+            NavContext navCtx,
+            PathRequest request,
+            CancellationToken cancellationToken = default
+        )
         {
             if (navCtx.Svo.IsEmpty)
             {
@@ -110,6 +120,11 @@ namespace NavVolume.Runtime.Pathfinding
 
             while (!_openList.IsEmpty)
             {
+                if ((expanded & _CANCEL_CHECK_MASK) == 0)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+
                 if (maxBudget > 0 && expanded >= maxBudget)
                 {
                     return PathResult.Failure(

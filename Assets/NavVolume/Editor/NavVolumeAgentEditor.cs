@@ -158,7 +158,7 @@ namespace NavVolume.Editor
                 if (!lastPath.HasValue)
                 {
                     EditorGUILayout.HelpBox(
-                        "No path computed yet. Call MoveTo to populate stats.",
+                        "No path computed yet. Call SetDestination to populate stats.",
                         MessageType.Info
                     );
                 }

@@ -49,7 +49,7 @@ namespace NavVolume.Demo
                 return;
             }
 
-            _agent.MoveTo(goal);
+            _agent.SetDestination(goal);
         }
     }
 }
