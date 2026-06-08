@@ -297,11 +297,7 @@ namespace NavVolume.Editor
 
                 if (!TryGetCachedNavContext(space, out var navCtx))
                 {
-                    EditorGUILayout.HelpBox(
-                        "No SVO available. Bake the volume (or enter Play Mode with BuildOnAwake) "
-                            + "to see stats.",
-                        MessageType.Info
-                    );
+                    EditorGUILayout.HelpBox(NoSvoMessage(space.BuildMode), MessageType.Info);
                 }
                 else
                 {
@@ -312,6 +308,25 @@ namespace NavVolume.Editor
             }
 
             EditorGUILayout.EndFoldoutHeaderGroup();
+        }
+
+        /// <summary>
+        /// Help-box text for the Stats foldout when no SVO exists yet. The instruction on how to get
+        /// one depends on how the volume is configured to build.
+        /// </summary>
+        static string NoSvoMessage(BuildMode mode)
+        {
+            const string lead = "No SVO available. ";
+
+            return mode switch
+            {
+                BuildMode.Baked => lead + "Bake the volume first to see its stats.",
+                BuildMode.BuildOnAwake => lead
+                    + "Enter Play Mode to build the volume and see its stats.",
+                BuildMode.Manual => lead
+                    + "Enter Play Mode, then call Build() or press the Rebuild button to see its stats.",
+                _ => lead + "Build the volume to see its stats.",
+            };
         }
 
         static void DrawStatsRows(SVOStats stats)
@@ -581,45 +596,64 @@ namespace NavVolume.Editor
                             MessageType.Warning
                         );
                     }
-
-                    EditorGUILayout.Space(4);
-
-                    using (new EditorGUILayout.HorizontalScope())
-                    {
-                        if (GUILayout.Button("Bake", GUILayout.Height(28)))
-                        {
-                            Bake(space, dataProp);
-                        }
-
-                        using (new EditorGUI.DisabledScope(!BakeStatsWindow.HasReport))
-                        {
-                            if (
-                                GUILayout.Button("Stats", GUILayout.Height(28), GUILayout.Width(60))
-                            )
-                            {
-                                BakeStatsWindow.ShowLast();
-                            }
-                        }
-                    }
                 }
 
                 EditorGUILayout.Space(4);
 
-                GUI.enabled = Application.isPlaying;
-
-                if (GUILayout.Button("Rebuild Now (Play Mode)", GUILayout.Height(28)))
-                {
-                    space.Build();
-                    InvalidateNavContextCache(space);
-                    SceneView.RepaintAll();
-                }
-
-                GUI.enabled = true;
+                DrawBuildButton(space, mode, dataProp);
 
                 EditorGUI.indentLevel--;
             }
 
             EditorGUILayout.EndFoldoutHeaderGroup();
+        }
+
+        /// <summary>
+        /// Single bake/rebuild button. In <see cref="BuildMode.Baked"/> it bakes the asset while
+        /// editing and live-rebuilds the in-memory volume while playing. In the other modes there is
+        /// nothing to bake, so it only offers a live rebuild, which is possible only in Play Mode and
+        /// is shown disabled otherwise.
+        /// </summary>
+        void DrawBuildButton(NavVolumeSpace space, BuildMode mode, SerializedProperty dataProp)
+        {
+            var isPlaying = Application.isPlaying;
+            var canBake = mode == BuildMode.Baked && !isPlaying;
+
+            var label =
+                canBake ? "Bake"
+                : isPlaying ? "Rebuild"
+                : "Rebuild (Play Mode)";
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                using (new EditorGUI.DisabledScope(!canBake && !isPlaying))
+                {
+                    if (GUILayout.Button(label, GUILayout.Height(28)))
+                    {
+                        if (canBake)
+                        {
+                            Bake(space, dataProp);
+                        }
+                        else
+                        {
+                            space.Build();
+                            InvalidateNavContextCache(space);
+                            SceneView.RepaintAll();
+                        }
+                    }
+                }
+
+                if (mode == BuildMode.Baked)
+                {
+                    using (new EditorGUI.DisabledScope(!BakeStatsWindow.HasReport))
+                    {
+                        if (GUILayout.Button("Stats", GUILayout.Height(28), GUILayout.Width(60)))
+                        {
+                            BakeStatsWindow.ShowLast();
+                        }
+                    }
+                }
+            }
         }
 
         #endregion
