@@ -358,7 +358,12 @@ namespace NavVolume.Runtime.Pathfinding
             return svo.GetNode(neighbor).HasChildren;
         }
 
-        void ExpandChildren(SVO svo, SVOLink coarseNeighbor, SVOLink incomingLink, float incomingGCost)
+        void ExpandChildren(
+            SVO svo,
+            SVOLink coarseNeighbor,
+            SVOLink incomingLink,
+            float incomingGCost
+        )
         {
             ref readonly var coarse = ref svo.GetNode(coarseNeighbor);
 
@@ -472,7 +477,10 @@ namespace NavVolume.Runtime.Pathfinding
             }
 
             return fromGCost
-                + SVOHeuristic.EuclideanCost(_ctx.LinkToCenter(fromLink), _ctx.LinkToCenter(toLink));
+                + SVOHeuristic.EuclideanCost(
+                    _ctx.LinkToCenter(fromLink),
+                    _ctx.LinkToCenter(toLink)
+                );
         }
 
         float ComputeH(SVOLink link) =>
