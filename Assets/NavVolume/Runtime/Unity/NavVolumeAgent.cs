@@ -98,7 +98,8 @@ namespace NavVolume
                 transform.position,
                 goal,
                 AgentType.HeuristicWeight,
-                _MAX_NODES_BUDGET
+                _MAX_NODES_BUDGET,
+                AgentType.CostMode
             );
 
             var result = _navVolumeSpace.FindPath(request);

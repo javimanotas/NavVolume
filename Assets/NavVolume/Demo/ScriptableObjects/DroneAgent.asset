@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: DroneAgent
   m_EditorClassIdentifier: NavVolume.Runtime::NavVolume.Runtime.AgentType
   <Radius>k__BackingField: 1
-  <HeuristicWeight>k__BackingField: 2
+  <CostMode>k__BackingField: 1
+  <HeuristicWeight>k__BackingField: 1

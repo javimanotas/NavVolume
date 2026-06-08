@@ -200,7 +200,7 @@ namespace NavVolume.Runtime.Pathfinding
                     continue;
                 }
 
-                var newG = current.GCost + SVOHeuristic.UnitCost();
+                var newG = ComputeG(navCtx, request, current.Link, current.GCost, neighbor);
 
                 if (_gCost.TryGetValue(neighbor, out var existingG) && newG >= existingG)
                 {
@@ -386,7 +386,7 @@ namespace NavVolume.Runtime.Pathfinding
                     continue;
                 }
 
-                var newG = incomingGCost + SVOHeuristic.UnitCost();
+                var newG = ComputeG(navCtx, request, incomingLink, incomingGCost, childLink);
 
                 if (_gCost.TryGetValue(childLink, out var existingG) && newG >= existingG)
                 {
@@ -429,7 +429,7 @@ namespace NavVolume.Runtime.Pathfinding
                     continue;
                 }
 
-                var newG = fromGCost + SVOHeuristic.UnitCost();
+                var newG = ComputeG(navCtx, request, fromLink, fromGCost, voxelLink);
 
                 if (_gCost.TryGetValue(voxelLink, out var existingG) && newG >= existingG)
                 {
@@ -448,6 +448,24 @@ namespace NavVolume.Runtime.Pathfinding
 
         #region Cost functions
 
+        static float ComputeG(
+            NavContext navCtx,
+            PathRequest request,
+            SVOLink fromLink,
+            float fromGCost,
+            SVOLink toLink
+        )
+        {
+            if (request.CostMode == PathCostMode.EuclideanDistance)
+            {
+                var fromCenter = navCtx.LinkToCenter(fromLink);
+                var toCenter = navCtx.LinkToCenter(toLink);
+                return fromGCost + SVOHeuristic.EuclideanCost(fromCenter, toCenter);
+            }
+
+            return fromGCost + SVOHeuristic.UnitCost();
+        }
+
         static float ComputeH(
             NavContext navCtx,
             SVOLink link,
@@ -456,6 +474,12 @@ namespace NavVolume.Runtime.Pathfinding
         )
         {
             var center = navCtx.LinkToCenter(link);
+
+            if (request.CostMode == PathCostMode.EuclideanDistance)
+            {
+                return SVOHeuristic.EuclideanHeuristic(center, goalCenter, request.HeuristicWeight);
+            }
+
             var settings = navCtx.BuildSettings;
             var largestNodeSize = settings.NodeSizeForLayer(settings.NumLayers - 1);
 
