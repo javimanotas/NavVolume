@@ -1,4 +1,5 @@
 using System;
+using NavVolume.Runtime;
 using NavVolume.Runtime.Builder;
 using UnityEditor;
 using UnityEngine;
@@ -23,7 +24,7 @@ namespace NavVolume.Editor
         BakeReport _report;
 
         [NonSerialized]
-        BakePhase[] _ordered; // phases sorted by cost, descending (drives both bar and legend)
+        TimedPhase[] _ordered; // phases sorted by cost, descending (drives both bar and legend)
 
         int _hovered = -1;
 
@@ -71,11 +72,11 @@ namespace NavVolume.Editor
 
             if (report == null)
             {
-                _ordered = Array.Empty<BakePhase>();
+                _ordered = Array.Empty<TimedPhase>();
                 return;
             }
 
-            _ordered = new BakePhase[report.Phases.Count];
+            _ordered = new TimedPhase[report.Phases.Count];
             for (var i = 0; i < report.Phases.Count; i++)
             {
                 _ordered[i] = report.Phases[i];

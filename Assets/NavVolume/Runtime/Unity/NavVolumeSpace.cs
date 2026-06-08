@@ -168,33 +168,40 @@ namespace NavVolume
                 return PathResult.Failure(PathResultStatus.NoTree);
             }
 
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            // The pathfinder uses the same per-step profiler as the bake, so the reported total is
+            // the sum of the per-step timings.
+            var profiler = new StepProfiler();
+            profiler.Start();
 
             var raw = new SVOPathfinder().FindPath(NavCtx, request);
+            profiler.Lap("A* search");
 
             if (!raw.Succeeded)
             {
-                stopwatch.Stop();
                 var failStats = new PathStats(
                     raw.Stats.NodesExpanded,
-                    stopwatch.Elapsed.TotalMilliseconds,
+                    profiler.TotalMs,
                     0,
-                    0
+                    0,
+                    profiler.Phases
                 );
                 return PathResult.Failure(raw.Status, failStats);
             }
 
             var rawWaypoints = raw.Waypoints;
-            var shortcut = PathSmoother.GreedyShortcut(rawWaypoints, in NavCtx);
-            var smoothed = PathSmoother.CatmullRomSpline(shortcut);
 
-            stopwatch.Stop();
+            var shortcut = PathSmoother.GreedyShortcut(rawWaypoints, in NavCtx);
+            profiler.Lap("Shortcut (LOS)");
+
+            var smoothed = PathSmoother.CatmullRomSpline(shortcut);
+            profiler.Lap("Spline");
 
             var stats = new PathStats(
                 raw.Stats.NodesExpanded,
-                stopwatch.Elapsed.TotalMilliseconds,
+                profiler.TotalMs,
                 Mathf.Max(0, rawWaypoints.Count - shortcut.Count),
-                rawWaypoints.Count
+                rawWaypoints.Count,
+                profiler.Phases
             );
 
             return PathResult.Success(smoothed, rawWaypoints, stats);

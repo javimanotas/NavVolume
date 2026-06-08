@@ -12,21 +12,6 @@ namespace NavVolume.Runtime.Builder
     internal delegate void BakeProgress(string phase, float fraction);
 
     /// <summary>
-    /// A single timed phase of a bake.
-    /// </summary>
-    internal readonly struct BakePhase
-    {
-        public readonly string Label;
-        public readonly double Milliseconds;
-
-        public BakePhase(string label, double milliseconds)
-        {
-            Label = label;
-            Milliseconds = milliseconds;
-        }
-    }
-
-    /// <summary>
     /// Transient timing breakdown of one bake, produced by <see cref="BakeProfiler"/>.
     /// </summary>
     /// <remarks>
@@ -45,13 +30,13 @@ namespace NavVolume.Runtime.Builder
         public readonly double SaveMs;
 
         /// <summary>Per-phase timings, in execution order.</summary>
-        public readonly IReadOnlyList<BakePhase> Phases;
+        public readonly IReadOnlyList<TimedPhase> Phases;
 
         public BakeReport(
             double totalMs,
             double buildMs,
             double saveMs,
-            IReadOnlyList<BakePhase> phases
+            IReadOnlyList<TimedPhase> phases
         )
         {
             TotalMs = totalMs;

@@ -243,56 +243,41 @@ namespace NavVolume.Runtime.Builder
     }
 
     /// <summary>
-    /// Lightweight per-phase bake timer. Collects named laps and emits a single unified log: a
-    /// header with the total split into build vs. save (post-build) time, then every phase below.
+    /// Bake-specific front end over a shared <see cref="StepProfiler"/>. Adds the build-vs-save split
+    /// and snapshots the collected laps into a transient <see cref="BakeReport"/>.
     /// </summary>
     internal sealed class BakeProfiler
     {
-        readonly List<(string Label, double Ms)> _laps = new();
-        readonly System.Diagnostics.Stopwatch _phase = new();
+        readonly StepProfiler _profiler = new();
 
         // Running total (ms) captured when the build finished; -1 until then.
         double _buildMs = -1;
 
         public void Start()
         {
-            _laps.Clear();
+            _profiler.Start();
             _buildMs = -1;
-            _phase.Restart();
         }
 
-        public void Lap(string label)
-        {
-            _laps.Add((label, _phase.Elapsed.TotalMilliseconds));
-            _phase.Restart();
-        }
+        public void Lap(string label) => _profiler.Lap(label);
 
         /// <summary>Marks where the build ends and post-build (save) phases begin.</summary>
-        public void MarkBuildComplete() => _buildMs = Sum();
+        public void MarkBuildComplete() => _buildMs = _profiler.TotalMs;
 
         /// <summary>Snapshots the collected laps into a transient <see cref="BakeReport"/>.</summary>
         public BakeReport ToReport()
         {
-            var total = Sum();
+            var total = _profiler.TotalMs;
             var buildMs = _buildMs >= 0 ? _buildMs : total;
 
-            var phases = new BakePhase[_laps.Count];
-            for (var i = 0; i < _laps.Count; i++)
+            // Copy so the report stays independent of the (reusable) profiler's live phase list.
+            var phases = new TimedPhase[_profiler.Phases.Count];
+            for (var i = 0; i < phases.Length; i++)
             {
-                phases[i] = new BakePhase(_laps[i].Label, _laps[i].Ms);
+                phases[i] = _profiler.Phases[i];
             }
 
             return new BakeReport(total, buildMs, total - buildMs, phases);
-        }
-
-        double Sum()
-        {
-            var sum = 0.0;
-            foreach (var (_, ms) in _laps)
-            {
-                sum += ms;
-            }
-            return sum;
         }
     }
 }
