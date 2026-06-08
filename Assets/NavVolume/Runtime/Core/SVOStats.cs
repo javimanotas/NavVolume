@@ -14,7 +14,6 @@ namespace NavVolume.Runtime.Core
 
         const int _OBJECT_HEADER_BYTES = 24; // Sync block / object header + method table pointer + padding to align to 8 bytes
         const int _ARRAY_HEADER_BYTES = 24; // Sync block / object header + method table pointer + length + padding to align to 8 bytes
-        const int _LIST_FIELDS_BYTES = 16; // Items ref + Count + Version (mutation counter for enumeration)
         const int _REFERENCE_BYTES = 8;
 
         #endregion
@@ -51,7 +50,7 @@ namespace NavVolume.Runtime.Core
 
             MemoryUsedBytes = ComputeMemoryUsedBytes(svo);
 
-            NodesPerLayer = svo.Layers.Select(l => l.Count).Reverse().ToArray();
+            NodesPerLayer = svo.Layers.Select(l => l.Length).Reverse().ToArray();
 
             TheoreticalNodesPerLayer = new long[NodesPerLayer.Length];
             for (var i = 0; i < NodesPerLayer.Length; i++)
@@ -66,11 +65,14 @@ namespace NavVolume.Runtime.Core
 
             total += _ARRAY_HEADER_BYTES + Unsafe.SizeOf<SVOLeaf>() * svo.LeafNodes.Length;
 
+            // Outer jagged array: one reference slot per layer.
             total += _ARRAY_HEADER_BYTES + _REFERENCE_BYTES * svo.Layers.Length;
+
+            // Each layer is a plain SVONode[] now (no List wrapper, no spare capacity): one array
+            // header plus exactly its element count.
             foreach (var layer in svo.Layers)
             {
-                total += _OBJECT_HEADER_BYTES + _LIST_FIELDS_BYTES;
-                total += _ARRAY_HEADER_BYTES + Unsafe.SizeOf<SVONode>() * layer.Capacity;
+                total += _ARRAY_HEADER_BYTES + Unsafe.SizeOf<SVONode>() * layer.Length;
             }
 
             return total;

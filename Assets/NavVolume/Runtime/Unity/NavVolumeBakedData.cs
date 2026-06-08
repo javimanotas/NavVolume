@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using NavVolume.Runtime.Builder;
 using NavVolume.Runtime.Core;
 using UnityEngine;
@@ -64,7 +63,7 @@ namespace NavVolume
             var totalBytes = sizeof(int) + leaves.Length * sizeof(ulong) + sizeof(int);
             foreach (var layer in layers)
             {
-                totalBytes += sizeof(int) + layer.Count * _BYTES_PER_NODE;
+                totalBytes += sizeof(int) + layer.Length * _BYTES_PER_NODE;
             }
 
             using var stream = new MemoryStream(totalBytes);
@@ -79,7 +78,7 @@ namespace NavVolume
             writer.Write(layers.Length);
             foreach (var layer in layers)
             {
-                writer.Write(layer.Count);
+                writer.Write(layer.Length);
                 foreach (var node in layer)
                 {
                     var (
@@ -126,26 +125,24 @@ namespace NavVolume
             }
 
             var layerCount = reader.ReadInt32();
-            var layers = new List<SVONode>[layerCount];
+            var layers = new SVONode[layerCount][];
             for (var l = 0; l < layerCount; l++)
             {
                 var nodeCount = reader.ReadInt32();
-                var nodes = new List<SVONode>(nodeCount);
+                var nodes = new SVONode[nodeCount];
 
                 for (var n = 0; n < nodeCount; n++)
                 {
-                    nodes.Add(
-                        new SVONode(
-                            reader.ReadUInt32(), // morton code
-                            reader.ReadUInt32(), // first child
-                            reader.ReadUInt32(), // parent
-                            reader.ReadUInt32(), // +X neighbor
-                            reader.ReadUInt32(), // -X neighbor
-                            reader.ReadUInt32(), // +Y neighbor
-                            reader.ReadUInt32(), // -Y neighbor
-                            reader.ReadUInt32(), // +Z neighbor
-                            reader.ReadUInt32() // -Z neighbor
-                        )
+                    nodes[n] = new SVONode(
+                        reader.ReadUInt32(), // morton code
+                        reader.ReadUInt32(), // first child
+                        reader.ReadUInt32(), // parent
+                        reader.ReadUInt32(), // +X neighbor
+                        reader.ReadUInt32(), // -X neighbor
+                        reader.ReadUInt32(), // +Y neighbor
+                        reader.ReadUInt32(), // -Y neighbor
+                        reader.ReadUInt32(), // +Z neighbor
+                        reader.ReadUInt32() // -Z neighbor
                     );
                 }
 

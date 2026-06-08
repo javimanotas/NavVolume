@@ -136,7 +136,7 @@ namespace NavVolume.Editor
         {
             var svo = navCtx.Svo;
             var rootLayer = svo.Layers.Length - 1;
-            var rootCount = svo.Layers[rootLayer].Count;
+            var rootCount = svo.Layers[rootLayer].Length;
 
             var drawn = 0;
 
@@ -171,7 +171,7 @@ namespace NavVolume.Editor
             }
 
             var layerList = svo.Layers[layer];
-            if (offset >= layerList.Count)
+            if (offset >= layerList.Length)
             {
                 return;
             }

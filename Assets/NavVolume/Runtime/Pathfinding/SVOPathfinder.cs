@@ -260,7 +260,7 @@ namespace NavVolume.Runtime.Pathfinding
 
             if (link.IsNode(out _))
             {
-                var node = svo.GetNode(link);
+                ref readonly var node = ref svo.GetNode(link);
 
                 for (var d = 0; d < 6; d++)
                 {
@@ -315,7 +315,7 @@ namespace NavVolume.Runtime.Pathfinding
 
             #endregion
 
-            var srcNode = svo.GetNode(SVOLink.NodeLink(0, voxelLink.Offset));
+            ref readonly var srcNode = ref svo.GetNode(SVOLink.NodeLink(0, voxelLink.Offset));
             var leafNeighbor = srcNode.Neighbors[overflowDir];
 
             if (!leafNeighbor.IsValid)
@@ -355,13 +355,12 @@ namespace NavVolume.Runtime.Pathfinding
                 return false;
             }
 
-            var neighborNode = svo.GetNode(neighbor);
-            return neighborNode.HasChildren;
+            return svo.GetNode(neighbor).HasChildren;
         }
 
         void ExpandChildren(SVO svo, SVOLink coarseNeighbor, SVOLink incomingLink, float incomingGCost)
         {
-            var coarse = svo.GetNode(coarseNeighbor);
+            ref readonly var coarse = ref svo.GetNode(coarseNeighbor);
 
             if (!coarse.HasChildren)
             {

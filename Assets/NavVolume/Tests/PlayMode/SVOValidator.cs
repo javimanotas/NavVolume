@@ -78,11 +78,11 @@ namespace NavVolume.Tests.PlayMode
             }
 
             // LeafNodes must match the number of layer-0 nodes.
-            if (svo.Layers.Length > 0 && svo.LeafNodes.Length != svo.Layers[0].Count)
+            if (svo.Layers.Length > 0 && svo.LeafNodes.Length != svo.Layers[0].Length)
             {
                 report.Add(
                     $"LeafNodes.Length = {svo.LeafNodes.Length} "
-                        + $"but Layer 0 has {svo.Layers[0].Count} node(s). They must match 1-to-1."
+                        + $"but Layer 0 has {svo.Layers[0].Length} node(s). They must match 1-to-1."
                 );
             }
         }
@@ -102,7 +102,7 @@ namespace NavVolume.Tests.PlayMode
                 var layer = svo.Layers[layerIdx];
                 var prefix = $"Layer {layerIdx}";
 
-                for (var nodeIdx = 0; nodeIdx < layer.Count; nodeIdx++)
+                for (var nodeIdx = 0; nodeIdx < layer.Length; nodeIdx++)
                 {
                     var code = layer[nodeIdx].MortonCode;
 
@@ -164,7 +164,7 @@ namespace NavVolume.Tests.PlayMode
                 var isRoot = layerIdx == coarsestLayer;
                 var prefix = $"Layer {layerIdx}";
 
-                for (var nodeIdx = 0; nodeIdx < layer.Count; nodeIdx++)
+                for (var nodeIdx = 0; nodeIdx < layer.Length; nodeIdx++)
                 {
                     var node = layer[nodeIdx];
                     var nodePfx = $"{prefix}, node {nodeIdx} (Morton 0x{(uint)node.MortonCode:X8})";
@@ -253,7 +253,7 @@ namespace NavVolume.Tests.PlayMode
                 var isLeaf = layerIdx == 0;
                 var prefix = $"Layer {layerIdx}";
 
-                for (var nodeIdx = 0; nodeIdx < layer.Count; nodeIdx++)
+                for (var nodeIdx = 0; nodeIdx < layer.Length; nodeIdx++)
                 {
                     var node = layer[nodeIdx];
                     var selfLink = SVOLink.NodeLink(layerIdx, nodeIdx);
@@ -282,11 +282,11 @@ namespace NavVolume.Tests.PlayMode
                     var lastChildOff = firstChildOff + 7;
 
                     // All 8 child offsets must be in range.
-                    if (lastChildOff >= childLayer.Count)
+                    if (lastChildOff >= childLayer.Length)
                     {
                         report.Add(
                             $"{nodePfx}: Child range [{firstChildOff}, {lastChildOff}] "
-                                + $"exceeds layer {childLayerIdx} count ({childLayer.Count}). "
+                                + $"exceeds layer {childLayerIdx} count ({childLayer.Length}). "
                                 + "Node does not have 8 valid children."
                         );
                         continue;
@@ -337,7 +337,7 @@ namespace NavVolume.Tests.PlayMode
             {
                 var layer = svo.Layers[layerIdx];
 
-                for (var nodeIdx = 0; nodeIdx < layer.Count; nodeIdx++)
+                for (var nodeIdx = 0; nodeIdx < layer.Length; nodeIdx++)
                 {
                     var node = layer[nodeIdx];
 
@@ -406,7 +406,7 @@ namespace NavVolume.Tests.PlayMode
                 var gridRes = Mathf.RoundToInt(settings.RootSize / nodeSize);
                 var prefix = $"Layer {layerIdx}";
 
-                for (var nodeIdx = 0; nodeIdx < layer.Count; nodeIdx++)
+                for (var nodeIdx = 0; nodeIdx < layer.Length; nodeIdx++)
                 {
                     var node = layer[nodeIdx];
                     var selfLink = SVOLink.NodeLink(layerIdx, nodeIdx);

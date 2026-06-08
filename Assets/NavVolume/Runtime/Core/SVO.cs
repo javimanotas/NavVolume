@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System;
 
 namespace NavVolume.Runtime.Core
 {
@@ -13,15 +13,18 @@ namespace NavVolume.Runtime.Core
         /// Lower layers of the octree are the ones containing higher resolution data.
         /// </summary>
         /// <remarks>
-        /// Each layer is kept sorted by <see cref="MortonCode"/>; lookups use
-        /// <see cref="TryFindNodeIndex"/> (binary search) rather than a hash table.
+        /// Each layer is a flat <see cref="SVONode"/> array kept sorted by <see cref="MortonCode"/>;
+        /// lookups use <see cref="TryFindNodeIndex"/> (binary search) rather than a hash table. Plain
+        /// arrays (instead of <c>List</c>) let callers read a single field through an array element
+        /// without copying the whole ~36-byte node, which is the dominant cost on the pathfinding hot
+        /// path (see <see cref="GetNode"/>).
         /// </remarks>
-        public readonly List<SVONode>[] Layers;
+        public readonly SVONode[][] Layers;
 
         /// <summary>
         /// Raw constructor.
         /// </summary>
-        public SVO(SVOLeaf[] leafNodes, List<SVONode>[] layers)
+        public SVO(SVOLeaf[] leafNodes, SVONode[][] layers)
         {
             LeafNodes = leafNodes;
             Layers = layers;
@@ -29,20 +32,24 @@ namespace NavVolume.Runtime.Core
 
         public SVO(int numLayers)
         {
-            Layers = new List<SVONode>[numLayers];
+            Layers = new SVONode[numLayers][];
 
             for (var i = 0; i < numLayers; i++)
             {
-                Layers[i] = new();
+                Layers[i] = Array.Empty<SVONode>();
             }
         }
 
-        public bool IsEmpty => Layers[0].Count == 0;
+        public bool IsEmpty => Layers[0].Length == 0;
 
-        public SVONode GetNode(SVOLink link)
+        /// <summary>
+        /// Returns a read-only reference to the node, avoiding a copy of the whole struct. Callers that
+        /// only read fields should bind it with <c>ref readonly var node = ref svo.GetNode(link);</c>.
+        /// </summary>
+        public ref readonly SVONode GetNode(SVOLink link)
         {
             link.IsNode(out var layerIdx);
-            return Layers[layerIdx][link.Offset];
+            return ref Layers[layerIdx][link.Offset];
         }
 
         public void SetNode(SVOLink link, in SVONode node)
@@ -60,7 +67,7 @@ namespace NavVolume.Runtime.Core
             var nodes = Layers[layer];
             var target = (uint)mortonCode;
             var lo = 0;
-            var hi = nodes.Count - 1;
+            var hi = nodes.Length - 1;
 
             while (lo <= hi)
             {
