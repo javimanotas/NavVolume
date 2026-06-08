@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using NavVolume.Runtime;
 using NavVolume.Runtime.Builder;
 using NavVolume.Runtime.Core;
@@ -62,9 +65,16 @@ namespace NavVolume
 
         internal NavContext NavCtx;
 
-        // Reused across queries so the open list and search-state buffers keep their capacity instead
-        // of being reallocated on every path request. Safe because FindPath runs synchronously.
+        // Reused across the synchronous FindPath calls so the open list and search-state buffers keep
+        // their capacity instead of being reallocated on every request. Safe because synchronous
+        // FindPath never overlaps with itself.
         readonly SVOPathfinder _pathfinder = new();
+
+        // Asynchronous searches run on the thread pool and may overlap (up to one per agent in
+        // flight), so each rents its own pathfinder scratch state from here rather than sharing
+        // _pathfinder. The SVO they read stays immutable while a query runs, so no further
+        // synchronization is needed.
+        readonly ConcurrentBag<SVOPathfinder> _pathfinderPool = new();
 
         internal NavVolumeBakedData BakedData => _bakedData;
 
@@ -172,12 +182,66 @@ namespace NavVolume
                 return PathResult.Failure(PathResultStatus.NoTree);
             }
 
+            return RunQuery(_pathfinder, NavCtx, request, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Find a path on a background thread. The returned task produces the same result a
+        /// synchronous <see cref="FindPath"/> would, and observes <paramref name="cancellationToken"/>
+        /// so a superseded request stops instead of running to completion.
+        /// </summary>
+        internal Task<PathResult> FindPathAsync(
+            PathRequest request,
+            CancellationToken cancellationToken
+        )
+        {
+            if (!IsReady)
+            {
+                return Task.FromResult(PathResult.Failure(PathResultStatus.NoTree));
+            }
+
+            // Snapshot the context on the calling thread. NavContext is a readonly struct over an SVO
+            // that stays immutable while queries run, so the worker can read it without locking.
+            var ctx = NavCtx;
+
+            return Task.Run(
+                () =>
+                {
+                    var pathfinder = _pathfinderPool.TryTake(out var pooled)
+                        ? pooled
+                        : new SVOPathfinder();
+
+                    try
+                    {
+                        return RunQuery(pathfinder, ctx, request, cancellationToken);
+                    }
+                    finally
+                    {
+                        _pathfinderPool.Add(pathfinder);
+                    }
+                },
+                cancellationToken
+            );
+        }
+
+        /// <summary>
+        /// Runs the A* search with <paramref name="pathfinder"/> and post-processes the raw path into
+        /// the smoothed waypoints callers consume. Apart from that pathfinder's scratch state it is
+        /// pure, so it is safe to call from any thread as long as the pathfinder is not shared.
+        /// </summary>
+        static PathResult RunQuery(
+            SVOPathfinder pathfinder,
+            NavContext ctx,
+            PathRequest request,
+            CancellationToken cancellationToken
+        )
+        {
             // The pathfinder uses the same per-step profiler as the bake, so the reported total is
             // the sum of the per-step timings.
             var profiler = new StepProfiler();
             profiler.Start();
 
-            var raw = _pathfinder.FindPath(NavCtx, request);
+            var raw = pathfinder.FindPath(ctx, request, cancellationToken);
             profiler.Lap("A* search");
 
             if (!raw.Succeeded)
@@ -194,7 +258,7 @@ namespace NavVolume
 
             var rawWaypoints = raw.Waypoints;
 
-            var shortcut = PathSmoother.GreedyShortcut(rawWaypoints, in NavCtx);
+            var shortcut = PathSmoother.GreedyShortcut(rawWaypoints, in ctx);
             profiler.Lap("Shortcut (LOS)");
 
             var smoothed = PathSmoother.CatmullRomSpline(shortcut);

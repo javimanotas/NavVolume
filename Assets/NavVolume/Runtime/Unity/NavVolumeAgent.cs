@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using NavVolume.Runtime;
 using NavVolume.Runtime.Pathfinding;
 using UnityEngine;
@@ -56,6 +58,8 @@ namespace NavVolume
 
         PathResult? _lastPath;
 
+        CancellationTokenSource _pathCts;
+
         internal IReadOnlyList<Vector3> SmoothedWaypoints => _smoothedWaypoints;
 
         internal IReadOnlyList<Vector3> RawWaypoints => _rawWaypoints;
@@ -81,10 +85,22 @@ namespace NavVolume
             _navVolumeSpace = navVolumeSpace;
         }
 
+        void OnDestroy()
+        {
+            // Stop any in-flight search so its continuation drops out instead of touching this agent
+            // after it is gone. The owning task disposes the source once it observes the cancellation.
+            _pathCts?.Cancel();
+        }
+
         /// <summary>
-        /// Request a path to a goal and begin flying.
+        /// Request a path to a goal and begin flying once it is found.
         /// </summary>
-        public void MoveTo(Vector3 goal)
+        /// <remarks>
+        /// The path is computed on a background thread; the agent keeps following its current path (if
+        /// any) until the new one is ready. Calling this again supersedes a search still in progress:
+        /// the previous one is cancelled and only the latest destination is followed.
+        /// </remarks>
+        public void SetDestination(Vector3 goal)
         {
             if (_navVolumeSpace == null || !_navVolumeSpace.IsReady)
             {
@@ -94,6 +110,13 @@ namespace NavVolume
                 return;
             }
 
+            // Supersede any search already in flight: the previous request observes the cancelled
+            // token at its next checkpoint, stops early, and disposes its own token source.
+            _pathCts?.Cancel();
+
+            var cts = new CancellationTokenSource();
+            _pathCts = cts;
+
             var request = new PathRequest(
                 transform.position,
                 goal,
@@ -102,18 +125,46 @@ namespace NavVolume
                 AgentType.CostMode
             );
 
-            var result = _navVolumeSpace.FindPath(request);
-            _lastPath = result;
+            FindPathAndFollow(request, cts);
+        }
 
-            if (!result.Succeeded)
+        async void FindPathAndFollow(PathRequest request, CancellationTokenSource cts)
+        {
+            try
             {
-                Debug.LogError($"[NavVolume][NavVolumeAgent] Pathfinding failed: {result.Status} ");
-                return;
-            }
+                var result = await _navVolumeSpace.FindPathAsync(request, cts.Token);
 
-            _smoothedWaypoints = result.Waypoints;
-            _rawWaypoints = result.RawWaypoints ?? new List<Vector3>();
-            _currentWaypointIndex = 0;
+                // The continuation resumes on the main thread. A newer request may have superseded
+                // this one between the search finishing and here, so drop the now-stale result.
+                if (cts.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                _lastPath = result;
+
+                if (!result.Succeeded)
+                {
+                    Debug.LogError(
+                        $"[NavVolume][NavVolumeAgent] Pathfinding failed: {result.Status} "
+                    );
+                    return;
+                }
+
+                _smoothedWaypoints = result.Waypoints;
+                _rawWaypoints = result.RawWaypoints ?? new List<Vector3>();
+                _currentWaypointIndex = 0;
+            }
+            catch (OperationCanceledException) { }
+            finally
+            {
+                if (_pathCts == cts)
+                {
+                    _pathCts = null;
+                }
+
+                cts.Dispose();
+            }
         }
 
         void Update()
