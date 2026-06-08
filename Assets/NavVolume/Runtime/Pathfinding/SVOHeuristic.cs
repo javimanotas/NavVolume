@@ -3,61 +3,41 @@ using UnityEngine;
 namespace NavVolume.Runtime.Pathfinding
 {
     /// <summary>
-    /// All heuristic and traversal cost functions for A* search.
+    /// Traversal-cost and heuristic helpers for the A* search.
     /// </summary>
     /// <remarks>
-    /// The g-cost and the heuristic must share a unit, otherwise <c>f = g + h</c> is meaningless.
-    /// Two consistent pairs are provided, selected by <see cref="PathCostMode"/>: <see cref="UnitCost"/>
-    /// pairs with <see cref="NodeCountHeuristic"/> (node hops), and <see cref="EuclideanCost"/> pairs
-    /// with <see cref="EuclideanHeuristic"/> (meters).
+    /// The g-cost and the heuristic must share a unit, otherwise <c>f = g + h</c> is meaningless. Two
+    /// consistent pairings are used, selected by <see cref="PathCostMode"/>:
+    /// <list type="bullet">
+    /// <item><see cref="UnitCost"/> (one per hop) pairs with a heuristic scaled by
+    /// <c>weight / largestNodeSize</c>, which re-expresses the straight-line distance as a hop count
+    /// (a single hop can never span more than the largest node, so it stays admissible).</item>
+    /// <item><see cref="EuclideanCost"/> (meters per hop) pairs with a heuristic scaled by
+    /// <c>weight</c> (meters).</item>
+    /// </list>
+    /// The pathfinder folds that scale into a single factor once per query and feeds it to
+    /// <see cref="ScaledDistance"/>, keeping the inner loop down to one distance and one multiply. A
+    /// weight of 1 stays admissible; larger weights search more greedily (faster, less optimal).
     /// </remarks>
     internal static class SVOHeuristic
     {
         /// <summary>
-        /// Unit traversal cost: every node step costs exactly 1.0 regardless of the node's physical size.
+        /// Unit traversal cost: every hop costs 1 regardless of node size, which biases the path
+        /// toward large nodes (open space) and keeps waypoints clear of surfaces.
         /// </summary>
-        /// <remarks>
-        /// Counting nodes instead of accumulating distance biases the search toward large nodes, which
-        /// only exist in open space, so the resulting path keeps clear of surfaces. Pair with
-        /// <see cref="NodeCountHeuristic"/>.
-        /// </remarks>
         public static float UnitCost() => 1f;
 
         /// <summary>
-        /// Distance traversal cost: a step costs the Euclidean distance between the two node centers.
+        /// Distance traversal cost: a hop costs the Euclidean distance between the two node centers.
         /// </summary>
-        /// <remarks>
-        /// Accumulating distance yields the geometrically shortest path, which hugs surfaces and corners.
-        /// Pair with <see cref="EuclideanHeuristic"/>.
-        /// </remarks>
         public static float EuclideanCost(Vector3 fromCenter, Vector3 toCenter) =>
             Vector3.Distance(fromCenter, toCenter);
 
         /// <summary>
-        /// Weighted heuristic in node-hop units: an estimate of the number of node hops still needed to
-        /// reach the goal. Pairs with <see cref="UnitCost"/>.
+        /// Weighted heuristic: the straight-line distance to the goal times a precomputed
+        /// <paramref name="scale"/> (see the type remarks for how the scale is derived per cost mode).
         /// </summary>
-        /// <remarks>
-        /// The straight-line distance is divided by <paramref name="largestNodeSize"/> because a single
-        /// hop can never span more than the largest node, so the quotient is an admissible lower bound on
-        /// the remaining hop count. The greater the <paramref name="weight"/>, the more greedily the
-        /// search behaves (faster but less optimal); a weight of 1 stays admissible.
-        /// </remarks>
-        public static float NodeCountHeuristic(
-            Vector3 current,
-            Vector3 goal,
-            float largestNodeSize,
-            float weight
-        ) => Vector3.Distance(current, goal) / largestNodeSize * weight;
-
-        /// <summary>
-        /// Standard weighted Euclidean heuristic in meters. Pairs with <see cref="EuclideanCost"/>.
-        /// </summary>
-        /// <remarks>
-        /// The greater the <paramref name="weight"/>, the more greedily the search behaves (faster but
-        /// less optimal); a weight of 1 stays admissible.
-        /// </remarks>
-        public static float EuclideanHeuristic(Vector3 current, Vector3 goal, float weight) =>
-            Vector3.Distance(current, goal) * weight;
+        public static float ScaledDistance(Vector3 current, Vector3 goal, float scale) =>
+            Vector3.Distance(current, goal) * scale;
     }
 }

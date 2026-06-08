@@ -1,11 +1,12 @@
-﻿using UnityEngine.Assertions;
+using System;
+using UnityEngine.Assertions;
 
 namespace NavVolume.Runtime.Core
 {
     /// <summary>
     /// Pointer to an arbitrary node or voxel in the SVO.
     /// </summary>
-    internal readonly struct SVOLink
+    internal readonly struct SVOLink : IEquatable<SVOLink>
     {
         // Technically this is not an invalid pointer but in practice we will never have this data configuration.
         // This will imply that we are using 63 layers and it is completely impossible to rasterize at such a high resolution.
@@ -93,6 +94,11 @@ namespace NavVolume.Runtime.Core
         public static bool operator ==(SVOLink lhs, SVOLink rhs) => lhs._link == rhs._link;
 
         public static bool operator !=(SVOLink lhs, SVOLink rhs) => lhs._link != rhs._link;
+
+        // IEquatable<SVOLink> matters for performance: SVOLink is used as the key of the pathfinder's
+        // hash collections, and without it Dictionary/HashSet fall back to the boxing
+        // ObjectEqualityComparer in their hottest path.
+        public bool Equals(SVOLink other) => _link == other._link;
 
         public override bool Equals(object obj) => obj is SVOLink other && this == other;
 

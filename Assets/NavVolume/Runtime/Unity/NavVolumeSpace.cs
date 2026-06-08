@@ -62,6 +62,10 @@ namespace NavVolume
 
         internal NavContext NavCtx;
 
+        // Reused across queries so the open list and search-state buffers keep their capacity instead
+        // of being reallocated on every path request. Safe because FindPath runs synchronously.
+        readonly SVOPathfinder _pathfinder = new();
+
         internal NavVolumeBakedData BakedData => _bakedData;
 
         internal BuildMode BuildMode => _buildMode;
@@ -173,7 +177,7 @@ namespace NavVolume
             var profiler = new StepProfiler();
             profiler.Start();
 
-            var raw = new SVOPathfinder().FindPath(NavCtx, request);
+            var raw = _pathfinder.FindPath(NavCtx, request);
             profiler.Lap("A* search");
 
             if (!raw.Succeeded)
