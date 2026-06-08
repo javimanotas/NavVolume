@@ -90,6 +90,13 @@ namespace NavVolume
 
         public bool IsReady => NavCtx.Svo != null;
 
+        /// <summary>
+        /// Raised on the main thread right after the volume's data is (re)built through
+        /// <see cref="Build"/>. An existing path may cut through geometry that just changed, so agents
+        /// listen for this to replan against the new tree.
+        /// </summary>
+        public event Action Rebuilt;
+
         void Awake()
         {
             s_Instances.Add(this);
@@ -170,6 +177,7 @@ namespace NavVolume
         {
             var builder = new SVOBuilder(CurrentSettings);
             NavCtx = builder.Build();
+            Rebuilt?.Invoke();
         }
 
         /// <summary>

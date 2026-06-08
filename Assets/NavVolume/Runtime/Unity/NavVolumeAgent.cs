@@ -60,6 +60,10 @@ namespace NavVolume
 
         CancellationTokenSource _pathCts;
 
+        Vector3 _currentGoal;
+
+        bool _hasDestination;
+
         internal IReadOnlyList<Vector3> SmoothedWaypoints => _smoothedWaypoints;
 
         internal IReadOnlyList<Vector3> RawWaypoints => _rawWaypoints;
@@ -83,13 +87,25 @@ namespace NavVolume
             }
 
             _navVolumeSpace = navVolumeSpace;
+            _navVolumeSpace.Rebuilt += OnNavVolumeRebuilt;
         }
 
         void OnDestroy()
         {
-            // Stop any in-flight search so its continuation drops out instead of touching this agent
-            // after it is gone. The owning task disposes the source once it observes the cancellation.
+            if (_navVolumeSpace != null)
+            {
+                _navVolumeSpace.Rebuilt -= OnNavVolumeRebuilt;
+            }
+
             _pathCts?.Cancel();
+        }
+
+        void OnNavVolumeRebuilt()
+        {
+            if (_hasDestination)
+            {
+                SetDestination(_currentGoal);
+            }
         }
 
         /// <summary>
@@ -102,6 +118,9 @@ namespace NavVolume
         /// </remarks>
         public void SetDestination(Vector3 goal)
         {
+            _currentGoal = goal;
+            _hasDestination = true;
+
             if (_navVolumeSpace == null || !_navVolumeSpace.IsReady)
             {
                 Debug.LogWarning(
