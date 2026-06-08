@@ -211,23 +211,20 @@ namespace NavVolume.Runtime.Builder
 
         void LinkParentAndChildren(SVO svo, int layer, int childLayer)
         {
-            var sortedChildren = svo.Layers[childLayer];
+            var children = svo.Layers[childLayer];
+            var parents = svo.Layers[layer];
 
-            for (var childIdx = 0; childIdx < sortedChildren.Length; childIdx++)
+            for (var childIdx = 0; childIdx < children.Length; childIdx++)
             {
-                var child = sortedChildren[childIdx];
-                var parentCode = child.MortonCode.ParentCode;
+                var parentCode = children[childIdx].MortonCode.ParentCode;
+                svo.TryFindNodeIndex(layer, parentCode, out var parentIdx);
 
-                svo.TryGetLink(layer, parentCode, out var parentLink);
+                children[childIdx].Parent = SVOLink.NodeLink(layer, parentIdx);
 
-                child.Parent = parentLink;
-                svo.Layers[childLayer][childIdx] = child;
-
-                var parentNode = svo.GetNode(parentLink);
-                if (!parentNode.HasChildren)
+                ref var parent = ref parents[parentIdx];
+                if (!parent.HasChildren)
                 {
-                    parentNode.FirstChild = SVOLink.NodeLink(childLayer, childIdx);
-                    svo.SetNode(parentLink, parentNode);
+                    parent.FirstChild = SVOLink.NodeLink(childLayer, childIdx);
                 }
             }
         }

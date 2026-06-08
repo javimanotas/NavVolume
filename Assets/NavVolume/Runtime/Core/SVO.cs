@@ -52,12 +52,6 @@ namespace NavVolume.Runtime.Core
             return ref Layers[layerIdx][link.Offset];
         }
 
-        public void SetNode(SVOLink link, in SVONode node)
-        {
-            link.IsNode(out var layerIdx);
-            Layers[layerIdx][link.Offset] = node;
-        }
-
         /// <summary>
         /// Binary-searches the (sorted) layer for the node carrying <paramref name="mortonCode"/>.
         /// </summary>
@@ -91,18 +85,6 @@ namespace NavVolume.Runtime.Core
             }
 
             idx = -1;
-            return false;
-        }
-
-        public bool TryGetLink(int layer, MortonCode mortonCode, out SVOLink link)
-        {
-            if (TryFindNodeIndex(layer, mortonCode, out var idx))
-            {
-                link = SVOLink.NodeLink(layer, idx);
-                return true;
-            }
-
-            link = SVOLink.Invalid;
             return false;
         }
 
