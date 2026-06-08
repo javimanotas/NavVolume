@@ -35,6 +35,8 @@ namespace NavVolume
         [SerializeField]
         internal bool _freezeRotationZ;
 
+        const int _MAX_NODES_BUDGET = 10000_000;
+
         Vector3 _initialEuler;
 
         NavVolumeSpace _navVolumeSpace;
@@ -43,6 +45,8 @@ namespace NavVolume
         /// The <see cref="NavVolumeSpace"/> this agent is bound to.
         /// </summary>
         public NavVolumeSpace NavVolumeSpace => _navVolumeSpace;
+
+        const float _WAYPOINT_TOLERANCE = 0.1f;
 
         List<Vector3> _smoothedWaypoints = new();
 
@@ -94,7 +98,7 @@ namespace NavVolume
                 transform.position,
                 goal,
                 AgentType.HeuristicWeight,
-                AgentType.MaxNodesBudget
+                _MAX_NODES_BUDGET
             );
 
             var result = _navVolumeSpace.FindPath(request);
@@ -129,7 +133,7 @@ namespace NavVolume
                 _speed * Time.deltaTime
             );
 
-            if (Vector3.Distance(transform.position, target) < AgentType.WaypointTolerance)
+            if (Vector3.Distance(transform.position, target) < _WAYPOINT_TOLERANCE)
             {
                 _currentWaypointIndex++;
             }

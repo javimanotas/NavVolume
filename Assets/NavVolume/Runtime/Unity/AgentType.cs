@@ -10,21 +10,11 @@ namespace NavVolume.Runtime
     {
         [field: SerializeField]
         [Tooltip("The radius of the agent.")]
-        public float Radius { get; private set; } = 0;
-
-        // TODO: revisit pathfinding parameters and heuristics.
-
-        [field: SerializeField]
-        [Tooltip("How close the agent must get to a waypoint before advancing.")]
-        public float WaypointTolerance { get; private set; } = 0.1f;
+        public float Radius { get; private set; } = 1;
 
         [field: SerializeField]
         [Tooltip("Heuristic weight. Greater values imply faster results but with worse quality.")]
         [Range(1f, 5f)]
         public float HeuristicWeight { get; private set; } = 1.5f;
-
-        [field: SerializeField]
-        [Tooltip("Maximum A* nodes expanded before giving up. 0 = unlimited.")]
-        public int MaxNodesBudget { get; private set; } = 100_000;
     }
 }
