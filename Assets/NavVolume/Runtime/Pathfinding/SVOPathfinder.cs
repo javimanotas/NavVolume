@@ -200,7 +200,7 @@ namespace NavVolume.Runtime.Pathfinding
                     continue;
                 }
 
-                var newG = ComputeG(navCtx, current, neighbor);
+                var newG = current.GCost + SVOHeuristic.UnitCost();
 
                 if (_gCost.TryGetValue(neighbor, out var existingG) && newG >= existingG)
                 {
@@ -416,8 +416,6 @@ namespace NavVolume.Runtime.Pathfinding
                 return false;
             }
 
-            var fromCenter = navCtx.LinkToCenter(fromLink);
-
             for (var i = 0; i < SVOLeaf.NUM_VOXELS; i++)
             {
                 if (leaf.IsOccupied(i))
@@ -431,8 +429,7 @@ namespace NavVolume.Runtime.Pathfinding
                     continue;
                 }
 
-                var voxelCenter = navCtx.LinkToCenter(voxelLink);
-                var newG = fromGCost + SVOHeuristic.EuclideanCost(fromCenter, voxelCenter);
+                var newG = fromGCost + SVOHeuristic.UnitCost();
 
                 if (_gCost.TryGetValue(voxelLink, out var existingG) && newG >= existingG)
                 {
@@ -451,25 +448,23 @@ namespace NavVolume.Runtime.Pathfinding
 
         #region Cost functions
 
-        float ComputeG(NavContext navCtx, SearchNode from, SVOLink toLink)
-        {
-            // TODO: check if use size compensation
-            // return from.GCost + SVOHeuristic.UnitCost();
-
-            var fromCenter = navCtx.LinkToCenter(from.Link);
-            var toCenter = navCtx.LinkToCenter(toLink);
-            return from.GCost + SVOHeuristic.EuclideanCost(fromCenter, toCenter);
-        }
-
-        float ComputeH(NavContext navCtx, SVOLink link, Vector3 goalCenter, PathRequest request)
+        static float ComputeH(
+            NavContext navCtx,
+            SVOLink link,
+            Vector3 goalCenter,
+            PathRequest request
+        )
         {
             var center = navCtx.LinkToCenter(link);
+            var settings = navCtx.BuildSettings;
+            var largestNodeSize = settings.NodeSizeForLayer(settings.NumLayers - 1);
 
-            // TODO: check if use size compensation
-            // distinguish nodesize between layer or leaf
-            // return SVOHeuristic.SizeCompensated(center, goalCenter, nodeSize, request.HeuristicWeight);
-
-            return SVOHeuristic.EuclideanHeuristic(center, goalCenter, request.HeuristicWeight);
+            return SVOHeuristic.NodeCountHeuristic(
+                center,
+                goalCenter,
+                largestNodeSize,
+                request.HeuristicWeight
+            );
         }
 
         #endregion
