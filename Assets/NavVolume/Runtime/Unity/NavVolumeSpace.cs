@@ -80,6 +80,16 @@ namespace NavVolume
 
         internal BuildMode BuildMode => _buildMode;
 
+        /// <summary>
+        /// Timing breakdown of the most recent build, surfaced by the editor in the Stats foldout. Set
+        /// by every build path: <see cref="Build"/> (BuildOnAwake / Manual) and the editor bake (Baked).
+        /// </summary>
+        /// <remarks>
+        /// Transient and per-run: held in memory only (cleared on domain reload) and never serialized,
+        /// since timings are machine-dependent. Null until the volume is built at least once this session.
+        /// </remarks>
+        internal BakeReport LastBuildReport { get; set; }
+
         internal BuildSettings CurrentSettings =>
             new(transform.position, _rootSize, _numLayers, _collisionMask, 0);
 
@@ -176,7 +186,11 @@ namespace NavVolume
         public void Build()
         {
             var builder = new SVOBuilder(CurrentSettings);
-            NavCtx = builder.Build();
+            var profiler = new BakeProfiler();
+
+            NavCtx = builder.Build(profiler);
+            LastBuildReport = profiler.ToReport();
+
             Rebuilt?.Invoke();
         }
 
