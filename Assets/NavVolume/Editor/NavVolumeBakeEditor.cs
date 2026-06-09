@@ -346,30 +346,16 @@ namespace NavVolume.Editor
 
             if (space.LastBuildReport == null)
             {
-                EditorGUILayout.HelpBox(NoTimingMessage(space.BuildMode), MessageType.Info);
+                EditorGUILayout.HelpBox(
+                    "No build timing captured this session. "
+                        + "Timings are machine-specific telemetry, so they stay out of the asset. "
+                        + "Bake again to capture them.",
+                    MessageType.Info
+                );
                 return;
             }
 
             BakeStatsView.Draw(space.LastBuildReport);
-        }
-
-        /// <summary>
-        /// Hint for the Build Time section when no timing report exists yet. Timings are transient and
-        /// per-run, so an SVO can be present (e.g. loaded from a baked asset) without one.
-        /// </summary>
-        static string NoTimingMessage(BuildMode mode)
-        {
-            const string lead = "No build timing captured this session. ";
-
-            return mode switch
-            {
-                BuildMode.Baked => lead
-                    + "Timings aren't saved with the asset; bake again to capture them.",
-                BuildMode.BuildOnAwake => lead + "Enter Play Mode to build the volume.",
-                BuildMode.Manual => lead
-                    + "Call Build() or press Rebuild in Play Mode to capture them.",
-                _ => lead + "Build the volume to capture them.",
-            };
         }
 
         static void DrawStatsRows(SVOStats stats)
