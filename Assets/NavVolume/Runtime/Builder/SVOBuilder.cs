@@ -20,11 +20,6 @@ namespace NavVolume.Runtime.Builder
         }
 
         /// <summary>
-        /// Builds the SVO and logs its own phase timings. Used by runtime (non-editor) callers.
-        /// </summary>
-        public NavContext Build() => Build(new());
-
-        /// <summary>
         /// Builds the SVO, recording per-phase timings into <paramref name="profiler"/> and, when
         /// supplied, reporting coarse progress through <paramref name="progress"/>. The host's
         /// reporter may throw at a phase boundary to cancel the bake.

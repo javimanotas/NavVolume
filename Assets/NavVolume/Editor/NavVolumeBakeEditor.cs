@@ -262,6 +262,10 @@ namespace NavVolume.Editor
 
         #region Editor GUI
 
+        // Repaint live while playing so build timings captured by a runtime build (BuildOnAwake /
+        // Manual) appear in the Stats foldout without needing to reselect the object.
+        public override bool RequiresConstantRepaint() => Application.isPlaying;
+
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
@@ -302,6 +306,7 @@ namespace NavVolume.Editor
                 else
                 {
                     DrawStatsRows(new SVOStats(navCtx));
+                    DrawBuildTimeSection(space);
                 }
 
                 EditorGUI.indentLevel--;
@@ -326,6 +331,44 @@ namespace NavVolume.Editor
                 BuildMode.Manual => lead
                     + "Enter Play Mode, then call Build() or press the Rebuild button to see its stats.",
                 _ => lead + "Build the volume to see its stats.",
+            };
+        }
+
+        /// <summary>
+        /// Per-build timing breakdown, shown in the same foldout as the structural stats for every
+        /// build mode. The timing report is transient (see <see cref="NavVolumeSpace.LastBuildReport"/>),
+        /// so when none is available yet a short hint explains how to produce one.
+        /// </summary>
+        static void DrawBuildTimeSection(NavVolumeSpace space)
+        {
+            EditorGUILayout.Space(8);
+            EditorGUILayout.LabelField("Build Time", EditorStyles.boldLabel);
+
+            if (space.LastBuildReport == null)
+            {
+                EditorGUILayout.HelpBox(NoTimingMessage(space.BuildMode), MessageType.Info);
+                return;
+            }
+
+            BakeStatsView.Draw(space.LastBuildReport);
+        }
+
+        /// <summary>
+        /// Hint for the Build Time section when no timing report exists yet. Timings are transient and
+        /// per-run, so an SVO can be present (e.g. loaded from a baked asset) without one.
+        /// </summary>
+        static string NoTimingMessage(BuildMode mode)
+        {
+            const string lead = "No build timing captured this session. ";
+
+            return mode switch
+            {
+                BuildMode.Baked => lead
+                    + "Timings aren't saved with the asset; bake again to capture them.",
+                BuildMode.BuildOnAwake => lead + "Enter Play Mode to build the volume.",
+                BuildMode.Manual => lead
+                    + "Call Build() or press Rebuild in Play Mode to capture them.",
+                _ => lead + "Build the volume to capture them.",
             };
         }
 
@@ -624,33 +667,19 @@ namespace NavVolume.Editor
                 : isPlaying ? "Rebuild"
                 : "Rebuild (Play Mode)";
 
-            using (new EditorGUILayout.HorizontalScope())
+            using (new EditorGUI.DisabledScope(!canBake && !isPlaying))
             {
-                using (new EditorGUI.DisabledScope(!canBake && !isPlaying))
+                if (GUILayout.Button(label, GUILayout.Height(28)))
                 {
-                    if (GUILayout.Button(label, GUILayout.Height(28)))
+                    if (canBake)
                     {
-                        if (canBake)
-                        {
-                            Bake(space, dataProp);
-                        }
-                        else
-                        {
-                            space.Build();
-                            InvalidateNavContextCache(space);
-                            SceneView.RepaintAll();
-                        }
+                        Bake(space, dataProp);
                     }
-                }
-
-                if (mode == BuildMode.Baked)
-                {
-                    using (new EditorGUI.DisabledScope(!BakeStatsWindow.HasReport))
+                    else
                     {
-                        if (GUILayout.Button("Stats", GUILayout.Height(28), GUILayout.Width(60)))
-                        {
-                            BakeStatsWindow.ShowLast();
-                        }
+                        space.Build();
+                        InvalidateNavContextCache(space);
+                        SceneView.RepaintAll();
                     }
                 }
             }
@@ -795,7 +824,7 @@ namespace NavVolume.Editor
                 InvalidateNavContextCache(space);
                 SceneView.RepaintAll();
 
-                BakeStatsWindow.Show(profiler.ToReport());
+                space.LastBuildReport = profiler.ToReport();
             }
             catch (System.OperationCanceledException)
             {
