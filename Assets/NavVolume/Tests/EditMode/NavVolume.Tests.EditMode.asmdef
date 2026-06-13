@@ -3,6 +3,8 @@
     "rootNamespace": "NavVolume.Tests.EditMode",
     "references": [
         "NavVolume.Runtime",
+        "Unity.Mathematics",
+        "Unity.Collections",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

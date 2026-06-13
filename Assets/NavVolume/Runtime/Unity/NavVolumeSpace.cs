@@ -303,6 +303,27 @@ namespace NavVolume
         public bool IsInsideVolume(Vector3 worldPos) => VolumeBounds.Contains(worldPos);
 
         /// <summary>
+        /// Returns true when the straight segment between two points does not cross any occupied
+        /// voxel. Used by agents as the last-resort clamp against clipping through baked geometry.
+        /// Segments with an endpoint outside the volume are permissive: there is no data to
+        /// validate against out there.
+        /// </summary>
+        internal bool IsSegmentNavigable(Vector3 from, Vector3 to)
+        {
+            if (!IsReady)
+            {
+                return true;
+            }
+
+            if (!IsInsideVolume(from) || !IsInsideVolume(to))
+            {
+                return true;
+            }
+
+            return SVORaycast.HasLineOfSight(NavCtx, from, to);
+        }
+
+        /// <summary>
         /// Returns true if the point lies inside the volume and the voxel containing it is free.
         /// </summary>
         public bool IsNavigable(Vector3 worldPos)

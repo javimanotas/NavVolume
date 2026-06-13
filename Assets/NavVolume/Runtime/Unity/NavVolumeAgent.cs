@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using NavVolume.Runtime;
+using NavVolume.Runtime.Avoidance;
 using NavVolume.Runtime.Pathfinding;
 using UnityEngine;
 
@@ -37,7 +38,34 @@ namespace NavVolume
         [SerializeField]
         internal bool _freezeRotationZ;
 
+        [Tooltip(
+            "Enables ORCA local avoidance against other agents, obstacles and the baked volume. "
+                + "Even with avoidance disabled the agent is still registered, so others keep "
+                + "avoiding it."
+        )]
+        [SerializeField]
+        bool _isAvoidanceEnabled = true;
+
         const int _MAX_NODES_BUDGET = 10000_000;
+
+        #region Avoidance fallbacks when no AgentType is assigned
+
+        const float _FALLBACK_RADIUS = 0.5f;
+        const float _FALLBACK_NEIGHBOR_RANGE = 10f;
+        const int _FALLBACK_MAX_NEIGHBORS = 10;
+        const float _FALLBACK_TIME_HORIZON_AGENTS = 2f;
+        const float _FALLBACK_TIME_HORIZON_OBSTACLES = 1f;
+
+        #endregion
+
+        /// <summary>
+        /// Velocities below this are treated as standing still (no movement, no rotation).
+        /// </summary>
+        const float _MIN_SPEED_SQ = 1e-8f;
+
+        int _avoidanceHandle = -1;
+
+        int _spaceIndex = -1;
 
         Vector3 _initialEuler;
 
@@ -88,6 +116,36 @@ namespace NavVolume
 
             _navVolumeSpace = navVolumeSpace;
             _navVolumeSpace.Rebuilt += OnNavVolumeRebuilt;
+
+            var simulation = AvoidanceSimulation.Instance;
+
+            if (simulation != null)
+            {
+                _spaceIndex = simulation.RegisterSpace(_navVolumeSpace);
+            }
+        }
+
+        void OnEnable()
+        {
+            var simulation = AvoidanceSimulation.GetOrCreate();
+
+            if (simulation != null)
+            {
+                _avoidanceHandle = simulation.RegisterAgent(
+                    this,
+                    BuildAvoidanceState(Vector3.zero, Vector3.zero)
+                );
+            }
+        }
+
+        void OnDisable()
+        {
+            if (_avoidanceHandle >= 0 && AvoidanceSimulation.Instance != null)
+            {
+                AvoidanceSimulation.Instance.UnregisterAgent(_avoidanceHandle);
+            }
+
+            _avoidanceHandle = -1;
         }
 
         void OnDestroy()
@@ -188,9 +246,32 @@ namespace NavVolume
 
         void Update()
         {
-            if (!HasActivePath)
+            var deltaTime = Time.deltaTime;
+
+            if (deltaTime <= 0f)
             {
                 return;
+            }
+
+            var velocity =
+                _isAvoidanceEnabled && _avoidanceHandle >= 0 && AvoidanceSimulation.Instance != null
+                    ? MoveWithAvoidance(deltaTime)
+                    : MoveAlongPath(deltaTime);
+
+            SubmitAvoidanceState(velocity, deltaTime);
+        }
+
+        #region Movement
+
+        /// <summary>
+        /// Direct path following without local avoidance; the behaviour the agent had before
+        /// avoidance existed.
+        /// </summary>
+        Vector3 MoveAlongPath(float deltaTime)
+        {
+            if (!HasActivePath)
+            {
+                return Vector3.zero;
             }
 
             var target = _smoothedWaypoints[_currentWaypointIndex];
@@ -198,17 +279,152 @@ namespace NavVolume
 
             UpdateRotation(toTarget);
 
-            transform.position = Vector3.MoveTowards(
-                transform.position,
-                target,
-                _speed * Time.deltaTime
-            );
+            var previousPosition = transform.position;
+            transform.position = Vector3.MoveTowards(previousPosition, target, _speed * deltaTime);
 
             if (Vector3.Distance(transform.position, target) < _WAYPOINT_TOLERANCE)
             {
                 _currentWaypointIndex++;
             }
+
+            return (transform.position - previousPosition) / deltaTime;
         }
+
+        /// <summary>
+        /// Integrates the velocity computed by the avoidance simulation in the previous step.
+        /// </summary>
+        /// <returns>
+        /// The velocity actually realized, which feeds the next avoidance step.
+        /// </returns>
+        Vector3 MoveWithAvoidance(float deltaTime)
+        {
+            var velocity = AvoidanceSimulation.Instance.GetNewVelocity(_avoidanceHandle);
+            var hasMoved = false;
+
+            if (velocity.sqrMagnitude >= _MIN_SPEED_SQ)
+            {
+                var from = transform.position;
+                var to = from + velocity * deltaTime;
+
+                // Last-resort clamp: ORCA already steers around baked geometry, but the solver can
+                // degrade when over-constrained, so never commit a step crossing an occupied voxel.
+                if (_navVolumeSpace == null || _navVolumeSpace.IsSegmentNavigable(from, to))
+                {
+                    UpdateRotation(velocity);
+                    transform.position = to;
+                    hasMoved = true;
+                }
+            }
+
+            AdvanceReachedWaypoints();
+
+            return hasMoved ? velocity : Vector3.zero;
+        }
+
+        /// <summary>
+        /// Consumes every waypoint already within tolerance. With avoidance the agent rarely passes
+        /// exactly over a waypoint, so intermediate ones complete within the agent radius; only the
+        /// final waypoint demands a tighter approach.
+        /// </summary>
+        void AdvanceReachedWaypoints()
+        {
+            var agentType = AgentType;
+            var radius = agentType != null ? agentType.Radius : _FALLBACK_RADIUS;
+
+            while (HasActivePath)
+            {
+                var isLast = _currentWaypointIndex == _smoothedWaypoints.Count - 1;
+                var tolerance = isLast
+                    ? Mathf.Max(_WAYPOINT_TOLERANCE, radius * 0.5f)
+                    : Mathf.Max(_WAYPOINT_TOLERANCE, radius);
+                var target = _smoothedWaypoints[_currentWaypointIndex];
+
+                if (Vector3.Distance(transform.position, target) >= tolerance)
+                {
+                    break;
+                }
+
+                _currentWaypointIndex++;
+            }
+        }
+
+        #endregion
+
+        #region Avoidance state exchange
+
+        /// <summary>
+        /// Velocity the agent would take if it were alone: straight toward the current waypoint,
+        /// slowing down on the final approach so it does not orbit the goal.
+        /// </summary>
+        Vector3 ComputePreferredVelocity(float deltaTime)
+        {
+            if (!HasActivePath)
+            {
+                return Vector3.zero;
+            }
+
+            var toTarget = _smoothedWaypoints[_currentWaypointIndex] - transform.position;
+            var distance = toTarget.magnitude;
+
+            if (distance < 1e-5f)
+            {
+                return Vector3.zero;
+            }
+
+            var desiredSpeed = Mathf.Min(_speed, distance / deltaTime);
+            return toTarget * (desiredSpeed / distance);
+        }
+
+        void SubmitAvoidanceState(Vector3 velocity, float deltaTime)
+        {
+            if (_avoidanceHandle < 0)
+            {
+                return;
+            }
+
+            var simulation = AvoidanceSimulation.Instance;
+
+            if (simulation == null)
+            {
+                return;
+            }
+
+            simulation.SubmitAgentState(
+                _avoidanceHandle,
+                BuildAvoidanceState(velocity, ComputePreferredVelocity(deltaTime))
+            );
+        }
+
+        AvoidanceAgentState BuildAvoidanceState(Vector3 velocity, Vector3 prefVelocity)
+        {
+            var agentType = AgentType;
+
+            return new AvoidanceAgentState
+            {
+                Position = transform.position,
+                Velocity = velocity,
+                PrefVelocity = prefVelocity,
+                Radius = agentType != null ? agentType.Radius : _FALLBACK_RADIUS,
+                MaxSpeed = _speed,
+                NeighborRange =
+                    agentType != null ? agentType.AvoidanceNeighborRange : _FALLBACK_NEIGHBOR_RANGE,
+                TimeHorizonAgents =
+                    agentType != null
+                        ? agentType.AvoidanceTimeHorizonAgents
+                        : _FALLBACK_TIME_HORIZON_AGENTS,
+                TimeHorizonObstacles =
+                    agentType != null
+                        ? agentType.AvoidanceTimeHorizonObstacles
+                        : _FALLBACK_TIME_HORIZON_OBSTACLES,
+                MaxNeighbors =
+                    agentType != null ? agentType.AvoidanceMaxNeighbors : _FALLBACK_MAX_NEIGHBORS,
+                SpaceIndex = _spaceIndex,
+            };
+        }
+
+        internal void UpdateAvoidanceHandle(int handle) => _avoidanceHandle = handle;
+
+        #endregion
 
         void UpdateRotation(Vector3 direction)
         {
