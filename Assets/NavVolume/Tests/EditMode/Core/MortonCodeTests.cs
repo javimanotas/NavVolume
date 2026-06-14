@@ -138,7 +138,7 @@ namespace NavVolume.Tests.EditMode.Core
                     )
                 )
                 {
-                    continue; // skip invalid neighbors (e.g. at boundaries)
+                    continue; // skip invalid neighbors
                 }
 
                 neighbor.TryGetNeighborCode(
@@ -186,8 +186,7 @@ namespace NavVolume.Tests.EditMode.Core
         {
             if (delta < 0)
             {
-                // only test the positive directions here
-                return;
+                return; // only test the positive directions here
             }
 
             var maxCoord = _RESOLUTION - 1;
@@ -211,8 +210,7 @@ namespace NavVolume.Tests.EditMode.Core
         {
             if (delta > 0)
             {
-                // only test the negative directions here
-                return;
+                return; // only test the negative directions here
             }
 
             var x = axisIndex == 0 ? 0 : 1;

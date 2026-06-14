@@ -7,6 +7,8 @@ namespace NavVolume.Tests.EditMode.Core
 {
     public class NeighborSetTests
     {
+        #region Auxiliary
+
         static IEnumerable<TestCaseData> NeighborDirectionCases()
         {
             yield return new TestCaseData((int)NeighborDirection.PosX).SetName("PosX");
@@ -16,6 +18,8 @@ namespace NavVolume.Tests.EditMode.Core
             yield return new TestCaseData((int)NeighborDirection.PosZ).SetName("PosZ");
             yield return new TestCaseData((int)NeighborDirection.NegZ).SetName("NegZ");
         }
+
+        #endregion
 
         [Test]
         [TestCaseSource(nameof(NeighborDirectionCases))]
