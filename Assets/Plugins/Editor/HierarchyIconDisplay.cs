@@ -7,18 +7,18 @@ namespace Project.EditorPlugins
 {
     /// <summary>
     /// Provides functionality to display custom icons for GameObjects in the Unity Hierarchy window during editor time.
-    /// </summary>
-    /// <remarks>
+    /// <para>
     /// This static class hooks into Unity Editor events to render component icons next to GameObjects in the Hierarchy window.
     /// It is initialized automatically on editor load and does not require manual instantiation.
+    /// </para>
     /// The display adapts based on selection and focus state to enhance visual feedback for users working in the Unity Editor.
-    /// </remarks>
+    /// </summary>
     [InitializeOnLoad]
     public static class HierarchyIconDisplay
     {
-        static bool HierarchyHasFocus = false;
+        static bool s_HierarchyHasFocus = false;
 
-        static EditorWindow HierarchyWindow;
+        static EditorWindow s_HierarchyWindow;
 
         static HierarchyIconDisplay()
         {
@@ -28,10 +28,10 @@ namespace Project.EditorPlugins
 
         /// <summary>
         /// Attempts to retrieve a representative component from the specified GameObject.
-        /// </summary>
-        /// <remarks>
+        /// <para>
         /// The method prioritizes non-transform components and skips CanvasRenderer if present.
-        /// </remarks>
+        /// </para>
+        /// </summary>
         /// <param name="gameObject">
         /// The GameObject from which to select a representative component.
         /// </param>
@@ -97,7 +97,7 @@ namespace Project.EditorPlugins
             var color = BackgroundColorHelper.Get(
                 Selection.entityIds.Contains(instanceId),
                 selectionRect.Contains(Event.current.mousePosition),
-                HierarchyHasFocus
+                s_HierarchyHasFocus
             );
 
             var bgRect = selectionRect;
@@ -109,14 +109,15 @@ namespace Project.EditorPlugins
 
         static void HandleEditorUpdate()
         {
-            if (HierarchyWindow == null)
+            if (s_HierarchyWindow == null)
             {
                 var type = Type.GetType("UnityEditor.SceneHierarchyWindow,UnityEditor");
-                HierarchyWindow = EditorWindow.GetWindow(type);
+                s_HierarchyWindow = EditorWindow.GetWindow(type);
             }
 
-            HierarchyHasFocus =
-                EditorWindow.focusedWindow != null && EditorWindow.focusedWindow == HierarchyWindow;
+            s_HierarchyHasFocus =
+                EditorWindow.focusedWindow != null
+                && EditorWindow.focusedWindow == s_HierarchyWindow;
         }
     }
 }

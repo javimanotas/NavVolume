@@ -6,11 +6,11 @@ namespace Project.EditorPlugins
 {
     /// <summary>
     /// Provides functionality to toggle the active state of GameObjects directly from the Unity Hierarchy window.
-    /// </summary>
-    /// <remarks>
+    /// <para>
     /// This class is initialized automatically when the Unity Editor loads.
     /// Changing the toggle also marks the scene as dirty, enabling undo support.
-    /// </remarks>
+    /// </para>
+    /// </summary>
     [InitializeOnLoad]
     public static class HierarchyToggle
     {

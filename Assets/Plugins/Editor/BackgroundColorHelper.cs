@@ -7,13 +7,13 @@ namespace Project.EditorPlugins
     /// </summary>
     public static class BackgroundColorHelper
     {
-        static readonly Color Default = new(0.2196f, 0.2196f, 0.2196f);
+        static readonly Color s_Default = new(0.2196f, 0.2196f, 0.2196f);
 
-        static readonly Color Selected = new(0.1725f, 0.3647f, 0.5294f);
+        static readonly Color s_Selected = new(0.1725f, 0.3647f, 0.5294f);
 
-        static readonly Color SelectedUnfocused = new(0.3f, 0.3f, 0.3f);
+        static readonly Color s_SelectedUnfocused = new(0.3f, 0.3f, 0.3f);
 
-        static readonly Color Hovered = new(0.2706f, 0.2706f, 0.2706f);
+        static readonly Color s_Hovered = new(0.2706f, 0.2706f, 0.2706f);
 
         public static Color Get(bool isSelected, bool isHovered, bool isWindowFocused)
         {
@@ -21,18 +21,18 @@ namespace Project.EditorPlugins
             {
                 if (isWindowFocused)
                 {
-                    return Selected;
+                    return s_Selected;
                 }
 
-                return SelectedUnfocused;
+                return s_SelectedUnfocused;
             }
 
             if (isHovered)
             {
-                return Hovered;
+                return s_Hovered;
             }
 
-            return Default;
+            return s_Default;
         }
     }
 }

@@ -7,6 +7,8 @@ namespace NavVolume.Tests.EditMode.Avoidance
 {
     public class OrcaSolverTests
     {
+        #region Auxiliary
+
         const float _TOLERANCE = 1e-3f;
         const float _TIME_STEP = 1f / 60f;
 
@@ -34,6 +36,8 @@ namespace NavVolume.Tests.EditMode.Avoidance
             var violation = math.dot(plane.Normal, plane.Point - velocity);
             Assert.LessOrEqual(violation, _TOLERANCE, "Velocity violates the ORCA plane.");
         }
+
+        #endregion
 
         [Test]
         public void Solve_WithoutPlanes_ShouldReturnPreferredVelocity()
@@ -75,8 +79,7 @@ namespace NavVolume.Tests.EditMode.Avoidance
         [Test]
         public void Solve_WhenInfeasible_ShouldDegradeToBoundedVelocity()
         {
-            // x >= 0.5 and x <= -0.5 cannot both hold. The fallback must still produce a finite
-            // velocity inside the max-speed sphere, moving only along the conflict axis.
+            // x >= 0.5 and x <= -0.5 is inconsistent
             var planes = new[]
             {
                 new OrcaPlane { Normal = new float3(1f, 0f, 0f), Point = new float3(0.5f, 0f, 0f) },
@@ -98,8 +101,7 @@ namespace NavVolume.Tests.EditMode.Avoidance
         [Test]
         public void Solve_WhenInfeasible_ShouldKeepStaticPlanesHard()
         {
-            // The static plane (x >= 0.5) conflicts with the agent plane (x <= -0.5). Only the
-            // agent plane may be relaxed, so the result must still satisfy the static one.
+            // The static plane (x >= 0.5) conflicts with the agent plane (x <= -0.5).
             var planes = new[]
             {
                 new OrcaPlane { Normal = new float3(1f, 0f, 0f), Point = new float3(0.5f, 0f, 0f) },
@@ -118,8 +120,7 @@ namespace NavVolume.Tests.EditMode.Avoidance
         [Test]
         public void AgentPlane_WithHeadOnConflict_ShouldDodgeToComplementarySides()
         {
-            // Two identical agents flying straight at each other along X. The exact symmetry is
-            // degenerate; the deterministic tie-break must send them to opposite lateral sides.
+            // Two identical agents flying straight at each other along X.
             var positionA = new float3(0f, 0f, 0f);
             var positionB = new float3(4f, 0f, 0f);
             var velocityA = new float3(1f, 0f, 0f);
@@ -167,8 +168,6 @@ namespace NavVolume.Tests.EditMode.Avoidance
         [Test]
         public void StaticPlane_WithClosingVelocity_ShouldLimitApproachSpeed()
         {
-            // Sphere obstacle 2 m ahead with combined radius 1: the surface gap is 1 m, so within a
-            // 1 s horizon the approach speed along X must not exceed 1 m/s.
             var velocity = new float3(1.5f, 0f, 0f);
 
             var plane = OrcaMath.StaticPlane(
@@ -189,8 +188,6 @@ namespace NavVolume.Tests.EditMode.Avoidance
         [Test]
         public void StaticPlane_WhenOverlapping_ShouldPushOut()
         {
-            // Agent center 0.5 m inside the combined radius: the collision branch must produce a
-            // velocity moving away from the obstacle.
             var plane = OrcaMath.StaticPlane(
                 new float3(0.5f, 0f, 0f),
                 1f,

@@ -10,6 +10,8 @@ namespace NavVolume.Tests.EditMode.Avoidance
 {
     public class VoxelGridQueryTests
     {
+        #region Auxiliary
+
         const float _TOLERANCE = 1e-4f;
 
         NativeArray<uint> _mortons;
@@ -30,8 +32,7 @@ namespace NavVolume.Tests.EditMode.Avoidance
         }
 
         /// <summary>
-        /// Builds a 2x2x2-node grid (8 voxels per axis, voxel size 1, origin at zero) with the
-        /// given occupied voxels, using the real SVO leaf layout.
+        /// Builds a 2x2x2-node grid (8 voxels per axis, voxel size 1, origin at zero) with the given occupied voxels, using the real SVO leaf layout.
         /// </summary>
         VoxelGrid BuildGrid(params int3[] occupiedVoxels)
         {
@@ -63,7 +64,7 @@ namespace NavVolume.Tests.EditMode.Avoidance
                 i++;
             }
 
-            return new VoxelGrid
+            return new()
             {
                 NodeStart = 0,
                 NodeCount = nodes.Count,
@@ -73,6 +74,8 @@ namespace NavVolume.Tests.EditMode.Avoidance
                 NodeSize = 4f,
             };
         }
+
+        #endregion
 
         [Test]
         public void IsVoxelOccupied_WithOccupiedVoxel_ShouldReturnTrue()
