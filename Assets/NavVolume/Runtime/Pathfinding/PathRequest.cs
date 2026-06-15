@@ -14,24 +14,19 @@ namespace NavVolume.Runtime.Pathfinding
         /// <summary>
         /// Greedy heuristic weight W.
         /// </summary>
-        /// <remarks>
-        /// See <see cref="SVOHeuristic"/> for details.
-        /// </remarks>
         public readonly float HeuristicWeight;
 
         /// <summary>
         /// Maximum number of nodes the search is allowed to pop off the open list before giving up.
-        /// Prevents runaway searches in degenerate cases.
-        /// 0 = unlimited.
         /// </summary>
+        /// <remarks>
+        /// 0 = unlimited.
+        /// </remarks>
         public readonly int MaxNodesBudget;
 
         /// <summary>
         /// How the g-cost and heuristic are measured.
         /// </summary>
-        /// <remarks>
-        /// See <see cref="PathCostMode"/> for details.
-        /// </remarks>
         public readonly PathCostMode CostMode;
 
         public PathRequest(

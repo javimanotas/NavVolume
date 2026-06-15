@@ -12,9 +12,7 @@ namespace NavVolume.Runtime.Pathfinding
     internal class SVOPathfinder
     {
         /// <summary>
-        /// Per-link search state. Folding the former open-set membership, closed set, g-cost map and
-        /// came-from map into one dictionary entry lets each neighbor touch the hash table at most
-        /// twice (one lookup, one store) instead of four times.
+        /// Per-link search state.
         /// </summary>
         struct NodeRecord
         {
@@ -86,14 +84,10 @@ namespace NavVolume.Runtime.Pathfinding
 
             ClearState();
 
-            // Hoist everything that is constant for this query out of the inner loop.
             _ctx = navCtx;
             _goalCenter = navCtx.LinkToCenter(goalLink);
             _euclidean = request.CostMode == PathCostMode.EuclideanDistance;
 
-            // The heuristic is "straight-line distance to goal x scale". Folding the weight (and, for
-            // node-count cost, the largest node size that converts meters into hops) into a single
-            // factor reduces ComputeH to one distance and one multiply.
             if (_euclidean)
             {
                 _hScale = request.HeuristicWeight;
@@ -512,14 +506,6 @@ namespace NavVolume.Runtime.Pathfinding
                     return false;
                 }
 
-                // Layer-0 NODE link: only fully empty leaves are safe to use
-                // as a single waypoint. The node center of a partial leaf sits
-                // on the inner-octant boundary of the 4x4x4 voxel grid and may
-                // land inside an occupied subnode, so partial (and full)
-                // leaves must be entered via voxel links instead. The
-                // cross-leaf voxel transitions in TryAddVoxelNeighbor already
-                // produce the correct voxel entry links, so the search can
-                // still reach those cells.
                 return !svo.LeafNodes[link.Offset].IsEmpty;
             }
 

@@ -6,14 +6,12 @@ namespace NavVolume.Runtime.Pathfinding
     public enum PathCostMode
     {
         /// <summary>
-        /// Every node step costs 1 regardless of its size, biasing the path toward large nodes
-        /// (open space) so waypoints stay clear of surfaces. The heuristic is measured in node hops.
+        /// Every node step costs 1 regardless of its size, biasing the path toward large nodes (open space).
         /// </summary>
         NodeCount,
 
         /// <summary>
-        /// Each step costs the Euclidean distance between node centers, producing the geometrically
-        /// shortest path, which hugs surfaces and corners. The heuristic is measured in meters.
+        /// Each step costs the Euclidean distance between node centers, producing the geometrically shortest path.
         /// </summary>
         EuclideanDistance,
     }

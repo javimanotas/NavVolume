@@ -4,10 +4,10 @@ namespace NavVolume.Demo
 {
     /// <summary>
     /// Very simple demo script that makes the <see cref="NavVolumeAgent"/> fly towards a target Transform.
-    /// <para>
-    /// The position of the target can be changed at runtime, and the NavVolumeAgent will update its path accordingly.
-    /// </para>
     /// </summary>
+    /// <remarks>
+    /// The position of the target can be changed at runtime, and the NavVolumeAgent will update its path accordingly.
+    /// </remarks>
     [AddComponentMenu("NavVolume/Demo/Fly To Target")]
     [RequireComponent(typeof(NavVolumeAgent))]
     [DisallowMultipleComponent]
