@@ -28,10 +28,10 @@ namespace Project.EditorPlugins
 
         /// <summary>
         /// Attempts to retrieve a representative component from the specified GameObject.
-        /// <para>
-        /// The method prioritizes non-transform components and skips CanvasRenderer if present.
-        /// </para>
         /// </summary>
+        /// <remarks>
+        /// The method prioritizes non-transform components and skips CanvasRenderer if present.
+        /// </remarks>
         /// <param name="gameObject">
         /// The GameObject from which to select a representative component.
         /// </param>

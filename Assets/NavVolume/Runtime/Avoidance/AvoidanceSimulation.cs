@@ -221,7 +221,7 @@ namespace NavVolume.Runtime.Avoidance
 
         /// <summary>
         /// Registers a space's baked occupancy for voxel constraints and returns its index.
-        /// Spaces are never unregistered; a destroyed space keeps its slot with an empty grid so
+        /// Spaces are never unregistered, a destroyed space keeps its slot with an empty grid so
         /// agent space indices stay valid.
         /// </summary>
         public int RegisterSpace(NavVolumeSpace space)
@@ -360,7 +360,7 @@ namespace NavVolume.Runtime.Avoidance
 
         /// <summary>
         /// Blocks until the in-flight step finishes. In steady state the jobs already ran during
-        /// rendering, so the early-frame call returns immediately; the guards on every accessor
+        /// rendering, so the early-frame call returns immediately, the guards on every accessor
         /// only pay this cost when something touches the simulation between schedule and frame end.
         /// </summary>
         void CompleteScheduledJobs()

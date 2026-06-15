@@ -5,11 +5,6 @@ namespace NavVolume.Runtime.Pathfinding
     /// <summary>
     /// A generic binary min-heap (priority queue).
     /// </summary>
-    /// <remarks>
-    /// Backed by a raw array with hole-based bubble-up/sift-down: instead of swapping pairs on every
-    /// level, the moving entry is held aside and existing entries are shifted into the hole, halving
-    /// the writes per operation. This is the pathfinder's open list, so it is on the hottest path.
-    /// </remarks>
     internal sealed class MinHeap<T>
     {
         struct Entry
@@ -35,7 +30,6 @@ namespace NavVolume.Runtime.Pathfinding
                 Array.Resize(ref _heap, _heap.Length << 1);
             }
 
-            // Bubble the hole up, shifting larger parents down, then drop the entry in once.
             var i = _count++;
             while (i > 0)
             {
@@ -65,10 +59,9 @@ namespace NavVolume.Runtime.Pathfinding
 
             if (last > 0)
             {
-                // Sift the last entry down from the root through a hole, then drop it in once.
                 var movedPriority = _heap[last].Priority;
                 var movedItem = _heap[last].Item;
-                var half = last >> 1; // entries at index >= half are leaves
+                var half = last >> 1;
 
                 var i = 0;
                 while (i < half)
@@ -94,7 +87,7 @@ namespace NavVolume.Runtime.Pathfinding
                 _heap[i].Item = movedItem;
             }
 
-            _heap[last] = default; // release any reference held in the vacated slot
+            _heap[last] = default;
             return result;
         }
 

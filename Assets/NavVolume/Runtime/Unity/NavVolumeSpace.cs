@@ -65,15 +65,10 @@ namespace NavVolume
 
         internal NavContext NavCtx;
 
-        // Reused across the synchronous FindPath calls so the open list and search-state buffers keep
-        // their capacity instead of being reallocated on every request. Safe because synchronous
-        // FindPath never overlaps with itself.
+        // Reused across the synchronous FindPath calls.
         readonly SVOPathfinder _pathfinder = new();
 
-        // Asynchronous searches run on the thread pool and may overlap (up to one per agent in
-        // flight), so each rents its own pathfinder scratch state from here rather than sharing
-        // _pathfinder. The SVO they read stays immutable while a query runs, so no further
-        // synchronization is needed.
+        // Pool for async searches.
         readonly ConcurrentBag<SVOPathfinder> _pathfinderPool = new();
 
         internal NavVolumeBakedData BakedData => _bakedData;
@@ -81,12 +76,7 @@ namespace NavVolume
         internal BuildMode BuildMode => _buildMode;
 
         /// <summary>
-        /// Timing breakdown of the most recent build, surfaced by the editor in the Stats foldout. Set
-        /// by every build path: <see cref="Build"/> (BuildOnAwake / Manual) and the editor bake (Baked).
-        /// </summary>
-        /// <remarks>
-        /// Transient and per-run: held in memory only (cleared on domain reload) and never serialized,
-        /// since timings are machine-dependent. Null until the volume is built at least once this session.
+        /// Timing breakdown of the most recent build.
         /// </remarks>
         internal BakeReport LastBuildReport { get; set; }
 
@@ -101,9 +91,7 @@ namespace NavVolume
         public bool IsReady => NavCtx.Svo != null;
 
         /// <summary>
-        /// Raised on the main thread right after the volume's data is (re)built through
-        /// <see cref="Build"/>. An existing path may cut through geometry that just changed, so agents
-        /// listen for this to replan against the new tree.
+        /// Raised on the main thread right after the volume's data is (re)built.
         /// </summary>
         public event Action Rebuilt;
 
@@ -208,9 +196,7 @@ namespace NavVolume
         }
 
         /// <summary>
-        /// Find a path on a background thread. The returned task produces the same result a
-        /// synchronous <see cref="FindPath"/> would, and observes <paramref name="cancellationToken"/>
-        /// so a superseded request stops instead of running to completion.
+        /// Find a path on a background thread.
         /// </summary>
         internal Task<PathResult> FindPathAsync(
             PathRequest request,
@@ -222,8 +208,6 @@ namespace NavVolume
                 return Task.FromResult(PathResult.Failure(PathResultStatus.NoTree));
             }
 
-            // Snapshot the context on the calling thread. NavContext is a readonly struct over an SVO
-            // that stays immutable while queries run, so the worker can read it without locking.
             var ctx = NavCtx;
 
             return Task.Run(
@@ -247,9 +231,7 @@ namespace NavVolume
         }
 
         /// <summary>
-        /// Runs the A* search with <paramref name="pathfinder"/> and post-processes the raw path into
-        /// the smoothed waypoints callers consume. Apart from that pathfinder's scratch state it is
-        /// pure, so it is safe to call from any thread as long as the pathfinder is not shared.
+        /// Runs the A* search with <paramref name="pathfinder"/> and post-processes the raw path into the smoothed waypoints.
         /// </summary>
         static PathResult RunQuery(
             SVOPathfinder pathfinder,
@@ -258,8 +240,6 @@ namespace NavVolume
             CancellationToken cancellationToken
         )
         {
-            // The pathfinder uses the same per-step profiler as the bake, so the reported total is
-            // the sum of the per-step timings.
             var profiler = new StepProfiler();
             profiler.Start();
 
@@ -303,10 +283,7 @@ namespace NavVolume
         public bool IsInsideVolume(Vector3 worldPos) => VolumeBounds.Contains(worldPos);
 
         /// <summary>
-        /// Returns true when the straight segment between two points does not cross any occupied
-        /// voxel. Used by agents as the last-resort clamp against clipping through baked geometry.
-        /// Segments with an endpoint outside the volume are permissive: there is no data to
-        /// validate against out there.
+        /// Returns true when the straight segment between two points does not cross any occupied voxel.
         /// </summary>
         internal bool IsSegmentNavigable(Vector3 from, Vector3 to)
         {

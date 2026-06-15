@@ -65,11 +65,8 @@ namespace NavVolume.Runtime.Core
 
             total += _ARRAY_HEADER_BYTES + Unsafe.SizeOf<SVOLeaf>() * svo.LeafNodes.Length;
 
-            // Outer jagged array: one reference slot per layer.
             total += _ARRAY_HEADER_BYTES + _REFERENCE_BYTES * svo.Layers.Length;
 
-            // Each layer is a plain SVONode[] now (no List wrapper, no spare capacity): one array
-            // header plus exactly its element count.
             foreach (var layer in svo.Layers)
             {
                 total += _ARRAY_HEADER_BYTES + Unsafe.SizeOf<SVONode>() * layer.Length;

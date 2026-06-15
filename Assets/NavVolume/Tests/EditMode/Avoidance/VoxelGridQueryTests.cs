@@ -119,8 +119,7 @@ namespace NavVolume.Tests.EditMode.Avoidance
         [Test]
         public void GatherNearestOccupiedVoxels_ShouldReturnClosestPointAndDistance()
         {
-            // Voxel (2,0,0) spans [2..3]x[0..1]x[0..1]; from (3.5, 0.5, 0.5) the closest point is
-            // the face at x = 3.
+            // Voxel (2,0,0) spans [2..3]x[0..1]x[0..1], from (3.5, 0.5, 0.5) the closest point is the face at x = 3.
             var grid = BuildGrid(new int3(2, 0, 0));
             var position = new float3(3.5f, 0.5f, 0.5f);
 

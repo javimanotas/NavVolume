@@ -13,11 +13,7 @@ namespace NavVolume.Runtime.Core
         /// Lower layers of the octree are the ones containing higher resolution data.
         /// </summary>
         /// <remarks>
-        /// Each layer is a flat <see cref="SVONode"/> array kept sorted by <see cref="MortonCode"/>;
-        /// lookups use <see cref="TryFindNodeIndex"/> (binary search) rather than a hash table. Plain
-        /// arrays (instead of <c>List</c>) let callers read a single field through an array element
-        /// without copying the whole ~36-byte node, which is the dominant cost on the pathfinding hot
-        /// path (see <see cref="GetNode"/>).
+        /// Each layer is a flat <see cref="SVONode"/> array kept sorted by <see cref="MortonCode"/>.
         /// </remarks>
         public readonly SVONode[][] Layers;
 
@@ -43,8 +39,7 @@ namespace NavVolume.Runtime.Core
         public bool IsEmpty => Layers[0].Length == 0;
 
         /// <summary>
-        /// Returns a read-only reference to the node, avoiding a copy of the whole struct. Callers that
-        /// only read fields should bind it with <c>ref readonly var node = ref svo.GetNode(link);</c>.
+        /// Returns a read-only reference to the node, avoiding a copy of the whole struct.
         /// </summary>
         public ref readonly SVONode GetNode(SVOLink link)
         {
@@ -55,7 +50,9 @@ namespace NavVolume.Runtime.Core
         /// <summary>
         /// Binary-searches the (sorted) layer for the node carrying <paramref name="mortonCode"/>.
         /// </summary>
-        /// <returns>true and the node's offset when found, false and -1 otherwise.</returns>
+        /// <returns>
+        /// true and the node's offset when found, false and -1 otherwise.
+        /// </returns>
         public bool TryFindNodeIndex(int layer, MortonCode mortonCode, out int idx)
         {
             var nodes = Layers[layer];

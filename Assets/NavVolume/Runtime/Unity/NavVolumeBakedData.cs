@@ -16,14 +16,8 @@ namespace NavVolume
         BuildSettings _buildSettings;
 
         /// <summary>
-        /// The whole SVO (leaf bitmasks + every layer's nodes) packed into a single binary blob.
+        /// The whole SVO is packed into a single binary blob.
         /// </summary>
-        /// <remarks>
-        /// Stored as a raw <see cref="byte"/> array rather than nested struct arrays because Unity
-        /// serializes a <c>byte[]</c> as one compact blob, whereas an array of hundreds of thousands
-        /// of structs is written as millions of YAML lines. For large trees this turns multi-second
-        /// asset saves into a few milliseconds.
-        /// </remarks>
         [SerializeField]
         [HideInInspector]
         byte[] _blob;

@@ -3,20 +3,20 @@ using Unity.Mathematics;
 namespace NavVolume.Runtime.Avoidance
 {
     /// <summary>
-    /// World-space snapshot of one <see cref="NavVolumeObstacle"/>, refreshed by the simulation
-    /// every step.
+    /// World-space snapshot of one <see cref="NavVolumeObstacle"/>, refreshed by the simulation every step.
     /// </summary>
     internal struct AvoidanceObstacleState
     {
         public float3 Position;
 
         /// <summary>
-        /// World rotation; only meaningful for boxes.
+        /// World rotation
         /// </summary>
         public quaternion Rotation;
 
         /// <summary>
-        /// Box: world half extents. Sphere: radius stored in X.
+        /// Box: world half extents.
+        /// Sphere: radius stored in X.
         /// </summary>
         public float3 HalfExtents;
 

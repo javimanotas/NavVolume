@@ -43,16 +43,9 @@ namespace NavVolume.Runtime.Avoidance
         }
 
         /// <summary>
-        /// Gathers up to <paramref name="maxCount"/> occupied voxels nearest to
-        /// <paramref name="position"/> within <paramref name="searchRange"/>.
-        /// Writes the closest point on each voxel and its squared distance, sorted by ascending
-        /// distance, and returns how many were found.
+        /// Gathers up to <paramref name="maxCount"/> occupied voxels nearest to <paramref name="position"/> within <paramref name="searchRange"/>.
+        /// Writes the closest point on each voxel and its squared distance, sorted by ascending distance, and returns how many were found.
         /// </summary>
-        /// <remarks>
-        /// Scans the layer-0 nodes overlapped by the search sphere (one binary search per node) and
-        /// prunes whole nodes whose bounds are already farther than the worst kept voxel.
-        /// A position inside an occupied voxel reports the voxel center with distance 0.
-        /// </remarks>
         public static int GatherNearestOccupiedVoxels(
             in VoxelGrid grid,
             NativeArray<uint> mortons,
@@ -125,7 +118,6 @@ namespace NavVolume.Runtime.Avoidance
                             var bit = math.tzcnt(mask);
                             mask &= mask - 1;
 
-                            // Bit layout mirrors SVOLeaf.IndexToSubnodeCoords.
                             var voxelMin =
                                 nodeMin
                                 + new float3((bit >> 4) & 3, (bit >> 2) & 3, bit & 3)
@@ -141,8 +133,7 @@ namespace NavVolume.Runtime.Avoidance
 
                             if (distSq < 1e-12f)
                             {
-                                // Inside the voxel: report its center so callers get a usable
-                                // direction to push away from.
+                                // Inside the voxel
                                 closest = (voxelMin + voxelMax) * 0.5f;
                                 distSq = 0f;
                             }

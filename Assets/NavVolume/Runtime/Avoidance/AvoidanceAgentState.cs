@@ -10,7 +10,7 @@ namespace NavVolume.Runtime.Avoidance
         public float3 Position;
 
         /// <summary>
-        /// Velocity the agent actually realized last frame; the current velocity in the ORCA sense.
+        /// Velocity the agent actually realized last frame, the current velocity in the ORCA sense.
         /// </summary>
         public float3 Velocity;
 
@@ -35,8 +35,7 @@ namespace NavVolume.Runtime.Avoidance
         public int MaxNeighbors;
 
         /// <summary>
-        /// Index of the agent's <see cref="NavVolumeSpace"/> in the simulation's voxel grid table,
-        /// or -1 when the agent is not bound to a space.
+        /// Index of the agent's <see cref="NavVolumeSpace"/> in the simulation's voxel grid table, or -1 when the agent is not bound to a space.
         /// </summary>
         public int SpaceIndex;
     }

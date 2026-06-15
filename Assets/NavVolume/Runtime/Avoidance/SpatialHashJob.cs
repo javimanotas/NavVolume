@@ -6,8 +6,7 @@ using Unity.Mathematics;
 namespace NavVolume.Runtime.Avoidance
 {
     /// <summary>
-    /// Hashes every agent into its uniform-grid cell so the avoidance job can gather neighbors
-    /// without scanning the whole population.
+    /// Hashes every agent into its uniform-grid cell so the avoidance job can gather neighbors without scanning the whole population.
     /// </summary>
     [BurstCompile]
     internal struct SpatialHashJob : IJobParallelFor

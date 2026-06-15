@@ -170,9 +170,8 @@ namespace NavVolume
         /// Request a path to a goal and begin flying once it is found.
         /// </summary>
         /// <remarks>
-        /// The path is computed on a background thread; the agent keeps following its current path (if
-        /// any) until the new one is ready. Calling this again supersedes a search still in progress:
-        /// the previous one is cancelled and only the latest destination is followed.
+        /// The path is computed on a background thread.
+        /// Calling this during the calculation cancels the previous request.
         /// </remarks>
         public void SetDestination(Vector3 goal)
         {
@@ -187,8 +186,6 @@ namespace NavVolume
                 return;
             }
 
-            // Supersede any search already in flight: the previous request observes the cancelled
-            // token at its next checkpoint, stops early, and disposes its own token source.
             _pathCts?.Cancel();
 
             var cts = new CancellationTokenSource();
@@ -211,8 +208,6 @@ namespace NavVolume
             {
                 var result = await _navVolumeSpace.FindPathAsync(request, cts.Token);
 
-                // The continuation resumes on the main thread. A newer request may have superseded
-                // this one between the search finishing and here, so drop the now-stale result.
                 if (cts.IsCancellationRequested)
                 {
                     return;
@@ -264,8 +259,7 @@ namespace NavVolume
         #region Movement
 
         /// <summary>
-        /// Direct path following without local avoidance; the behaviour the agent had before
-        /// avoidance existed.
+        /// Direct path following without local avoidance.
         /// </summary>
         Vector3 MoveAlongPath(float deltaTime)
         {
@@ -322,9 +316,8 @@ namespace NavVolume
         }
 
         /// <summary>
-        /// Consumes every waypoint already within tolerance. With avoidance the agent rarely passes
-        /// exactly over a waypoint, so intermediate ones complete within the agent radius; only the
-        /// final waypoint demands a tighter approach.
+        /// Consumes every waypoint already within tolerance.
+        /// With avoidance the agent rarely passes exactly over a waypoint, so intermediate ones complete within the agent radius.
         /// </summary>
         void AdvanceReachedWaypoints()
         {

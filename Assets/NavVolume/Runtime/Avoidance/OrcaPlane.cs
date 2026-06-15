@@ -4,7 +4,6 @@ namespace NavVolume.Runtime.Avoidance
 {
     /// <summary>
     /// Half-space constraint in velocity space produced by ORCA.
-    /// A velocity v is permitted when <c>dot(Normal, v - Point) &gt;= 0</c>.
     /// </summary>
     internal struct OrcaPlane
     {

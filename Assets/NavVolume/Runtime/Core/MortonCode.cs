@@ -1,5 +1,4 @@
 ﻿using System;
-using UnityEngine.Assertions;
 
 namespace NavVolume.Runtime.Core
 {

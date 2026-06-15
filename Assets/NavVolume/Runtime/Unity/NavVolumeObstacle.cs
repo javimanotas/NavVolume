@@ -8,12 +8,9 @@ namespace NavVolume
     /// Volume that every <see cref="NavVolumeAgent"/> avoids entirely while flying.
     /// </summary>
     /// <remarks>
-    /// Unlike geometry baked into the navigation volume, obstacles are dynamic: they can be
-    /// enabled, disabled, moved and resized at runtime without rebaking. Agents treat them as hard
-    /// constraints and take full responsibility for the avoidance, so an obstacle is never expected
-    /// to move out of the way. Note that obstacles only affect local steering; paths are still
-    /// planned against the baked data, so a large obstacle dropped on a narrow corridor can make
-    /// agents wait in front of it rather than reroute.
+    /// Unlike geometry baked into the navigation volume, obstacles are dynamic:
+    /// they can be enabled, disabled, moved and resized at runtime without rebaking.
+    /// Agents treat them as hard constraints and take full responsibility for the avoidance.
     /// </remarks>
     [AddComponentMenu("NavVolume/NavVolume Obstacle")]
     [DisallowMultipleComponent]
@@ -85,8 +82,7 @@ namespace NavVolume
         internal void UpdateAvoidanceHandle(int handle) => _avoidanceHandle = handle;
 
         /// <summary>
-        /// World-space snapshot of the obstacle with zero velocity; the simulation derives the
-        /// velocity from successive snapshots.
+        /// World-space snapshot of the obstacle with zero velocity.
         /// </summary>
         internal AvoidanceObstacleState ComputeState()
         {

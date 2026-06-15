@@ -15,7 +15,6 @@ namespace NavVolume.Runtime.Pathfinding
 
         /// <summary>
         /// Wall-clock time taken by <see cref="SVOPathfinder.FindPath"/> plus the smoothing passes.
-        /// Equals the sum of <see cref="Phases"/>.
         /// </summary>
         public readonly double ElapsedMs;
 
@@ -25,16 +24,14 @@ namespace NavVolume.Runtime.Pathfinding
         public readonly int WaypointsRemovedByLOS;
 
         /// <summary>
-        /// Waypoint count of the raw A* path before smoothing. Acts as the denominator for
-        /// <see cref="WaypointsRemovedByLOS"/>.
+        /// Waypoint count of the raw A* path before smoothing. Acts as the denominator for <see cref="WaypointsRemovedByLOS"/>.
         /// </summary>
         public readonly int RawWaypointsCount;
 
         readonly IReadOnlyList<TimedPhase> _phases;
 
         /// <summary>
-        /// Per-step timings (the A* search and the smoothing passes), in execution order. Their sum
-        /// is <see cref="ElapsedMs"/>. Never null.
+        /// Per-step timings, in execution order.
         /// </summary>
         public IReadOnlyList<TimedPhase> Phases => _phases ?? Array.Empty<TimedPhase>();
 

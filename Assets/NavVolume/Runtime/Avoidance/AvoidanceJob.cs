@@ -8,14 +8,12 @@ namespace NavVolume.Runtime.Avoidance
 {
     /// <summary>
     /// Computes one ORCA step for every agent in parallel.
-    /// </summary>
-    /// <remarks>
+    /// <para>
     /// For each agent the job builds the constraint planes in a fixed order (nearest baked voxels,
-    /// then nearest obstacles, then nearest agents) and solves the linear program for the velocity
-    /// closest to the preferred one. Voxel and obstacle planes are hard: the infeasible fallback
-    /// only ever relaxes agent-agent planes. All buffers are stack allocated, so the job performs
-    /// no allocations.
-    /// </remarks>
+    /// then nearest obstacles, then nearest agents).
+    /// Then solves the linear program for the velocity closest to the preferred one.
+    /// </para>
+    /// </summary>
     [BurstCompile]
     internal struct AvoidanceJob : IJobParallelFor
     {
@@ -25,9 +23,7 @@ namespace NavVolume.Runtime.Avoidance
         public const int MAX_PLANES = MAX_NEIGHBORS + MAX_OBSTACLE_PLANES + MAX_VOXEL_PLANES;
 
         /// <summary>
-        /// Upper bound of the voxel search radius in layer-0 nodes. Bounds the node scan to at most
-        /// 7x7x7 binary searches per agent when voxels are much smaller than the agent or its
-        /// braking distance; nearer geometry still constrains the agent normally.
+        /// Upper bound of the voxel search radius in layer-0 nodes.
         /// </summary>
         const float _MAX_VOXEL_SEARCH_NODES = 2.5f;
 
@@ -344,8 +340,7 @@ namespace NavVolume.Runtime.Avoidance
         #endregion
 
         /// <summary>
-        /// Inserts a candidate into the parallel index/distance buffers, kept sorted by ascending
-        /// distance and capped at <paramref name="maxCount"/> entries.
+        /// Inserts a candidate into the parallel index/distance buffers, kept sorted by ascending distance and capped at <paramref name="maxCount"/> entries.
         /// </summary>
         static void InsertNearest(
             Span<int> indices,

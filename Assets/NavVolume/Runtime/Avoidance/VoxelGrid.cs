@@ -4,8 +4,7 @@ namespace NavVolume.Runtime.Avoidance
 {
     /// <summary>
     /// Burst-readable view over one <see cref="NavVolumeSpace"/>'s finest-resolution occupancy.
-    /// References a slice of the shared pools of sorted layer-0 morton codes and leaf bitmasks
-    /// owned by <see cref="AvoidanceSimulation"/>.
+    /// References a slice of the shared pools of sorted layer-0 morton codes and leaf bitmasks owned by <see cref="AvoidanceSimulation"/>.
     /// </summary>
     internal struct VoxelGrid
     {
@@ -15,7 +14,7 @@ namespace NavVolume.Runtime.Avoidance
         public int NodeStart;
 
         /// <summary>
-        /// Number of layer-0 nodes; 0 marks a grid without data (no constraints generated).
+        /// Number of layer-0 nodes.
         /// </summary>
         public int NodeCount;
 
