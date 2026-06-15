@@ -8,8 +8,7 @@ namespace NavVolume
     /// Volume that every <see cref="NavVolumeAgent"/> avoids entirely while flying.
     /// </summary>
     /// <remarks>
-    /// Unlike geometry baked into the navigation volume, obstacles are dynamic:
-    /// they can be enabled, disabled, moved and resized at runtime without rebaking.
+    /// Unlike geometry baked into the navigation volume, obstacles are dynamic: they can be enabled, disabled, moved and resized at runtime without rebaking.
     /// Agents treat them as hard constraints and take full responsibility for the avoidance.
     /// </remarks>
     [AddComponentMenu("NavVolume/NavVolume Obstacle")]

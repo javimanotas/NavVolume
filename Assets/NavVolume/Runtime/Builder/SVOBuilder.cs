@@ -20,9 +20,8 @@ namespace NavVolume.Runtime.Builder
         }
 
         /// <summary>
-        /// Builds the SVO, recording per-phase timings into <paramref name="profiler"/> and, when
-        /// supplied, reporting coarse progress through <paramref name="progress"/>. The host's
-        /// reporter may throw at a phase boundary to cancel the bake.
+        /// Builds the SVO, recording per-phase timings into <paramref name="profiler"/> and, when supplied, reporting coarse progress through <paramref name="progress"/>.
+        /// The host's reporter may throw at a phase boundary to cancel the bake.
         /// </summary>
         internal NavContext Build(BakeProfiler profiler, BakeProgress progress = null)
         {
@@ -150,13 +149,10 @@ namespace NavVolume.Runtime.Builder
         }
 
         /// <summary>
-        /// Ensures every parent in <paramref name="parentCodes"/> has all 8 of its children
-        /// present in <c>Layer[childLayer]</c>, in Morton-sorted order.
+        /// Ensures every parent in <paramref name="parentCodes"/> has all 8 of its children present in <c>Layer[childLayer]</c>, in Morton-sorted order.
         /// </summary>
         /// <remarks>
-        /// Instead of appending missing padding nodes and re-sorting the whole layer (an extra
-        /// O(N log N) sort every time a sibling is missing), this generates the complete
-        /// expected child set, sorts it once, and rebuilds the layer + lookup in a single pass.
+        /// Instead of appending missing padding nodes and re-sorting the whole layer (an extra O(N log N) sort every time a sibling is missing), this generates the complete expected child set, sorts it once, and rebuilds the layer + lookup in a single pass.
         /// Short-circuits cheaply when nothing is missing.
         /// </remarks>
         void AllocateMissingSiblings(SVO svo, int childLayer, List<MortonCode> parentCodes)
@@ -222,45 +218,6 @@ namespace NavVolume.Runtime.Builder
                     parent.FirstChild = SVOLink.NodeLink(childLayer, childIdx);
                 }
             }
-        }
-    }
-
-    /// <summary>
-    /// Bake-specific front end over a shared <see cref="StepProfiler"/>. Adds the build-vs-save split
-    /// and snapshots the collected laps into a transient <see cref="BakeReport"/>.
-    /// </summary>
-    internal sealed class BakeProfiler
-    {
-        readonly StepProfiler _profiler = new();
-
-        // Running total (ms) captured when the build finished; -1 until then.
-        double _buildMs = -1;
-
-        public void Start()
-        {
-            _profiler.Start();
-            _buildMs = -1;
-        }
-
-        public void Lap(string label) => _profiler.Lap(label);
-
-        /// <summary>Marks where the build ends and post-build (save) phases begin.</summary>
-        public void MarkBuildComplete() => _buildMs = _profiler.TotalMs;
-
-        /// <summary>Snapshots the collected laps into a transient <see cref="BakeReport"/>.</summary>
-        public BakeReport ToReport()
-        {
-            var total = _profiler.TotalMs;
-            var buildMs = _buildMs >= 0 ? _buildMs : total;
-
-            // Copy so the report stays independent of the (reusable) profiler's live phase list.
-            var phases = new TimedPhase[_profiler.Phases.Count];
-            for (var i = 0; i < phases.Length; i++)
-            {
-                phases[i] = _profiler.Phases[i];
-            }
-
-            return new BakeReport(total, buildMs, total - buildMs, phases);
         }
     }
 }

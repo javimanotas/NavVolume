@@ -21,7 +21,7 @@ namespace NavVolume
         }
 
         /// <summary>
-        /// Returns the int which bit reresentation matches the input bit representation.
+        /// Returns the int whose bit representation matches the input float's.
         /// </summary>
         public static int FloatBitsAsInt(float value)
         {

@@ -24,7 +24,7 @@ namespace NavVolume.Runtime.Pathfinding
         public readonly int WaypointsRemovedByLOS;
 
         /// <summary>
-        /// Waypoint count of the raw A* path before smoothing. Acts as the denominator for <see cref="WaypointsRemovedByLOS"/>.
+        /// Waypoint count of the raw A* path before smoothing.
         /// </summary>
         public readonly int RawWaypointsCount;
 

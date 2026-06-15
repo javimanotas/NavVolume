@@ -34,7 +34,7 @@ namespace NavVolume.Runtime.Pathfinding
         bool _euclidean;
 
         /// <summary>
-        /// This prevents from checking the cancellation token on every single expansion, which would be expensive.
+        /// Avoids checking the cancellation token on every expansion, which would be expensive.
         /// </summary>
         const int _CANCEL_CHECK_MASK = 1023;
 
@@ -130,7 +130,6 @@ namespace NavVolume.Runtime.Pathfinding
                 var current = _openList.Pop();
                 var currentLink = current.Link;
 
-                // The popped entry may be a stale duplicate of a node we already finalized.
                 _nodes.TryGetValue(currentLink, out var currentRec);
                 if (currentRec.Closed)
                 {
@@ -293,9 +292,6 @@ namespace NavVolume.Runtime.Pathfinding
             }
         }
 
-        /// <summary>
-        /// Try to add a voxel neighbor to the buffer.
-        /// </summary>
         static void TryAddVoxelNeighbor(
             SVO svo,
             SVOLink voxelLink,

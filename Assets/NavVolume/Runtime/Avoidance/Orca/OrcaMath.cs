@@ -6,9 +6,7 @@ namespace NavVolume.Runtime.Avoidance
     /// Builds ORCA half-space constraints out of velocity obstacles.
     /// </summary>
     /// <remarks>
-    /// Follows the 3D formulation of van den Berg et al., "Reciprocal n-Body Collision Avoidance"
-    /// (the RVO2-3D library, Apache 2.0), where every conflict is a truncated cone in relative
-    /// velocity space. All methods are Burst-compatible and allocation free.
+    /// Follows the 3D formulation of "Reciprocal n-Body Collision Avoidance" (the RVO2-3D library, Apache 2.0).
     /// </remarks>
     internal static class OrcaMath
     {
@@ -19,8 +17,6 @@ namespace NavVolume.Runtime.Avoidance
 
         /// <summary>
         /// Builds the ORCA plane induced by a neighboring agent.
-        /// Both agents are assumed to run avoidance, so each one takes half the responsibility of
-        /// resolving the conflict.
         /// </summary>
         public static OrcaPlane AgentPlane(
             float3 position,
@@ -47,15 +43,7 @@ namespace NavVolume.Runtime.Avoidance
 
         /// <summary>
         /// Builds the ORCA plane induced by a static or scripted obstacle.
-        /// The agent takes full responsibility for resolving the conflict, so the obstacle is never
-        /// expected to move out of the way.
         /// </summary>
-        /// <param name="relativePosition">
-        /// Vector from the agent to the obstacle point it could collide with.
-        /// </param>
-        /// <param name="combinedRadius">
-        /// Sum of the agent radius and the obstacle radius around that point.
-        /// </param>
         public static OrcaPlane StaticPlane(
             float3 relativePosition,
             float combinedRadius,
@@ -78,9 +66,7 @@ namespace NavVolume.Runtime.Avoidance
         }
 
         /// <summary>
-        /// Computes the smallest change u that takes the relative velocity out of the velocity
-        /// obstacle induced by a sphere of <paramref name="combinedRadius"/> centered at
-        /// <paramref name="relativePosition"/>, truncated at <paramref name="timeHorizon"/>.
+        /// Computes the smallest change u that takes the relative velocity out of the velocity obstacle induced by a sphere of <paramref name="combinedRadius"/> centered at <paramref name="relativePosition"/>, truncated at <paramref name="timeHorizon"/>.
         /// </summary>
         static float3 ComputeU(
             float3 relativePosition,
@@ -96,7 +82,6 @@ namespace NavVolume.Runtime.Avoidance
 
             if (distSq > combinedRadiusSq)
             {
-                // No current overlap: resolve against the truncated cone.
                 var invTimeHorizon = 1f / timeHorizon;
                 var w = relativeVelocity - invTimeHorizon * relativePosition;
                 var wLengthSq = math.lengthsq(w);
@@ -104,7 +89,6 @@ namespace NavVolume.Runtime.Avoidance
 
                 if (dotProduct < 0f && dotProduct * dotProduct > combinedRadiusSq * wLengthSq)
                 {
-                    // Closest exit is through the cut-off sphere cap.
                     var wLength = math.sqrt(wLengthSq);
                     var unitW = SafeDirection(w, wLength, relativePosition);
 
@@ -112,7 +96,6 @@ namespace NavVolume.Runtime.Avoidance
                     return (combinedRadius * invTimeHorizon - wLength) * unitW;
                 }
 
-                // Closest exit is through the cone side.
                 var a = distSq;
                 var b = math.dot(relativePosition, relativeVelocity);
                 var crossProduct = math.cross(relativePosition, relativeVelocity);
@@ -128,7 +111,6 @@ namespace NavVolume.Runtime.Avoidance
                 return (combinedRadius * t - wwLength) * unitWW;
             }
 
-            // Already overlapping: push the relative velocity out within a single time step.
             var invTimeStep = 1f / timeStep;
             var wc = relativeVelocity - invTimeStep * relativePosition;
             var wcLength = math.length(wc);
@@ -139,10 +121,7 @@ namespace NavVolume.Runtime.Avoidance
         }
 
         /// <summary>
-        /// Normalizes <paramref name="direction"/>, falling back to a deterministic perpendicular of
-        /// <paramref name="relativePosition"/> when it is degenerate (exact head-on conflicts).
-        /// The fallback is an odd function, so the two agents of a symmetric conflict dodge to
-        /// complementary sides instead of mirroring each other forever.
+        /// Normalizes <paramref name="direction"/>, falling back to a deterministic perpendicular of <paramref name="relativePosition"/> when it is degenerate.
         /// </summary>
         static float3 SafeDirection(float3 direction, float length, float3 relativePosition) =>
             length > _MIN_DIRECTION_LENGTH

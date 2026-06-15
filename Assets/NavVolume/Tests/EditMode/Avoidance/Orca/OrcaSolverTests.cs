@@ -63,7 +63,6 @@ namespace NavVolume.Tests.EditMode.Avoidance
         [Test]
         public void Solve_WithSinglePlane_ShouldProjectOntoConstraint()
         {
-            // Permitted half-space: x <= 1.
             var planes = new[]
             {
                 new OrcaPlane { Normal = new float3(-1f, 0f, 0f), Point = new float3(1f, 0f, 0f) },
@@ -79,7 +78,6 @@ namespace NavVolume.Tests.EditMode.Avoidance
         [Test]
         public void Solve_WhenInfeasible_ShouldDegradeToBoundedVelocity()
         {
-            // x >= 0.5 and x <= -0.5 is inconsistent
             var planes = new[]
             {
                 new OrcaPlane { Normal = new float3(1f, 0f, 0f), Point = new float3(0.5f, 0f, 0f) },
@@ -101,7 +99,6 @@ namespace NavVolume.Tests.EditMode.Avoidance
         [Test]
         public void Solve_WhenInfeasible_ShouldKeepStaticPlanesHard()
         {
-            // The static plane (x >= 0.5) conflicts with the agent plane (x <= -0.5).
             var planes = new[]
             {
                 new OrcaPlane { Normal = new float3(1f, 0f, 0f), Point = new float3(0.5f, 0f, 0f) },
@@ -120,7 +117,6 @@ namespace NavVolume.Tests.EditMode.Avoidance
         [Test]
         public void AgentPlane_WithHeadOnConflict_ShouldDodgeToComplementarySides()
         {
-            // Two identical agents flying straight at each other along X.
             var positionA = new float3(0f, 0f, 0f);
             var positionB = new float3(4f, 0f, 0f);
             var velocityA = new float3(1f, 0f, 0f);

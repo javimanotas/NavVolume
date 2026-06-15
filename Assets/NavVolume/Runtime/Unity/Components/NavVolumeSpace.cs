@@ -77,7 +77,7 @@ namespace NavVolume
 
         /// <summary>
         /// Timing breakdown of the most recent build.
-        /// </remarks>
+        /// </summary>
         internal BakeReport LastBuildReport { get; set; }
 
         internal BuildSettings CurrentSettings =>
@@ -169,7 +169,7 @@ namespace NavVolume
         }
 
         /// <summary>
-        /// Builds synchronously the NavVolume.
+        /// Builds the NavVolume synchronously.
         /// </summary>
         public void Build()
         {

@@ -44,8 +44,7 @@ namespace NavVolume
         #region Order invariance
 
         /// <summary>
-        /// I really don't know if Unity <see cref="Physics"/> will return the colliders always in the same order.
-        /// This function tries to sort them using always the same attributes.
+        /// Sorts the colliders by a stable footprint so the hash does not depend on the order <see cref="Physics"/> happens to return them in.
         /// </summary>
         static void EnsureOrderInvariance(Collider[] colliders)
         {

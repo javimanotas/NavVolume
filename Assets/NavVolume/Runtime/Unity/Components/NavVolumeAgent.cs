@@ -9,7 +9,7 @@ using UnityEngine;
 namespace NavVolume
 {
     /// <summary>
-    /// A simple flying agent that uses <see cref="Pathfinding.NavVolumeSpace"/> to navigate between a start and goal position in 3D space.
+    /// A simple flying agent that uses <see cref="NavVolumeSpace"/> to navigate between a start and goal position in 3D space.
     /// </summary>
     [AddComponentMenu("NavVolume/NavVolume Agent")]
     [DisallowMultipleComponent]
@@ -346,8 +346,7 @@ namespace NavVolume
         #region Avoidance state exchange
 
         /// <summary>
-        /// Velocity the agent would take if it were alone: straight toward the current waypoint,
-        /// slowing down on the final approach so it does not orbit the goal.
+        /// Velocity the agent would take if it were alone: straight toward the current waypoint, slowing down on the final approach so it does not orbit the goal.
         /// </summary>
         Vector3 ComputePreferredVelocity(float deltaTime)
         {

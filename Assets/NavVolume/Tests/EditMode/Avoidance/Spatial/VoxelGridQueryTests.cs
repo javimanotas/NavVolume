@@ -119,7 +119,6 @@ namespace NavVolume.Tests.EditMode.Avoidance
         [Test]
         public void GatherNearestOccupiedVoxels_ShouldReturnClosestPointAndDistance()
         {
-            // Voxel (2,0,0) spans [2..3]x[0..1]x[0..1], from (3.5, 0.5, 0.5) the closest point is the face at x = 3.
             var grid = BuildGrid(new int3(2, 0, 0));
             var position = new float3(3.5f, 0.5f, 0.5f);
 
@@ -160,7 +159,6 @@ namespace NavVolume.Tests.EditMode.Avoidance
                 2
             );
 
-            // Distances: voxel (2,0,0) -> 0.25, voxel (0,0,0) -> 6.25, voxel (0,2,0) -> 8.5.
             Assert.AreEqual(2, found);
             Assert.AreEqual(0.25f, distancesSq[0], _TOLERANCE);
             Assert.AreEqual(6.25f, distancesSq[1], _TOLERANCE);

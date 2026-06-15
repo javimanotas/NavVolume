@@ -9,9 +9,6 @@ namespace NavVolume.Runtime.Avoidance
     {
         public float3 Position;
 
-        /// <summary>
-        /// World rotation
-        /// </summary>
         public quaternion Rotation;
 
         /// <summary>

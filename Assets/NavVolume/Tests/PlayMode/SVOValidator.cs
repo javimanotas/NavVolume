@@ -44,7 +44,8 @@ namespace NavVolume.Tests.PlayMode
         /// Runs all validation passes over <paramref name="ctx"/> and returns if there are no errors.
         /// </summary>
         /// <remarks>
-        /// Each function checks a list of different aspects. Those aspects are documented in the summary and labeled on the code.
+        /// Each function checks a list of different aspects.
+        /// Those aspects are documented in the summary and labeled on the code.
         /// </remarks>
         public static bool IsValid(NavContext ctx, out List<string> errors)
         {

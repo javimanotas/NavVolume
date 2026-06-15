@@ -8,26 +8,23 @@ using UnityEngine;
 namespace NavVolume.Runtime.Avoidance
 {
     /// <summary>
-    /// Runtime-created singleton that runs ORCA local avoidance for every
-    /// <see cref="NavVolumeAgent"/> and <see cref="NavVolumeObstacle"/> in play mode.
+    /// Runtime-created singleton that runs ORCA local avoidance for every <see cref="NavVolumeAgent"/> and <see cref="NavVolumeObstacle"/> in play mode.
     /// </summary>
     /// <remarks>
-    /// Scheduling is pipelined to keep the main thread free: jobs are kicked off in
-    /// <c>LateUpdate</c> with the state agents submitted during their <c>Update</c>, run across
-    /// worker threads while the frame renders, and are completed at the start of the next frame
-    /// (this component updates before agents, see <see cref="_EXECUTION_ORDER"/>). Agents therefore
-    /// read velocities computed from one-frame-old state, the standard trade-off for asynchronous
-    /// avoidance. Steady state performs no managed allocations.
+    /// Avoidance jobs are scheduled in LateUpdate and completed at the start of the next frame, so they run on worker threads while the frame renders.
     /// </remarks>
     [DefaultExecutionOrder(_EXECUTION_ORDER)]
-    [AddComponentMenu("")]
     [DisallowMultipleComponent]
     internal sealed class AvoidanceSimulation : MonoBehaviour
     {
         const int _EXECUTION_ORDER = -100;
+
         const int _INITIAL_AGENT_CAPACITY = 64;
+
         const int _INITIAL_NODE_CAPACITY = 1024;
+
         const int _HASH_BATCH_SIZE = 64;
+
         const int _COMPUTE_BATCH_SIZE = 2;
 
         /// <summary>
@@ -141,8 +138,8 @@ namespace NavVolume.Runtime.Avoidance
         #region Agent registry
 
         /// <summary>
-        /// Registers an agent and returns its handle. Handles are dense indices: removing an agent
-        /// moves the last one into its slot, notifying the moved owner.
+        /// Registers an agent and returns its handle.
+        /// Handles are dense indices: removing an agent moves the last one into its slot, notifying the moved owner.
         /// </summary>
         public int RegisterAgent(NavVolumeAgent owner, in AvoidanceAgentState initialState)
         {
@@ -221,8 +218,7 @@ namespace NavVolume.Runtime.Avoidance
 
         /// <summary>
         /// Registers a space's baked occupancy for voxel constraints and returns its index.
-        /// Spaces are never unregistered, a destroyed space keeps its slot with an empty grid so
-        /// agent space indices stay valid.
+        /// Spaces are never unregistered; a destroyed space keeps its slot with an empty grid so agent space indices stay valid.
         /// </summary>
         public int RegisterSpace(NavVolumeSpace space)
         {
@@ -359,9 +355,8 @@ namespace NavVolume.Runtime.Avoidance
         }
 
         /// <summary>
-        /// Blocks until the in-flight step finishes. In steady state the jobs already ran during
-        /// rendering, so the early-frame call returns immediately, the guards on every accessor
-        /// only pay this cost when something touches the simulation between schedule and frame end.
+        /// Blocks until the in-flight step finishes.
+        /// Usually a no-op: the jobs already ran during rendering, so only callers that touch the simulation mid-frame pay any wait.
         /// </summary>
         void CompleteScheduledJobs()
         {

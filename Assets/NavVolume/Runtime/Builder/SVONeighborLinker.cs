@@ -11,16 +11,10 @@ namespace NavVolume.Runtime.Builder
         /// <summary>
         /// Fills the links from the upper to lower layers.
         /// </summary>
-        /// <remarks>
-        /// Same-layer neighbor lookups dominate this pass (6 binary searches per node). To keep them
-        /// cache-friendly we search a flat <c>uint[]</c> of Morton codes per layer instead of the
-        /// <see cref="SVONode"/> list, which would copy the whole ~40-byte struct at every search step.
-        /// </remarks>
         public static void FillNeighborLinks(SVO svo, BuildSettings settings)
         {
             var layerCount = svo.Layers.Length;
 
-            // Flat, sorted Morton codes per layer for copy-free binary search.
             var mortonByLayer = new uint[layerCount][];
             for (var layer = 0; layer < layerCount; layer++)
             {
@@ -46,8 +40,6 @@ namespace NavVolume.Runtime.Builder
                 {
                     var node = nodes[nodeIdx];
 
-                    // Parent's neighbors are inherited on any side without a same-layer neighbor.
-                    // Fetch them once per node rather than re-copying the parent for all six sides.
                     var hasParent = node.Parent.IsValid;
                     var parentNeighbors = hasParent ? svo.GetNode(node.Parent).Neighbors : default;
 

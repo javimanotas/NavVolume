@@ -8,18 +8,20 @@ namespace NavVolume.Runtime.Avoidance
 {
     /// <summary>
     /// Computes one ORCA step for every agent in parallel.
-    /// <para>
-    /// For each agent the job builds the constraint planes in a fixed order (nearest baked voxels,
-    /// then nearest obstacles, then nearest agents).
-    /// Then solves the linear program for the velocity closest to the preferred one.
-    /// </para>
     /// </summary>
+    /// <remarks>
+    /// For each agent the job builds the constraint planes in a fixed order (nearest baked voxels, then nearest obstacles, then nearest agents).
+    /// Then solves the linear program for the velocity closest to the preferred one.
+    /// </remarks>
     [BurstCompile]
     internal struct AvoidanceJob : IJobParallelFor
     {
         public const int MAX_NEIGHBORS = 16;
+
         public const int MAX_OBSTACLE_PLANES = 8;
+
         public const int MAX_VOXEL_PLANES = 8;
+
         public const int MAX_PLANES = MAX_NEIGHBORS + MAX_OBSTACLE_PLANES + MAX_VOXEL_PLANES;
 
         /// <summary>
@@ -199,9 +201,7 @@ namespace NavVolume.Runtime.Avoidance
         }
 
         /// <summary>
-        /// Vector from the agent to the point of the box it could collide with: the closest surface
-        /// point when outside, or a virtual point placed so the ORCA collision branch pushes the
-        /// agent out through the nearest face when inside.
+        /// Vector from the agent to the point of the box it could collide with: the closest surface point when outside, or a virtual point placed so the ORCA collision branch pushes the agent out through the nearest face when inside.
         /// </summary>
         static float3 BoxRelativePosition(
             in AvoidanceAgentState agent,
