@@ -20,9 +20,8 @@ namespace NavVolume.Runtime.Builder
         }
 
         /// <summary>
-        /// Builds the SVO, recording per-phase timings into <paramref name="profiler"/> and, when
-        /// supplied, reporting coarse progress through <paramref name="progress"/>. The host's
-        /// reporter may throw at a phase boundary to cancel the bake.
+        /// Builds the SVO, recording per-phase timings into <paramref name="profiler"/> and, when supplied, reporting coarse progress through <paramref name="progress"/>.
+        /// The host's reporter may throw at a phase boundary to cancel the bake.
         /// </summary>
         internal NavContext Build(BakeProfiler profiler, BakeProgress progress = null)
         {
@@ -150,13 +149,10 @@ namespace NavVolume.Runtime.Builder
         }
 
         /// <summary>
-        /// Ensures every parent in <paramref name="parentCodes"/> has all 8 of its children
-        /// present in <c>Layer[childLayer]</c>, in Morton-sorted order.
+        /// Ensures every parent in <paramref name="parentCodes"/> has all 8 of its children present in <c>Layer[childLayer]</c>, in Morton-sorted order.
         /// </summary>
         /// <remarks>
-        /// Instead of appending missing padding nodes and re-sorting the whole layer (an extra
-        /// O(N log N) sort every time a sibling is missing), this generates the complete
-        /// expected child set, sorts it once, and rebuilds the layer + lookup in a single pass.
+        /// Instead of appending missing padding nodes and re-sorting the whole layer (an extra O(N log N) sort every time a sibling is missing), this generates the complete expected child set, sorts it once, and rebuilds the layer + lookup in a single pass.
         /// Short-circuits cheaply when nothing is missing.
         /// </remarks>
         void AllocateMissingSiblings(SVO svo, int childLayer, List<MortonCode> parentCodes)

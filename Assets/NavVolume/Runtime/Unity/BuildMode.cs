@@ -6,12 +6,12 @@
     internal enum BuildMode
     {
         /// <summary>
-        /// The SVO will be build in the Editor.
+        /// The SVO will be built in the Editor.
         /// </summary>
         Baked,
 
         /// <summary>
-        /// The SVO will be build when game starts.
+        /// The SVO will be built when the game starts.
         /// </summary>
         /// <remarks>
         /// Awake is used instead of Start so other components can query the SVO on Start.
@@ -19,7 +19,7 @@
         BuildOnAwake,
 
         /// <summary>
-        /// The SVO will be build only when calling
+        /// The SVO will be built only when explicitly requested in code.
         /// </summary>
         Manual,
     }

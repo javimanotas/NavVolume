@@ -12,7 +12,6 @@ namespace NavVolume.Runtime.Avoidance
     {
         /// <summary>
         /// Returns true when the voxel at the given finest-grid coordinates is occupied.
-        /// Coordinates outside the grid count as free.
         /// </summary>
         public static bool IsVoxelOccupied(
             in VoxelGrid grid,
@@ -133,7 +132,6 @@ namespace NavVolume.Runtime.Avoidance
 
                             if (distSq < 1e-12f)
                             {
-                                // Inside the voxel
                                 closest = (voxelMin + voxelMax) * 0.5f;
                                 distSq = 0f;
                             }

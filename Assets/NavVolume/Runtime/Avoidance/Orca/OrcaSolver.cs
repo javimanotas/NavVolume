@@ -7,12 +7,7 @@ namespace NavVolume.Runtime.Avoidance
     /// Solver for the ORCA linear program in 3D velocity space.
     /// </summary>
     /// <remarks>
-    /// Port of the linear programming routines of the RVO2-3D library (Apache 2.0): the result is
-    /// the velocity closest to the preferred one inside the convex region bounded by the ORCA
-    /// planes and the max-speed sphere. When that region is empty the solver falls back to the
-    /// least-violating velocity while never relaxing the leading block of
-    /// <c>staticPlaneCount</c> planes, which keeps obstacle and world constraints hard.
-    /// All methods are Burst-compatible and allocation free.
+    /// Port of the linear programming routines of the RVO2-3D library (Apache 2.0).
     /// </remarks>
     internal static class OrcaSolver
     {
@@ -22,12 +17,10 @@ namespace NavVolume.Runtime.Avoidance
         /// Solves the ORCA program for one agent.
         /// </summary>
         /// <param name="planes">
-        /// Constraint planes; the first <paramref name="staticPlaneCount"/> entries must be the
-        /// obstacle planes, followed by the agent-agent planes.
+        /// Constraint planes, the first <paramref name="staticPlaneCount"/> entries must be the obstacle planes, followed by the agent-agent planes.
         /// </param>
         /// <param name="scratch">
-        /// Caller-provided buffer of at least <paramref name="planeCount"/> entries used by the
-        /// infeasible fallback.
+        /// Caller-provided buffer of at least <paramref name="planeCount"/> entries used by the infeasible fallback.
         /// </param>
         public static float3 Solve(
             ReadOnlySpan<OrcaPlane> planes,
@@ -65,12 +58,10 @@ namespace NavVolume.Runtime.Avoidance
         }
 
         /// <summary>
-        /// Seeks the optimal velocity satisfying every plane, fixing violated constraints one at a
-        /// time (linearProgram3 in RVO2-3D).
+        /// Seeks the optimal velocity satisfying every plane, fixing violated constraints one at a time (linearProgram3 in RVO2-3D).
         /// </summary>
         /// <returns>
-        /// <paramref name="planeCount"/> on success, or the index of the first plane for which no
-        /// feasible velocity exists.
+        /// <paramref name="planeCount"/> on success, or the index of the first plane for which no feasible velocity exists.
         /// </returns>
         static int SolveFeasible(
             ReadOnlySpan<OrcaPlane> planes,
@@ -83,7 +74,6 @@ namespace NavVolume.Runtime.Avoidance
         {
             if (optimizeDirection)
             {
-                // optVelocity is of unit length in this case.
                 result = optVelocity * maxSpeed;
             }
             else if (math.lengthsq(optVelocity) > maxSpeed * maxSpeed)
@@ -122,8 +112,7 @@ namespace NavVolume.Runtime.Avoidance
         }
 
         /// <summary>
-        /// Optimizes within the disc that plane <paramref name="planeIndex"/> cuts out of the
-        /// max-speed sphere, subject to all previous planes (linearProgram2 in RVO2-3D).
+        /// Optimizes within the disc that plane <paramref name="planeIndex"/> cuts out of the max-speed sphere, subject to all previous planes.
         /// </summary>
         static bool SolveOnPlane(
             ReadOnlySpan<OrcaPlane> planes,
@@ -141,7 +130,6 @@ namespace NavVolume.Runtime.Avoidance
 
             if (planeDistSq > radiusSq)
             {
-                // The max speed sphere fully invalidates this plane.
                 return false;
             }
 
@@ -150,7 +138,6 @@ namespace NavVolume.Runtime.Avoidance
 
             if (optimizeDirection)
             {
-                // Project direction optVelocity on the plane.
                 var planeOptVelocity =
                     optVelocity - math.dot(optVelocity, plane.Normal) * plane.Normal;
                 var planeOptVelocityLengthSq = math.lengthsq(planeOptVelocity);
@@ -164,7 +151,6 @@ namespace NavVolume.Runtime.Avoidance
             }
             else
             {
-                // Project point optVelocity on the plane, then clamp to the disc.
                 result =
                     optVelocity + math.dot(plane.Point - optVelocity, plane.Normal) * plane.Normal;
 
@@ -181,12 +167,10 @@ namespace NavVolume.Runtime.Avoidance
             {
                 if (math.dot(planes[i].Normal, planes[i].Point - result) > 0f)
                 {
-                    // Optimize along the intersection line of plane i and the current plane.
                     var crossProduct = math.cross(planes[i].Normal, plane.Normal);
 
                     if (math.lengthsq(crossProduct) <= _EPSILON)
                     {
-                        // The planes are (almost) parallel and plane i fully invalidates this one.
                         return false;
                     }
 
@@ -221,8 +205,7 @@ namespace NavVolume.Runtime.Avoidance
         }
 
         /// <summary>
-        /// Optimizes along the segment that the max-speed sphere cuts out of a line, subject to the
-        /// first <paramref name="planeCount"/> planes (linearProgram1 in RVO2-3D).
+        /// Optimizes along the segment that the max-speed sphere cuts out of a line, subject to the first <paramref name="planeCount"/> planes (linearProgram1 in RVO2-3D).
         /// </summary>
         static bool SolveOnLine(
             ReadOnlySpan<OrcaPlane> planes,
@@ -241,7 +224,6 @@ namespace NavVolume.Runtime.Avoidance
 
             if (discriminant < 0f)
             {
-                // The max speed sphere fully invalidates the line.
                 return false;
             }
 
@@ -256,7 +238,6 @@ namespace NavVolume.Runtime.Avoidance
 
                 if (denominator * denominator <= _EPSILON)
                 {
-                    // The line is (almost) parallel to plane i.
                     if (numerator > 0f)
                     {
                         return false;
@@ -299,10 +280,7 @@ namespace NavVolume.Runtime.Avoidance
         }
 
         /// <summary>
-        /// Finds the velocity that least violates the relaxable planes when the program is
-        /// infeasible (linearProgram4 in RVO2-3D). The first <paramref name="staticPlaneCount"/>
-        /// planes are copied verbatim into every sub-program, so obstacle constraints stay hard
-        /// while agent-agent planes are progressively relaxed.
+        /// Finds the velocity that least violates the relaxable planes when the program is infeasible (linearProgram4 in RVO2-3D).
         /// </summary>
         static void SolveInfeasible(
             ReadOnlySpan<OrcaPlane> planes,
@@ -340,11 +318,9 @@ namespace NavVolume.Runtime.Avoidance
                     {
                         if (math.dot(planes[i].Normal, planes[j].Normal) > 0f)
                         {
-                            // Planes i and j point in the same direction: j is redundant.
                             continue;
                         }
 
-                        // Planes i and j point in opposite directions.
                         plane.Point = 0.5f * (planes[i].Point + planes[j].Point);
                     }
                     else
@@ -375,9 +351,7 @@ namespace NavVolume.Runtime.Avoidance
                     ) < scratchCount
                 )
                 {
-                    // This should in principle not happen: the result is by definition already in
-                    // the feasible region of this program. If it fails due to floating point
-                    // error, keep the current result.
+                    // This should never happen
                     result = previousResult;
                 }
 

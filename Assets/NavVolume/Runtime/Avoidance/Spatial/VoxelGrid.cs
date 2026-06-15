@@ -4,7 +4,6 @@ namespace NavVolume.Runtime.Avoidance
 {
     /// <summary>
     /// Burst-readable view over one <see cref="NavVolumeSpace"/>'s finest-resolution occupancy.
-    /// References a slice of the shared pools of sorted layer-0 morton codes and leaf bitmasks owned by <see cref="AvoidanceSimulation"/>.
     /// </summary>
     internal struct VoxelGrid
     {

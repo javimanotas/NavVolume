@@ -6,6 +6,7 @@ namespace NavVolume.Runtime
     internal readonly struct TimedPhase
     {
         public readonly string Label;
+
         public readonly double Milliseconds;
 
         public TimedPhase(string label, double milliseconds)

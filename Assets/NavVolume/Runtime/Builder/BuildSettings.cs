@@ -38,15 +38,17 @@ namespace NavVolume.Runtime.Builder
         public LayerMask CollisionMask { get; private set; }
 
         /// <summary>
-        /// Size of a single voxel (meters). This is derived from the root size and number of layers.
+        /// Size of a single voxel (meters).
+        /// This is derived from the root size and number of layers.
         /// </summary>
         [field: SerializeField]
         public float VoxelSize { get; private set; }
 
         /// <summary>
         /// Physical radius of the agent (meters).
+        /// </summary>
         /// <remarks>
-        /// Practical upper bound: keep AgentRadius <= VoxelSize / 2 to avoid fully blocking single-voxel-wide corridors.
+        /// Practical upper bound: keep AgentRadius at most VoxelSize / 2 to avoid fully blocking single-voxel-wide corridors.
         /// </remarks>
         [field: SerializeField]
         public float AgentRadius { get; private set; }

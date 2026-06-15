@@ -21,9 +21,6 @@ namespace NavVolume.Runtime.Builder
         /// </summary>
         const float _OVERLAP_BOX_SHRINK = 1e-3f;
 
-        /// <summary>
-        /// Inner-batch size for the IJobParallelFor passes that build commands and reduce hits.
-        /// </summary>
         const int _PARALLEL_FOR_BATCH = 64;
 
         /// <summary>
@@ -35,10 +32,7 @@ namespace NavVolume.Runtime.Builder
         /// Sweeps the navigation volume with layer 1 resolution while checking for geometry.
         /// </summary>
         /// <remarks>
-        /// Uses a coarse-to-fine hierarchical traversal: starts at a layer just below the root
-        /// (typically 8 candidate cells) and only subdivides candidates that contain geometry,
-        /// skipping entire empty subtrees. For sparse scenes (the common case for nav volumes)
-        /// this is orders of magnitude faster than a dense L1 sweep.
+        /// Uses a coarse-to-fine hierarchical traversal: starts at a layer just below the root (typically 8 candidate cells) and only subdivides candidates that contain geometry, skipping entire empty subtrees.
         /// </remarks>
         /// <returns>
         /// A sorted list of morton codes for every L1 cell that contains geometry.
@@ -52,9 +46,6 @@ namespace NavVolume.Runtime.Builder
                 hitBackfaces: false
             );
 
-            // Start at the layer just below root (8 seed cells = a 2x2x2 grid).
-            // For very shallow trees (NumLayers < 3) we fall back to seeding at layer 1
-            // directly, which is equivalent to the old dense sweep.
             var topLayer = Mathf.Max(1, settings.NumLayers - 2);
 
             var candidates = BuildSeedCandidates(settings, topLayer);
@@ -69,7 +60,6 @@ namespace NavVolume.Runtime.Builder
                     return candidates;
                 }
 
-                // Subdivide every occupied cell into its 8 children at the next finer layer.
                 var subdivided = new List<MortonCode>(candidates.Count * 8);
                 foreach (var occ in candidates)
                 {
@@ -81,8 +71,7 @@ namespace NavVolume.Runtime.Builder
                 candidates = subdivided;
             }
 
-            // Unreachable because the loop returns when currentLayer == 1, but keeps the
-            // compiler happy and guards against future refactors of the loop bounds.
+            // Unreachable
             candidates.Sort();
             return candidates;
         }
@@ -91,11 +80,9 @@ namespace NavVolume.Runtime.Builder
         /// Rasterizes the geometry for a batch of leaf nodes in parallel.
         /// </summary>
         /// <remarks>
-        /// Runs in two stages. A coarse pass fires a single <see cref="OverlapBoxCommand"/> covering
-        /// each whole L0 node and discards the ones that hit nothing. Only the survivors get the
-        /// expensive fine pass of 64 voxel queries each. Because the lower-layer allocation pads
-        /// every occupied parent with all eight children, most nodes are empty padding, so this cull
-        /// removes the bulk of the physics queries.
+        /// Runs in two stages.
+        /// A coarse pass fires a single <see cref="OverlapBoxCommand"/> covering each whole L0 node and discards the ones that hit nothing.
+        /// Only the survivors get the expensive fine pass of 64 voxel queries each.
         /// </remarks>
         public static SVOLeaf[] RasterizeLeaves(BuildSettings settings, Vector3[] leafCorners)
         {
@@ -244,8 +231,7 @@ namespace NavVolume.Runtime.Builder
         }
 
         /// <summary>
-        /// Builds the seed set for the hierarchical sweep: every cell of the regular grid
-        /// at <paramref name="topLayer"/>.
+        /// Builds the seed set for the hierarchical sweep: every cell of the regular grid at <paramref name="topLayer"/>.
         /// </summary>
         static List<MortonCode> BuildSeedCandidates(BuildSettings settings, int topLayer)
         {
@@ -268,8 +254,7 @@ namespace NavVolume.Runtime.Builder
         }
 
         /// <summary>
-        /// Runs a batched OverlapBox over <paramref name="candidates"/> at the given layer's
-        /// cell size and returns the subset that hit geometry.
+        /// Runs a batched OverlapBox over <paramref name="candidates"/> at the given layer's cell size and returns the subset that hit geometry.
         /// </summary>
         static List<MortonCode> OverlapAtLayer(
             BuildSettings settings,
