@@ -4,21 +4,6 @@ using System.Diagnostics;
 namespace NavVolume.Runtime
 {
     /// <summary>
-    /// A single timed step (phase) recorded by a <see cref="StepProfiler"/>.
-    /// </summary>
-    internal readonly struct TimedPhase
-    {
-        public readonly string Label;
-        public readonly double Milliseconds;
-
-        public TimedPhase(string label, double milliseconds)
-        {
-            Label = label;
-            Milliseconds = milliseconds;
-        }
-    }
-
-    /// <summary>
     /// Lightweight step timer with a built-in stopwatch. Call <see cref="Start"/> once, then
     /// <see cref="Lap"/> after each step: every lap records the time elapsed since the previous lap
     /// as a named <see cref="TimedPhase"/>. Shared by the bake (via <c>BakeProfiler</c>) and the
