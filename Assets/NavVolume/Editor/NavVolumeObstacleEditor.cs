@@ -4,9 +4,11 @@ using UnityEngine;
 namespace NavVolume.Editor
 {
     /// <summary>
-    /// Inspector and gizmos for <see cref="NavVolumeObstacle"/>.
-    /// Shows only the size field relevant to the selected shape.
+    /// Custom inspector and scene gizmos for <see cref="NavVolumeObstacle"/>.
     /// </summary>
+    /// <remarks>
+    /// Shows only the size field relevant to the selected shape.
+    /// </remarks>
     [CustomEditor(typeof(NavVolumeObstacle))]
     [CanEditMultipleObjects]
     public class NavVolumeObstacleEditor : UnityEditor.Editor

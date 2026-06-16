@@ -7,14 +7,8 @@ using UnityEngine;
 namespace NavVolume.Editor
 {
     /// <summary>
-    /// Inline drawer for a build's timing breakdown: a stacked timeline bar plus a ranked legend.
-    /// Rendered inside the NavVolume "Stats" foldout so timings sit next to the structural stats, for
-    /// every build mode (baked, build-on-awake, manual).
+    /// Inline drawer for a build's timing breakdown.
     /// </summary>
-    /// <remarks>
-    /// The report is transient (held in memory only, cleared on domain reload); it is never written to
-    /// the asset or the component, since timings are per-run and machine-dependent.
-    /// </remarks>
     internal static class BakeStatsView
     {
         static readonly Color s_BarBg = new(0.16f, 0.16f, 0.16f, 1f);
@@ -22,9 +16,7 @@ namespace NavVolume.Editor
         static readonly Color s_RowHighlight = new(1f, 1f, 1f, 0.06f);
 
         /// <summary>
-        /// Draws the timing breakdown for <paramref name="report"/>. Hover is recomputed from the
-        /// pointer each repaint, so the matching legend row highlights together with its bar segment;
-        /// the color-coded legend swatches keep the bar readable even when the inspector is static.
+        /// Draws the timing breakdown for <paramref name="report"/>.
         /// </summary>
         public static void Draw(BakeReport report)
         {
@@ -33,7 +25,6 @@ namespace NavVolume.Editor
                 return;
             }
 
-            // Phases ranked by cost (descending) drive both the bar's segment order and the legend.
             var ordered = new TimedPhase[report.Phases.Count];
             for (var i = 0; i < ordered.Length; i++)
             {
@@ -55,8 +46,6 @@ namespace NavVolume.Editor
         {
             EditorGuiHelpers.DrawHeadlineRow("Total", $"{report.TotalMs:F1} ms");
 
-            // The build/save split only means something for an editor bake, which appends the
-            // serialize + save phases. Runtime builds have no save phase, so skip the row there.
             if (report.SaveMs > 0)
             {
                 EditorGuiHelpers.DrawHeadlineRow(
@@ -66,7 +55,9 @@ namespace NavVolume.Editor
             }
         }
 
-        /// <summary>Draws the stacked bar and returns the hovered segment index, or -1.</summary>
+        /// <summary>
+        /// Draws the stacked bar and returns the hovered segment index, or -1.
+        /// </summary>
         static int DrawTimelineBar(BakeReport report, TimedPhase[] ordered)
         {
             const float _BAR_HEIGHT = 26f;
@@ -95,7 +86,6 @@ namespace NavVolume.Editor
                 var segment = new Rect(x, rect.y, width, rect.height);
                 EditorGUI.DrawRect(segment, PhaseColor(i, ordered.Length));
 
-                // Thin separator on the right edge to keep adjacent segments legible.
                 if (width > 1.5f)
                 {
                     EditorGUI.DrawRect(
@@ -107,7 +97,6 @@ namespace NavVolume.Editor
                 if (segment.Contains(mouse))
                 {
                     hovered = i;
-                    // White top accent to mark the hovered segment.
                     EditorGUI.DrawRect(
                         new Rect(segment.x, segment.y, segment.width, 2f),
                         Color.white
@@ -187,7 +176,6 @@ namespace NavVolume.Editor
         static Color PhaseColor(int orderedIndex, int count)
         {
             var n = Mathf.Max(1, count);
-            // Evenly spaced hues give distinct yet cohesive colors for any phase count.
             return Color.HSVToRGB((float)orderedIndex / n, 0.55f, 0.92f);
         }
     }

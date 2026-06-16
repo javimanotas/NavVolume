@@ -15,3 +15,7 @@ MonoBehaviour:
   <Radius>k__BackingField: 1
   <CostMode>k__BackingField: 0
   <HeuristicWeight>k__BackingField: 1.92
+  <AvoidanceNeighborRange>k__BackingField: 10
+  <AvoidanceMaxNeighbors>k__BackingField: 10
+  <AvoidanceTimeHorizonAgents>k__BackingField: 2
+  <AvoidanceTimeHorizonObstacles>k__BackingField: 1

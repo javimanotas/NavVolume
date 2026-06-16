@@ -85,5 +85,29 @@ namespace NavVolume.Editor
             var fill = new Rect(rect.x, rect.y, rect.width * t, rect.height);
             EditorGUI.DrawRect(fill, HeatmapColor(t));
         }
+
+        public const string DocumentationUrl = "https://github.com/javimanotas/NavVolume";
+
+        /// <summary>
+        /// Draws a right-aligned help button that opens the NavVolume documentation.
+        /// </summary>
+        public static void DrawHelpRow(Object target)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.FlexibleSpace();
+
+                var niceName = ObjectNames.NicifyVariableName(target.GetType().Name);
+                var content = new GUIContent(EditorGUIUtility.IconContent("_Help"))
+                {
+                    tooltip = $"Open the {niceName} documentation.",
+                };
+
+                if (GUILayout.Button(content, EditorStyles.iconButton))
+                {
+                    Application.OpenURL(DocumentationUrl);
+                }
+            }
+        }
     }
 }
