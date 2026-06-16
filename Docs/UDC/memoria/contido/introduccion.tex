@@ -1,7 +1,7 @@
 \chapter{Introducción}
 
 \lettrine{E}{l} desarrollo de entornos virtuales contemporáneos, como videojuegos y simulaciones interactivas, exige dotar a sus agentes de la inteligencia suficiente para interactuar coherentemente con su entorno.
-El comportamiento de estas entidades resulta clave para garantizar la credibilidad, funcionalidad y realismo del entorno virtual, especialmente en escenarios complejos y dinámicos.
+El comportamiento de estas entidades es clave para garantizar la credibilidad, funcionalidad y realismo del entorno virtual, especialmente en escenarios complejos y dinámicos.
 A pesar de que se trate de un problema que lleva décadas siendo explorado en el campo de la inteligencia artificial~\cite{russell1995modern}, a día de hoy, dista de ser trivial cuando se persigue un comportamiento robusto y eficiente.
 
 Dentro de este ámbito, un requisito fundamental es la \textbf{navegación autónoma}.
@@ -16,7 +16,7 @@ Ejemplos representativos de ello son el Navigation System en Unreal Engine~\cite
 
 La gran mayoría de estas herramientas se fundamentan en la biblioteca de código abierto Recast Navigation~\cite{RecastNavigation}.
 Este sistema permite generar una \textbf{malla de navegación}, que recibe el nombre de NavMesh, y que representa una \textbf{aproximación 2.5D} del entorno transitable.
-Aunque el escenario se modela en tres dimensiones, el cálculo de rutas se proyecta sobre superficies esencialmente bidimensionales que definen las zonas donde los agentes pueden apoyarse o caminar, tal y como puede apreciarse en la Figura~\ref{fig:navmesh25d}.
+Aunque el escenario se modela en tres dimensiones, el cálculo de rutas se proyecta sobre superficies bidimensionales que definen las zonas donde los agentes pueden apoyarse o caminar, tal y como puede apreciarse en la Figura~\ref{fig:navmesh25d}.
 A partir de esta geometría, se construye un grafo sobre el cual se aplican algoritmos de búsqueda heurística, siendo el algoritmo \gls{astar} el caso estándar de aplicación~\cite{astar}.
 
 \begin{figure}[htp]
@@ -30,7 +30,7 @@ A partir de esta geometría, se construye un grafo sobre el cual se aplican algo
 
 \section{Motivación}
 
-La necesidad de crear una herramienta que dote a agentes voladores de la capacidad de moverse a través de un espacio plenamente tridimensional surge del limitado soporte que ofrecen las tecnologías dominantes en el desarrollo de videojuegos actual.
+La necesidad de crear una herramienta que dote a agentes voladores de la capacidad de moverse a través de un espacio tridimensional surge del limitado soporte que ofrecen las tecnologías dominantes en el desarrollo de videojuegos actual.
 Las soluciones tradicionales basadas en mallas 2.5D resultan ideales para personajes terrestres, ya que presuponen que el agente está anclado al suelo y que su movimiento puede reducirse a un plano horizontal cuya altura es una propiedad derivada del terreno.
 Sin embargo, este supuesto no se cumple para entidades con capacidad de vuelo, tales como drones, naves espaciales, enjambres de insectos o criaturas submarinas como peces, las cuales requieren operar con \textbf{seis grados de libertad}: tres traslaciones a lo largo de los ejes $X$, $Y$ y $Z$ y tres rotaciones independientes alrededor de esos mismos ejes, conocidas como \textit{pitch}, \textit{yaw} y \textit{roll}, tal y como se ilustra en la Figura~\ref{fig:grados_libertad}.
 Ante la posibilidad de que los agentes puedan modificar su trayectoria en cualquier dirección y altura, un plano transitable resulta insuficiente y se hace imprescindible un \textbf{volumen de navegación}.
@@ -45,7 +45,7 @@ Este debe representar la \textbf{totalidad del espacio libre} del entorno y no s
   \label{fig:grados_libertad}
 \end{figure}
 
-Por consiguiente, el salto hacia una navegación puramente volumétrica plantea un desafío técnico de considerable magnitud.
+Por consiguiente, el salto hacia una navegación puramente volumétrica plantea un desafío técnico complejo.
 Al añadir la altura como una dimensión libre, la gran cantidad de espacio a analizar dispara el coste computacional tanto en tiempo como en memoria~\cite{lavalleplanning}.
 Si esta complejidad no se gestiona mediante estructuras de datos espaciales altamente especializadas como \glspl{octree}~\cite{octree} o representaciones jerárquicas equivalentes, el cálculo de trayectorias provocará un consumo crítico de memoria y una degradación severa en la tasa de \acrfull{fps}, comprometiendo la viabilidad comercial del producto.
 
@@ -55,8 +55,8 @@ Surge, por lo tanto, la necesidad evidente de diseñar un sistema \textbf{genér
 
 \section{Objetivos}
 
-El objetivo general de este Trabajo de Fin de Grado consiste en el diseño, implementación y validación en el motor Unity de un sistema de navegación volumétrica eficiente y optimizado.
-El resultado final tendrá un enfoque de producto, materializándose en un paquete de herramientas modular, de código abierto, listo para su integración inmediata en proyectos y entornos de producción reales.
+El objetivo general de este Trabajo de Fin de Grado consiste en el \textbf{diseño, implementación y validación en el motor Unity de un sistema de navegación volumétrica eficiente y optimizado}.
+El resultado final tendrá un enfoque de producto: un paquete de herramientas modular, de código abierto, listo para su integración inmediata en proyectos y entornos de producción reales.
 
 A partir de este objetivo general, se establecen los siguientes objetivos específicos:
 

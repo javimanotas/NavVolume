@@ -16,7 +16,7 @@ Si se analizan el conjunto de herramientas que son agnósticas al motor, se obse
 Esta herramienta fue concebida originalmente como un \textit{plugin} comercial exclusivo para Unreal Engine~\cite{unreal}.
 Sin embargo, su éxito motivó su posterior extensión para operar de forma desacoplada a este.
 
-El principal atractivo de Mercuna radica en su capacidad para unificar, bajo un mismo ecosistema, prácticamente la totalidad de los casos de uso que engloba la navegación.
+El principal atractivo de Mercuna radica en su capacidad para unificar, bajo un mismo ecosistema, casi todos los casos de uso que engloba la navegación.
 Entre sus características más relevantes se encuentran:
 
 \begin{itemize}
@@ -43,27 +43,27 @@ Mercuna dispone de distintas licencias que dependerán del subconjunto de caract
 
 Por el contrario, las herramientas especializadas en un motor gráfico concreto, operan en un paradigma de desarrollo diferente.
 Al prescindir de una arquitectura genérica y agnóstica que asegure su interoperabilidad multiplataforma, estas soluciones pueden aprovechar las rutinas nativas del motor para optimizar el rendimiento computacional, ofreciendo asimismo una integración total con el editor.
-Esto se traduce en herramientas significativamente más intuitivas para el desarrollador final.
+Esto se traduce en herramientas mucho más intuitivas para el desarrollador final.
 
-En este ámbito predomina el ecosistema de Unity, fuertemente respaldado por su tienda oficial de recursos: la Asset Store~\cite{assetstore}.
+En este ámbito predomina el ecosistema de Unity, respaldado por su tienda oficial de recursos: la Asset Store~\cite{assetstore}.
 Esta plataforma permite comercializar tanto herramientas de desarrollo como recursos artísticos (modelos tridimensionales, texturas o composiciones musicales, entre otros) que aceleran los flujos de trabajo al evitar la necesidad de diseñar dichos componentes desde el principio.
 Bajo un modelo de reparto de ingresos, Unity proporciona visibilidad de los productos creados.
 
-Como consecuencia de la vasta magnitud de este ecosistema, prácticamente la totalidad de las herramientas de terceros se desarrollan de manera exclusiva para este motor.
+Como consecuencia de la vasta magnitud de este ecosistema, casi todas las herramientas de terceros se desarrollan de manera exclusiva para este motor.
 Mientras que en entornos como Unreal Engine las soluciones complejas suelen comercializarse con costosas licencias comerciales, la Asset Store de Unity proporciona productos más asequibles para estudios independientes o de menor presupuesto.
 Entre estas destacan:
 
 \subsubsection{Nav3D (Softbrix Studio)}
 
-Desarrollada por Softbrix Studio, Nav3D es la opción que ostenta mejores valoraciones en la tienda de Unity (Asset Store)~\cite{Nav3D_SoftbrixAssetStore}.
+Desarrollada por Softbrix Studio, Nav3D es la opción mejor valorada en la tienda de Unity (Asset Store)~\cite{Nav3D_SoftbrixAssetStore}.
 Su mayor virtud reside en que no se limita al cálculo de rutas estáticas, sino que integra un sistema de evasión local.
 Esto garantiza que los \acrshort{npc}, en escenarios multiagente, coordinen sus trayectorias y las reajusten en tiempo real para evitar colisionar entre ellos~\cite{Nav3DPro}.
 
 \subsubsection{Nav3D (m6io)}
 
-Creada por el desarrollador independiente m6io, esta solución se comercializa con un enfoque puramente técnico.
+Creada por el desarrollador independiente m6io, esta solución se comercializa con un enfoque estrictamente técnico.
 A pesar de cubrir la mayoría de casos de uso, carece por completo de herramientas visuales e interfaces de configuración del editor.
-En consecuencia, presenta una curva de aprendizaje notablemente más pronunciada, exigiendo al usuario un nivel avanzado de programación en el lenguaje C\#~\cite{Nav3D_FlyingAIAssetStore}.
+En consecuencia, presenta una curva de aprendizaje mucho más pronunciada, exigiendo al usuario un nivel avanzado de programación en el lenguaje C\#~\cite{Nav3D_FlyingAIAssetStore}.
 
 \subsubsection{HyperNav}
 
@@ -108,13 +108,13 @@ En base a las soluciones analizadas, la elección de Unity como entorno para de 
 El ecosistema de la Asset Store garantiza no solo que la solución responda a una demanda real, sino que también asegura un canal con la visibilidad suficiente para su correcta difusión.
 
 A este factor se suma una ventaja técnica fundamental: la disponibilidad de herramientas orientadas al alto rendimiento integradas de forma nativa en el motor, como es el caso del Burst Compiler.
-Esta tecnología permite compilar código C\# en código máquina altamente optimizado mediante el uso de la infraestructura \gls{llvm}~\cite{llvm2004}.
+Esta tecnología permite compilar código C\# en código máquina muy optimizado mediante el uso de la infraestructura \gls{llvm}~\cite{llvm2004}.
 Dado que la navegación volumétrica implica una carga computacional intensiva, aprovechar el Burst Compiler facilita la ejecución de estas rutinas matemáticas en \textit{hilos secundarios} con un impacto mínimo en el \textit{hilo principal de procesamiento}, preservando así la tasa de refresco del entorno interactivo.
 
 \section{\texorpdfstring{\acrshort{dafo}}{DAFO}}
 
 Con el propósito de evaluar la viabilidad estratégica y justificar el desarrollo del proyecto, se ha llevado a cabo un análisis \acrshort{dafo}.
-Este estudio se estructura en un bloque de \textbf{análisis interno} (orientado a identificar las fortalezas y debilidades inherentes a la propuesta), un bloque de \textbf{análisis externo} (centrado en discernir las oportunidades y amenazas que presenta el mercado actual) y un apartado de conclusiones.
+Este estudio se estructura en un bloque de \textbf{análisis interno} (orientado a identificar las fortalezas y debilidades inherentes a la propuesta), un bloque de \textbf{análisis externo} (centrado en identificar las oportunidades y amenazas que presenta el mercado actual) y un apartado de conclusiones.
 
 \subsection{Análisis interno}
 
@@ -164,5 +164,5 @@ Asimismo, la eventual inclusión de una herramienta de navegación tridimensiona
 \subsection{Conclusiones}
 
 A partir de la matriz \acrshort{dafo} expuesta en la Tabla~\ref{tab:dafo}, se concluye que el desarrollo de este sistema es altamente viable.
-Si bien el proyecto deberá competir con soluciones comerciales maduras, su naturaleza de código abierto representa una ventaja competitiva crítica.
-En definitiva, el proyecto se posiciona como una alternativa democratizadora y accesible, con un claro potencial de adopción dentro del vasto ecosistema de desarrolladores de Unity.
+A pesar de que el proyecto deberá competir con soluciones comerciales maduras, su naturaleza de código abierto representa una gran ventaja competitiva.
+En conclusión, el proyecto se posiciona como una alternativa democratizadora, accesible y con un claro potencial de adopción dentro del vasto ecosistema de desarrolladores de Unity.
