@@ -1,0 +1,237 @@
+\chapter{Fundamentos}
+
+Para abordar el desarrollo de un sistema de navegación volumétrica, resulta imprescindible una comprensión profunda de tanto las tecnologías con las que se va a trabajar como los principios matemáticos o algorítmicos que se usarán en el sistema.
+En consecuencia, el presente capítulo se divide en dos grandes bloques.
+En primer lugar, se tratarán los fundamentos tecnológicos, detallando la arquitectura del motor gráfico seleccionado y las herramientas de alto rendimiento necesarias para garantizar su viabilidad y funcionamiento óptimo.
+En segundo lugar, se profundizará en los fundamentos teóricos, los cuales establecerán las bases de las estructuras de datos y las técnicas algorítmicas empleadas en el proyecto.
+
+\section{Fundamentos tecnológicos}
+
+La creación de un sistema no solo funcional, sino también robusto y eficiente, exige su implementación dentro de un ecosistema de desarrollo maduro que proporcione las herramientas requeridas.
+En este contexto, ha sido seleccionado el motor de desarrollo de propósito general Unity~\cite{unity}, introducido en el mercado en el 2005, cuyo uso se justificará detalladamente en la Sección~\ref{sec:justificacionentorno} tras un estudio del mercado y alternativas existentes.
+A continuación se describen sus componentes arquitectónicos y tecnologías más relevantes para el proyecto.
+
+\subsection{Unity y su modelo de componentes}
+
+Unity emplea una arquitectura basada en el patrón \textit{component}, la cual prioriza la composición frente a la herencia jerárquica tradicional de la \acrfull{poo}.
+En este paradigma, toda entidad presente en el entorno virtual, ya sea un personaje, un elemento decorativo o un elemento de \acrfull{ui}, se instancia como un objeto genérico de la clase \texttt{GameObject}.
+
+Para dotar de comportamiento a estas entidades, se les adjuntan múltiples componentes modulares que heredan de la clase \texttt{MonoBehaviour}.
+Esta modularidad favorece la creación de sistemas altamente desacoplados y reutilizables.
+El ciclo de vida de estos componentes se rige por el patrón \textit{game loop}: tras una fase inicial de configuración mediante los métodos \texttt{Awake} y \texttt{Start}, el motor ejecuta de manera repetida las funciones \texttt{Update}, \texttt{LateUpdate} y \texttt{FixedUpdate}.
+El programador debe definir en este ciclo continuo la lógica que se ejecutará en cada frame, como la actualización de la trayectoria del agente volador.
+
+Finalmente todos los \texttt{GameObject} se agrupan en una escena de manera jerárquica siguiendo una estructura de árbol (véase la Figura~\ref{fig:unityeditor}).
+Esta constituirá el entorno de ejecución del sistema.
+
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{imaxes/unityeditor.png}
+  \caption[Interfaz del editor de Unity. A la izquierda (en rojo) jerarquía de \texttt{GameObject} y a la derecha (en azul) inspector de componentes de un objeto.]
+  {Interfaz del editor de Unity.
+  A la izquierda (en rojo) jerarquía de \texttt{GameObject} y a la derecha (en azul) inspector de componentes de un objeto.
+  Imagen extraída de~\cite{unity_editor_tools}.}
+  \label{fig:unityeditor}
+\end{figure}
+
+\subsection{Herramientas proporcionadas por el editor}
+
+Un requisito fundamental es facilitar a perfiles no técnicos, como artistas o diseñadores de niveles, la posibilidad de configurar parámetros complejos sin necesidad de alterar el código fuente.
+Para ello la \acrfull{api} de Unity proporciona una serie de herramientas.
+Mediante el uso de atributos como \texttt{[SerializeField]} o \texttt{[Range]}, el programador puede exponer en el editor de Unity variables internas de los componentes de modo que estas puedan ser editadas desde fuera.
+Adicionalmente heredando de la clase \texttt{UnityEditor.Editor}, es posible reescribir por completo la interfaz del sistema, añadiendo paneles personalizados, gráficos o validaciones de datos.
+A estas capacidades se le suma la clase \texttt{Gizmos}, una herramienta de depuración visual que permite renderizar primitivas geométricas (por ejemplo, proyectando la malla de colisión), facilitando la validación del sistema sin interferir en el producto final.
+
+\subsection{Motor de físicas y consultas espaciales}
+
+El primer paso para que un agente pueda navegar autónomamente por un entorno tridimensional, es la extracción de información geométrica del escenario.
+Unity delega la detección de colisiones en su motor de físicas integrado, basado en la biblioteca NVIDIA PhysX~\cite{physx_nvidia}.
+Este  sistema utiliza \textit{colliders} (volúmenes matemáticos como cajas, cápsulas o mallas tridimensionales) para representar físicamente a los objetos.
+Estos pueden ser categorizados en capas con el objetivo de filtrar interacciones entre estas.
+
+La \acrshort{api} de Unity proporciona consultas espaciales que permiten consultar la ocupación del entorno.
+Por ejemplo, la función \texttt{OverlapBox} devuelve el conjunto de \textit{colliders} que intersectan un volumen cúbico determinado, utilizando máscaras de bits para restringir esta consulta a las capas de interés.
+No obstante, en el contexto de la navegación volumétrica, la gran cantidad de consultas requeridas para mapear el espacio aéreo supondría un cuello de botella, agravado por la restricción arquitectónica de Unity de ejecutar la \acrshort{api} de físicas de forma síncrona en el hilo principal~\cite{unity_physics_api}.
+Para solventar este impedimento, se hace uso de estructuras como el \texttt{OverlapBoxCommand}, la cual permiten agrupar múltiples consultas físicas (\textit{batches}), para su posterior ejecución asíncrona y paralelizada.
+
+\subsection{Data-Oriented Technology Stack}
+\label{sec:dots}
+
+Históricamente, Unity se ha fundamentado en la \acrshort{poo} pura.
+No obstante, en muchos sistemas que demandan procesamiento masivo de datos, las indirecciones de memoria, dispersión de los objetos en la \gls{heap} y el empaquetado ineficiente de datos provocan fallos continuos de caché degradando severamente el rendimiento.
+
+Para combatir esta limitación, Unity ha desarrollado el ecosistema \acrfull{dots}~\cite{unity_dots}.
+Este paradigma, basado en el \acrfull{dod}, busca maximizar el rendimiento estructurando los datos en memoria de forma que la \acrfull{cpu} pueda procesar la información de manera óptima aprovechando la arquitectura del hardware (ilustrado en la Figura~\ref{fig:oop_vs_dod}).
+
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{imaxes/dodvsoop.png}
+  \caption[Comparativa de \acrshort{poo} y \acrshort{dod}.]
+  {Comparativa de \acrshort{poo} y \acrshort{dod}.
+  Imagen extraída de~\cite{albano_dod}.}
+  \label{fig:oop_vs_dod}
+\end{figure}
+
+Los componentes clave de este \textit{stack} tecnológico son los siguientes:
+
+\begin{itemize}
+    \item \textbf{C\# Job System:} \acrshort{api} que abstrae y simplifica la programación concurrente, permitiendo y simplificando la ejecución segura de código multihilo.
+    Funciona mediante unidades de cómputo que reciben el nombre de \textit{jobs}, las cuales declaran explícitamente sus dependencias de datos~\cite{unity_job_system}.
+    Esta arquitectura previene errores en tiempo de ejecución como es el caso de las \glspl{racecondition}.
+    \item \textbf{Burst Compiler:} compilador avanzado diseñado para traducir el lenguaje C\# directamente a código máquina nativo, eludiendo así la máquina virtual estándar de este lenguaje conocida como \acrfull{clr}~\cite{burstcompiler}.
+    Basado en la infraestructura \gls{llvm}~\cite{llvm2004}, optimiza el código aprovechando las instrucciones \acrfull{simd} que permiten que el procesador ejecute una misma operación matemática simultáneamente sobre un conjunto de datos, acelerando drásticamente los cálculos.
+    \item \textbf{Unity.Mathematics:}
+    biblioteca matemática diseñada para aprovechar al máximo el Burst Compiler~\cite{unity_mathematics}.
+    Proporciona una serie de tipos de datos vectoriales como el \textit{float3} o \textit{int3}.
+    \item \textbf{Colecciones nativas:}
+    Estructuras de datos (tales como el \texttt{NativeArray}, \texttt{NativeList} o \texttt{NativeParallelMultiHashMap}) que reemplazan las colecciones estándar de C\#.
+    Estas operan sobre memoria no administrada lo que permite suprimir picos de latencia provocados por el recolector de basura.
+    Al usar estas colecciones, el programador asume el control absoluto y la responsabilidad de reservar y liberar explícitamente la memoria~\cite{unity_collections}.
+\end{itemize}
+
+\subsection{Características de bajo nivel en C\#}
+
+Para complementar el ecosistema de \acrshort{dots} y asegurar un rendimiento óptimo, resulta indispensable emplear características de bajo nivel del lenguaje.
+Las siguientes técnicas minimizan el impacto del recolector de memoria y reducen costes de transferencia de datos en zonas de ejecución críticas:
+
+\begin{itemize}
+    \item \textbf{\texttt{ref readonly}:} permite devolver una referencia de solo lectura a una estructura de datos.
+    Al evitar la copia de estructuras complejas, se reduce notablemente el uso de memoria.
+    Adicionalmente, la palabra clave \texttt{readonly} garantiza a nivel de compilación la integridad de los datos originales.
+    \item \textbf{\texttt{Span\textless T\textgreater}:} representa una sección de memoria contigua independientemente de si los datos residen en el \gls{stack} o en la \gls{heap}.
+    Esta estructura permite realizar operaciones de lectura y escritura sobre secciones de esta sin necesidad de almacenar más memoria.
+    \item \textbf{\texttt{stackalloc}:} permite reservar memoria en el \gls{stack}.
+    De este modo evita al recolector de basura tener que limpiar colecciones que se usan a modo de \textit{buffers} temporales, asegurando su liberación inmediata al salir de la función y omitiendo por completo al recolector de basura.
+\end{itemize}
+
+A este conjunto de técnicas se añade la manipulación de bits.
+Esta técnica permite codificar varios campos en una única variable entera, reduciendo drásticamente el uso de memoria.
+
+TODO hacer referencia a cuando estos se comenten en la fase de desarrollo a modo de ejemplo.
+
+\section{Fundamentos teóricos}
+
+Para el diseño de una herramienta de navegación tridimensional robusta, la elección de las tecnologías de bajo nivel constituye únicamente la mitad del problema.
+La otra mitad reside en la selección e implementación de los algoritmos y estructuras de datos adecuados que dictaminarán la eficiencia y rendimiento del sistema.
+A continuación, se describen los principios teóricos que constituyen el campo de la navegación volumétrica.
+
+\subsection{Búsqueda de caminos}
+
+La búsqueda de caminos, o \textit{pathfinding}, consiste en el problema computacional de determinar una ruta continua y libre de colisiones que conecte un punto de origen con un destino dentro de un entorno virtual~\cite{Millington}.
+Dado que el espacio físico es continuo y contiene infinitas posiciones posibles, el primer paso para su resolución exige obtener una representación discreta y estructurada de la geometría de la escena.
+Esta abstracción permitirá aplicar, posteriormente, un algoritmo de búsqueda de caminos mínimos.
+
+\subsubsection{Representación del espacio navegable}
+\label{sec:representacionespacionavegable}
+
+Al estudiar el ámbito de la navegación volumétrica, se puede observar que existen tres alternativas predominantes.
+Estas se categorizan fundamentalmente en:
+
+\begin{itemize}
+    \item \textbf{\textit{Waypoints}:} Esta solución requiere el posicionamiento manual de una serie de nodos que reciben dicho nombre.
+    Estos puntos constituirán los vértices del grafo y deben ubicarse estrictamente dentro del espacio libre de colisiones.
+    Las aristas se corresponderán a aquellas conexiones de vértices para las cuales existe una línea de visión directa, es decir, sin obstáculos intermedios entre ellos.
+    
+    A pesar de ser computacionalmente el método más ligero, este carece de escalabilidad en escenarios de gran tamaño o en entornos dinámicos, ya que cualquier cambio en la geometría de la escena obliga a recolocar los nodos y recalcular sus conexiones.
+    Sin embargo, dado que la implementación de un sistema con estas características es trivial, es común encontrar estudios que recurren a soluciones \gls{adhoc} cuando no se requieren sistemas de navegación complejos~\cite{Millington}.
+    \item \textbf{Campos de flujo (\textit{Flow fields}):} Esta aproximación consiste en calcular un campo vectorial global sobre una cuadrícula o volumen espacial, donde cada celda almacena un vector de dirección que apunta hacia el destino. 
+    Si bien resultan extremadamente eficientes para movilizar enjambres o multitudes masivas hacia un objetivo común, su coste computacional y uso de memoria en entornos tridimensionales se vuelve prohibitivo cuando existen múltiples agentes persiguiendo destinos independientes, descartándolos para soluciones de propósito general~\cite{emerson2019crowd}.
+    \item \textbf{\textit{\Glspl{octree}}:} Constituyen la técnica más extendida en la industria.
+    En ella, el espacio se subdivide en octantes, creando una estructura de datos jerárquica que representa el espacio libre navegable~\cite{octree}.
+    En prácticamente la totalidad de los casos, estas representaciones se optimizan haciendo uso de una modificación estructural: los \acrfull{svo}.
+    Estos dividen solo aquellos octantes que contienen geometría, logrando así un ahorro de memoria considerable.
+    
+    La discretización del volumen mediante estas estructuras requiere localizar rápidamente las celdas o \glspl{voxel} en la memoria.
+    Para lograrlo, resulta fundamental mapear coordenadas tridimensionales $(X, Y, Z)$ a un índice escalar, preservando la localidad espacial.
+    Esto se consigue mediante el cálculo de códigos de Morton, basados en las curvas de orden Z~\cite{morton} (véase la Figura~\ref{fig:morton_curve}).
+    A través de operaciones a nivel de bits, se intercalan los bits representativos de cada coordenada espacial para formar un único número entero.
+    Esta técnica garantiza que nodos espacialmente adyacentes en la escena tiendan a ocupar posiciones contiguas en la memoria lineal, reduciendo drásticamente los fallos de caché y maximizando los beneficios arquitectónicos del paradigma \acrshort{dod} ya explicados en la Sección~\ref{sec:dots}.
+
+    \begin{figure}[htp]
+      \centering
+      \includegraphics[width=0.75\textwidth]{imaxes/zfold.png}
+      \caption[Versión 2D de los códigos de Morton.]
+      {Versión 2D de los códigos de Morton.
+      Imagen extraída de~\cite{vinkler_morton}.}
+      \label{fig:morton_curve}
+    \end{figure}
+
+\end{itemize}
+
+\subsubsection{Algoritmos de búsqueda en grafos}
+
+Una vez estructurado el espacio en un grafo navegable, la extracción de la trayectoria se delega en algoritmos de caminos mínimos.
+El algoritmo clásico de Dijkstra explora los nodos de forma uniforme garantizando siempre la ruta más corta~\cite{dijkstra}.
+No obstante, su expansión radial conlleva un coste computacional inasumible para cálculos en tiempo real dentro de grandes volúmenes.
+
+En respuesta a esta limitación, el estándar de la industria es el algoritmo \gls{astar}.
+Esta técnica optimiza la búsqueda introduciendo una heurística a la función de coste.
+Dicha función se define matemáticamente como $f(n) = g(n) + h(n)$, donde $g(n)$ es el coste real desde el origen y $h(n)$ es el coste estimado hasta la meta.
+Esta estimación permite priorizar los nodos más prometedores, orientando la búsqueda hacia el destino y reduciendo exponencialmente el número de celdas evaluadas~\cite{astar}.
+
+\subsubsection{Postprocesado de trayectorias}
+
+Las rutas generadas por algoritmos sobre volúmenes discretizados resultan muy artificiales al estar compuestos por multitud de segmentos.
+Para dotar al agente de un movimiento orgánico, el sistema requiere de una etapa de postprocesado que se suele dividir en dos fases.
+
+En primer lugar, se aplica un algoritmo de \textit{String Pulling} con su variante voraz.
+Este itera sobre la ruta buscando el nodo más lejano con el que exista línea de visión directa, descartando recursivamente todos los nodos intermedios redundantes.
+Para validar esta línea de visión se requiere trazar rayos y comprobar su intersección con la geometría.
+Esto requiere que el algoritmo no sea solo correcto sino que también responda de manera robusta a errores derivados de la falta de precisión decimal, siendo el algoritmo \acrfull{dda}~\cite{amanatides1987fast} el caso estándar de aplicación.
+
+En segundo lugar, la trayectoria depurada se suaviza mediante la interpolación con curvas paramétricas.
+Se suele optar por el \textit{spline} de Catmull-Rom (como se muestra en la Figura~\ref{fig:catmull_rom}) sobre alternativas como las curvas de Bézier o B-splines.
+Esta decisión se fundamenta en que este tipo de curvas pasa de forma exacta a través de todos los puntos de control suministrados~\cite{catmull1974class}.
+
+Como se ilustra en la figura, los puntos rojos (denotados con la letra $P$) representan estos \textbf{puntos de control} o nodos de la trayectoria original.
+Dado que la etapa previa asegura que estos nodos están ubicados en espacio libre, obligar a la curva a cruzar exactamente por ellos, garantizando que la trayectoria resultante no intersecte accidentalmente con la geometría del entorno.
+
+Por su parte, la curva negra y las etiquetas $Q$ representan los \textbf{segmentos} generados matemáticamente que unen dichos puntos de control.
+El trazado de estos segmentos se define mediante el parámetro de interpolación $u$ (ilustrado con marcas amarillas), el cual toma valores entre 0 y 1 para calcular las posiciones intermedias a lo largo del segmento, permitiendo así una transición suave entre un punto de control y el siguiente.
+
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{imaxes/catmullrom.png}
+  \caption[Ejemplo curva Catmull Rom interpolando los puntos de control.]
+  {Ejemplo curva Catmull Rom interpolando los puntos de control.
+  Imagen extraída de~\cite{sueda_catmull}.}
+  \label{fig:catmull_rom}
+\end{figure}
+
+\subsection{Planificación de caminos}
+
+A pesar de haber encontrado un camino libre de obstáculos, en múltiples ocasiones se requiere la replanificación de este, por ejemplo, para esquivar a otros agentes.
+A este proceso se le conoce como \textit{path planning}, siendo el algoritmo \acrfull{orca} uno de los más relevantes~\cite{van2011reciprocal}.
+Este algoritmo se basa en los llamados obstáculos de velocidad, correspondiéndose estos con los propios agentes dinámicos de la escena.
+Para lograr la evasión, \acrshort{orca} razona sobre el denominado \textit{espacio de velocidades}: un dominio continuo en el que cada punto representa un posible vector de velocidad que el agente podría adoptar en el instante actual.
+Dentro de este dominio, el algoritmo delimita la región de velocidades \textbf{prohibidas} (aquellas que, de mantenerse, conducirían a una colisión) frente a las velocidades \textbf{permitidas}, consideradas seguras.
+La particularidad del método reside en su premisa de reciprocidad: ambos agentes ejecutan \acrshort{orca} de forma simultánea y asumen de manera conjunta la responsabilidad de esquivarse, en lugar de delegar toda la maniobra en uno solo de ellos.
+
+A modo de ejemplo ilustrativo, considérense dos agentes voladores, $A$ y $B$, que se aproximan frontalmente a lo largo de una misma recta.
+La velocidad preferida de $A$, aquella que lo dirige directamente hacia su destino, apunta hacia $B$, por lo que recae dentro de su región de velocidades prohibidas: mantenerla garantizaría el impacto.
+El algoritmo calcula entonces el mínimo vector de corrección $\vec{u}$ que situaría la velocidad relativa de ambos justo sobre la frontera de la región segura, por ejemplo, desviándose ligeramente hacia un lado.
+Si $B$ fuese un obstáculo estático incapaz de reaccionar, $A$ tendría que asumir esa corrección en su totalidad.
+No obstante, dado que $B$ también ejecuta el algoritmo, la responsabilidad se reparte de forma equitativa: $A$ modifica su velocidad en $\vec{u}/2$ y $B$ aplica la otra mitad en sentido opuesto.
+Así, ambos describen trayectorias simétricas y la colisión se evita con la mitad del esfuerzo por cada parte, lo que elimina además las oscilaciones que surgirían si cada agente supusiese que el otro no va a alterar su rumbo.
+
+En términos operacionales, \acrshort{orca} modela matemáticamente estas restricciones definiendo un semiplano de velocidades seguras para cada par de agentes en conflicto.
+A partir de la posición relativa, los radios de colisión y las velocidades actuales, se computa la mínima alteración de velocidad necesaria para garantizar que las trayectorias no se intersequen.
+Gracias a la premisa de reciprocidad, el algoritmo asume que cada entidad aplicará exactamente la mitad de esta corrección.
+Para ello, el sistema emplea técnicas de programación lineal para calcular de manera eficiente una nueva velocidad óptima que satisfaga todas las restricciones geométricas de los semiplanos y, simultáneamente, se aproxime lo máximo posible a la velocidad preferida del agente (aquella que lo dirige hacia su meta).
+
+El principal problema de este sistema de evasión local es que los agentes se pueden quedar atascados ante obstáculos dinámicos muy grandes.
+Resolver este problema, denominado \gls{deadlock}, conlleva hacer uso de sistemas de planificación que trabajen a más alto nivel y que operen independientemente del sistema de navegación, lo cual escapa del alcance de este proyecto.
+
+\subsection{Integridad estructural mediante algoritmos Hash}
+
+Con el propósito de evitar reconstruir la representación del espacio navegable cada vez que se cargue el juego, los sistemas de navegación suelen proveer un proceso denominado como \gls{bake}.
+Este consiste en construir las estructuras de datos de manera anticipada desde el editor y guardarlas en disco para que, posteriormente, puedan ser cargadas en tiempo de ejecución.
+
+Para asegurar la integridad de la escena, es decir, garantizar que no se han producido cambios en su geometría desde la última vez que se realizó el \gls{bake}, se suele computar el \textit{hash} de los objetos correspondientes.
+De este modo, si el valor resultante varía, se detecta que se ha producido una modificación.
+En el ecosistema de C\#, no se recomienda utilizar el método por defecto \texttt{GetHashCode}~\cite{csharp_gethashcode}.
+Esto se debe a que proporciona resultados dependientes de la semilla de ejecución, por lo que los valores pueden variar entre diferentes sesiones, rompiendo por completo el determinismo.
+
+En su lugar, se suelen implementar algoritmos de \textit{hash} desde cero, como es el caso de \gls{fnv1a}, el cual destaca por ser extremadamente rápido~\cite{fnv_hash}.
+Este algoritmo itera directamente sobre los bytes de los datos, acumulando el resultado en un valor inicializado con el llamado \textit{FNV offset basis}.
+En cada iteración, aplica una operación \textsc{xor} con el byte correspondiente y, acto seguido, lo multiplica por un número primo conocido como \textit{FNV prime}.

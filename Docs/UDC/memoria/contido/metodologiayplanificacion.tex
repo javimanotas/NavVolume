@@ -1,0 +1,25 @@
+\chapter{Metodología y planificación}
+
+% poner algo aquí. los parrafos deben tener más de una frase.
+
+\section{Metodología de desarrollo}
+
+% mejorar la redacción de lo siguiente.
+
+Para el desarrollo del proyecto se ha empleado una metodología iterativa e incremental.
+Este enfoque resulta idóneo para abordar la complejidad que conlleva implentar un sistema de navegación volumétrica, al facilitar una detección temprana de errores a través de la obtención de productos intermedios funcionales.
+
+Para gestionar este proceso y garantizar la estabilidad del proyecto, el desarrollo se ha apoyado en el sistema de control de versiones Git~\cite{git}, utilizando GitHub~\cite{github} como plataforma de alojamiento.
+El flujo de trabajo adoptado mediante estos se basa en el uso de ramas. % añadir que se parte de main
+De este modo, cada nueva funcionalidad, mejora o corrección de errores se desarrolla de manera aislada en su propia rama, sin interferir con la línea base del proyecto.
+Cuando esta se da por finalizada, primero se revisa el código mediante una \textit{pull request} de Github y si esta es correcta se integra con el proyecto haciendo uso del \textit{squash and merge}.
+% explicar mejor que es una pull request y en que consiste.
+
+Un factor clave en cada iteración, es el de validar la correctitud del código correspondiente.
+Para ello se ha hecho uso del sistema de \acrfull{ci} de Github.
+Este permite ejecutar en una máquina remota todos los tests de modo que estos se ejecutan de manera automática en cada pull request o \textit{commit} a la rama principal. % explicar algo aqui de que esto es bueno porque no te olvidas.
+
+\section{Planificación inicial}
+
+% costo + temporal
+% un trabajo de fin de grado son

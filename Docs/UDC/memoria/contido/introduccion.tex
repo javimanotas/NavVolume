@@ -1,0 +1,87 @@
+\chapter{Introducción}
+
+\lettrine{E}{l} desarrollo de entornos virtuales contemporáneos, como videojuegos y simulaciones interactivas, exige dotar a sus agentes de la inteligencia suficiente para interactuar coherentemente con su entorno.
+El comportamiento de estas entidades resulta clave para garantizar la credibilidad, funcionalidad y realismo del entorno virtual, especialmente en escenarios complejos y dinámicos.
+A pesar de que se trate de un problema que lleva décadas siendo explorado en el campo de la inteligencia artificial~\cite{russell1995modern}, a día de hoy, dista de ser trivial cuando se persigue un comportamiento robusto y eficiente.
+
+Dentro de este ámbito, un requisito fundamental es la \textbf{navegación autónoma}.
+Este proceso permite a un agente desplazarse desde un punto de origen hasta un destino específico calculando una ruta viable y esquivando, de manera eficiente, la geometría y los obstáculos presentes en la escena.
+En el contexto de videojuegos, este comportamiento recae habitualmente en los personajes no jugables, conocidos en inglés como \acrfull{npc}.
+Su capacidad para desenvolverse de forma autónoma condiciona en gran medida la percepción de inteligencia del sistema. 
+Abordar este reto no solo implica determinar el camino más corto, sino también garantizar que el movimiento resultante sea compatible con las restricciones físicas del entorno y con el comportamiento esperado del agente~\cite{reynolds1999steering}.
+
+El problema de la búsqueda de rutas, conocido en la literatura como \textit{pathfinding}, constituye uno de los casos de estudio más explorados en el campo de la inteligencia artificial aplicada a entornos virtuales~\cite{Millington}.
+En la actualidad, se considera un problema ampliamente resuelto para agentes terrestres en escenarios estáticos~\cite{abd2015comprehensive}, hasta el punto de que los principales motores de desarrollo, tanto comerciales como de código abierto, integran soluciones nativas y robustas para este fin.
+Ejemplos representativos de ello son el Navigation System en Unreal Engine~\cite{UnrealNavSystem}, el sistema nativo de NavMesh en Unity~\cite{UnityNavMesh} o el componente NavigationServer3D en Godot~\cite{GodotNavServer}, los cuales permiten implementar comportamientos de navegación complejos con un coste computacional asumible.
+
+La gran mayoría de estas herramientas se fundamentan en la biblioteca de código abierto Recast Navigation~\cite{RecastNavigation}.
+Este sistema permite generar una \textbf{malla de navegación}, que recibe el nombre de NavMesh, y que representa una \textbf{aproximación 2.5D} del entorno transitable.
+Aunque el escenario se modela en tres dimensiones, el cálculo de rutas se proyecta sobre superficies esencialmente bidimensionales que definen las zonas donde los agentes pueden apoyarse o caminar, tal y como puede apreciarse en la Figura~\ref{fig:navmesh25d}.
+A partir de esta geometría, se construye un grafo sobre el cual se aplican algoritmos de búsqueda heurística, siendo el algoritmo \gls{astar} el caso estándar de aplicación~\cite{astar}.
+
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{imaxes/navmesh25d.png}
+  \caption[Ejemplo de malla 2.5D generada por NavMesh sobre un entorno tridimensional.]
+  {Ejemplo de malla 2.5D generada por NavMesh sobre un entorno tridimensional.
+  Imagen extraída de~\cite{UnityNavMeshAgentManual}.}
+  \label{fig:navmesh25d}
+\end{figure}
+
+\section{Motivación}
+
+La necesidad de crear una herramienta que dote a agentes voladores de la capacidad de moverse a través de un espacio plenamente tridimensional surge del limitado soporte que ofrecen las tecnologías dominantes en el desarrollo de videojuegos actual.
+Las soluciones tradicionales basadas en mallas 2.5D resultan ideales para personajes terrestres, ya que presuponen que el agente está anclado al suelo y que su movimiento puede reducirse a un plano horizontal cuya altura es una propiedad derivada del terreno.
+Sin embargo, este supuesto no se cumple para entidades con capacidad de vuelo, tales como drones, naves espaciales, enjambres de insectos o criaturas submarinas como peces, las cuales requieren operar con \textbf{seis grados de libertad}: tres traslaciones a lo largo de los ejes $X$, $Y$ y $Z$ y tres rotaciones independientes alrededor de esos mismos ejes, conocidas como \textit{pitch}, \textit{yaw} y \textit{roll}, tal y como se ilustra en la Figura~\ref{fig:grados_libertad}.
+Ante la posibilidad de que los agentes puedan modificar su trayectoria en cualquier dirección y altura, un plano transitable resulta insuficiente y se hace imprescindible un \textbf{volumen de navegación}.
+Este debe representar la \textbf{totalidad del espacio libre} del entorno y no solo las superficies, logrando garantizar que ninguna ruta viable o alternativa óptima quede excluida durante el cálculo de trayectorias.
+
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{imaxes/6dof.png}
+  \caption[Visualización de los 6 grados de libertad.]
+  {Visualización de los 6 grados de libertad.
+  Imagen extraída de~\cite{6DoF_IIA}.}
+  \label{fig:grados_libertad}
+\end{figure}
+
+Por consiguiente, el salto hacia una navegación puramente volumétrica plantea un desafío técnico de considerable magnitud.
+Al añadir la altura como una dimensión libre, la gran cantidad de espacio a analizar dispara el coste computacional tanto en tiempo como en memoria~\cite{lavalleplanning}.
+Si esta complejidad no se gestiona mediante estructuras de datos espaciales altamente especializadas como \glspl{octree}~\cite{octree} o representaciones jerárquicas equivalentes, el cálculo de trayectorias provocará un consumo crítico de memoria y una degradación severa en la tasa de \acrfull{fps}, comprometiendo la viabilidad comercial del producto.
+
+Ante la falta de un soporte oficial eficiente en los motores dominantes, los estudios de desarrollo se ven obligados a implementar soluciones \gls{adhoc} para cada proyecto, o bien a intentar adaptar de forma artificial las tecnologías 2.5D existentes~\cite{Brewer2015NavMesh}.
+Ambas alternativas suelen derivar en un incremento significativo de los costes de producción, así como en una pérdida de tiempo que podría dedicarse al diseño del propio videojuego.
+Surge, por lo tanto, la necesidad evidente de diseñar un sistema \textbf{genérico, optimizado y reutilizable} que resuelva el problema de la navegación tridimensional de manera estructural.
+
+\section{Objetivos}
+
+El objetivo general de este Trabajo de Fin de Grado consiste en el diseño, implementación y validación en el motor Unity de un sistema de navegación volumétrica eficiente y optimizado.
+El resultado final tendrá un enfoque de producto, materializándose en un paquete de herramientas modular, de código abierto, listo para su integración inmediata en proyectos y entornos de producción reales.
+
+A partir de este objetivo general, se establecen los siguientes objetivos específicos:
+
+\begin{itemize}
+    \item \textbf{Diseño arquitectónico:} Diseñar una arquitectura modular y escalable que garantice la eficiencia computacional y facilite la futura integración de nuevas funcionalidades.
+    \item \textbf{Representación eficiente del espacio:} Implementar una estructura de datos espacial que represente el volumen navegable de forma compacta y optimizada para consultas en tiempo real.
+    \item \textbf{Sistema de serialización:} Desarrollar un módulo de almacenamiento en disco para guardar la representación generada, evitando el coste de su reconstrucción en tiempo de ejecución.
+    \item \textbf{Búsqueda de rutas:} Adaptar un algoritmo de búsqueda heurística tridimensional para hallar trayectorias viables dentro del espacio libre del volumen.
+    \item \textbf{Postprocesado de trayectorias:} Desarrollar un algoritmo de suavizado de caminos que optimice la trayectoria resultante mediante la eliminación de giros bruscos y nodos redundantes.
+    \item \textbf{Integración en Unity:} Desarrollar una herramienta nativa para el editor del motor que simplifique la configuración del sistema y su visualización mediante Gizmos y paneles personalizados.
+    \item \textbf{Accesibilidad y usabilidad:} Proveer una interfaz intuitiva que permita la configuración del sistema tanto a perfiles técnicos como a diseñadores de niveles y artistas.
+    \item \textbf{Análisis de rendimiento:} Evaluar cuantitativamente la eficiencia global del sistema y de sus componentes críticos bajo diferentes escenarios y cargas de prueba.
+    \item \textbf{Distribución modular:} Empaquetar el sistema final bajo los estándares oficiales de Unity para facilitar su integración en otros proyectos y su potencial publicación en la Unity Asset Store.
+\end{itemize}
+
+\section{Estructura de la memoria}
+
+La presente memoria se organiza en los siguientes capítulos:
+
+\begin{description}
+    \item[Capítulo 1: Introducción.] El presente capítulo.
+    \item[Capítulo 2: Fundamentos.] Explica los distintos términos y técnicas requeridas para comprender el proyecto.
+    \item[Capítulo 3: Estado de la cuestión.] Examina las soluciones existentes en la literatura y la industria, incluyendo un análisis de \acrfull{dafo}.
+    \item[Capítulo 4: Metodología y planificación.] Detalla el modelo de ciclo de vida de software adoptado, así como la planificación temporal y los recursos empleados.
+    \item[Capítulo 5: Desarrollo.] Profundiza en las distintas fases involucradas en la implementación del sistema.
+    \item[Capítulo 6: Conclusiones.] Sintetiza los resultados obtenidos y evalúa las aportaciones del sistema al desarrollo de videojuegos.
+    \item[Capítulo 7: Trabajos futuros.] Propone extensiones y nuevas líneas de investigación que pueden desarrollarse a partir del sistema implementado.
+\end{description}

@@ -1,0 +1,168 @@
+\chapter{Estado de la cuestión}
+
+El presente capítulo ofrece una revisión detallada del panorama actual respecto a las soluciones de navegación espacial existentes en el ámbito de los videojuegos.
+A lo largo de las siguientes secciones se explorarán las herramientas con mayor relevancia en el mercado actual.
+Posteriormente, a partir de un análisis crítico de estas, se justificará la necesidad de la herramienta de código abierto propuesta en este trabajo. 
+
+\section{Herramientas disponibles}
+
+En la actualidad, existe un amplio repertorio de herramientas orientadas a resolver el problema de la navegación en entornos virtuales.
+Entre estas soluciones, aquellas que gozan de mayor relevancia y adopción en la industria, se fundamentan en enfoques que combinan estructuras \acrshort{svo} y el algoritmo de búsqueda heurística \gls{astar}~\cite{Millington}, conceptos ya explicados previamente en la Sección~\ref{sec:representacionespacionavegable}.
+A nivel arquitectónico, estas soluciones se dividen en dos grandes grupos: aquellas que operan de forma independiente al motor gráfico y las diseñadas para integrarse en un entorno de desarrollo concreto.
+
+\subsection{Herramientas genéricas}
+
+Si se analizan el conjunto de herramientas que son agnósticas al motor, se observa que la solución predominante en el mercado es la de Mercuna~\cite{Mercuna}.
+Esta herramienta fue concebida originalmente como un \textit{plugin} comercial exclusivo para Unreal Engine~\cite{unreal}.
+Sin embargo, su éxito motivó su posterior extensión para operar de forma desacoplada a este.
+
+El principal atractivo de Mercuna radica en su capacidad para unificar, bajo un mismo ecosistema, prácticamente la totalidad de los casos de uso que engloba la navegación.
+Entre sus características más relevantes se encuentran:
+
+\begin{itemize}
+    \item \textbf{Navegación volumétrica:} Permite a los agentes tanto voladores como submarinos, moverse por la totalidad del espacio navegable, haciendo uso completo de sus seis grados de libertad.
+    \item \textbf{Navegación sobre superficies:} Proporciona la capacidad de desplazarse sobre cualquier tipo de geometría.
+    Esto no se limita al suelo convencional, sino que incluye también paredes o techos, gestionando la gravedad de manera local al agente (ver Figura~\ref{fig:anysurface}).
+    \item \textbf{Soporte para agentes \glspl{noholonomico}:} Incorpora las restricciones físicas y cinemáticas de los agentes en la fase de cálculo de trayectorias. De este modo, es posible modelar el comportamiento de vehículos con radios de giro limitados o entidades que carecen de la capacidad de acelerar y frenar de manera instantánea.
+\end{itemize}
+
+Se trata, sin lugar a dudas, de la herramienta que se puede considerar más robusta y completa del mercado.
+Sin embargo, su modelo de negocio supone una barrera de entrada prohibitiva para la mayor parte de estudios.
+Mercuna dispone de distintas licencias que dependerán del subconjunto de características requerido, con costes que parten de \pounds15000 o de \pounds2500 para estudios con un presupuesto de desarrollo inferior a \$500000~\cite{MercunaLicensing}.
+
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{imaxes/surfacenavigation.png}
+  \caption[Visualización de navegación por cualquier superficie.]
+  {Visualización de navegación por cualquier superficie.
+  Imagen extraída de~\cite{Mercuna_AnySurface}.}
+  \label{fig:anysurface}
+\end{figure}
+
+\subsection{Soluciones específicas de motor}
+
+Por el contrario, las herramientas especializadas en un motor gráfico concreto, operan en un paradigma de desarrollo diferente.
+Al prescindir de una arquitectura genérica y agnóstica que asegure su interoperabilidad multiplataforma, estas soluciones pueden aprovechar las rutinas nativas del motor para optimizar el rendimiento computacional, ofreciendo asimismo una integración total con el editor.
+Esto se traduce en herramientas significativamente más intuitivas para el desarrollador final.
+
+En este ámbito predomina el ecosistema de Unity, fuertemente respaldado por su tienda oficial de recursos: la Asset Store~\cite{assetstore}.
+Esta plataforma permite comercializar tanto herramientas de desarrollo como recursos artísticos (modelos tridimensionales, texturas o composiciones musicales, entre otros) que aceleran los flujos de trabajo al evitar la necesidad de diseñar dichos componentes desde el principio.
+Bajo un modelo de reparto de ingresos, Unity proporciona visibilidad de los productos creados.
+
+Como consecuencia de la vasta magnitud de este ecosistema, prácticamente la totalidad de las herramientas de terceros se desarrollan de manera exclusiva para este motor.
+Mientras que en entornos como Unreal Engine las soluciones complejas suelen comercializarse con costosas licencias comerciales, la Asset Store de Unity proporciona productos más asequibles para estudios independientes o de menor presupuesto.
+Entre estas destacan:
+
+\subsubsection{Nav3D (Softbrix Studio)}
+
+Desarrollada por Softbrix Studio, Nav3D es la opción que ostenta mejores valoraciones en la tienda de Unity (Asset Store)~\cite{Nav3D_SoftbrixAssetStore}.
+Su mayor virtud reside en que no se limita al cálculo de rutas estáticas, sino que integra un sistema de evasión local.
+Esto garantiza que los \acrshort{npc}, en escenarios multiagente, coordinen sus trayectorias y las reajusten en tiempo real para evitar colisionar entre ellos~\cite{Nav3DPro}.
+
+\subsubsection{Nav3D (m6io)}
+
+Creada por el desarrollador independiente m6io, esta solución se comercializa con un enfoque puramente técnico.
+A pesar de cubrir la mayoría de casos de uso, carece por completo de herramientas visuales e interfaces de configuración del editor.
+En consecuencia, presenta una curva de aprendizaje notablemente más pronunciada, exigiendo al usuario un nivel avanzado de programación en el lenguaje C\#~\cite{Nav3D_FlyingAIAssetStore}.
+
+\subsubsection{HyperNav}
+
+Elaborada por Infohazard Games, constituye actualmente una de las alternativas más robustas y sofisticadas del mercado de Unity, lo cual se refleja también en un coste superior.
+Su principal ventaja competitiva es su enfoque multiparadigma: además de la navegación puramente volumétrica, ofrece navegación sobre superficies, permitiendo a los agentes desplazarse por suelos y paredes con una gestión automatizada de la gravedad local~\cite{HyperNav3D}.
+
+\subsubsection{Spatial Pathfinding}
+
+Desarrollada por TecMaid, se presenta como una alternativa más económica para desarrolladores con presupuestos ajustados.
+Se trata de una solución que sacrifica funcionalidades avanzadas en favor de ofrecer un sistema más ligero, directo y de implementación rápida~\cite{SpatialPathfinding3D}.
+
+\section{Comparativa de mercado}
+
+A modo de síntesis, la herramienta de carácter agnóstico Mercuna ofrece una solución tecnológicamente superior, si bien su modelo comercial la orienta exclusivamente a producciones de alto presupuesto conocidas como \gls{aaa}.
+Por otro lado, las alternativas nativas para Unity democratizan el acceso a estas tecnologías con precios mucho más asequibles, situándose por lo general por debajo de los 100 euros.
+
+Sin embargo, estas últimas opciones se distribuyen bajo modelos de \textbf{código cerrado}, lo que supone una desventaja técnica importante.
+Esta opacidad impide a los desarrolladores consultar el código y prever el impacto real de cada funcionalidad en el rendimiento, lo que habitualmente deriva en un uso subóptimo del sistema.
+Además, en muchos casos, estas soluciones carecen de un nivel de refinamiento adecuado en cuanto a usabilidad; como es el caso del ya mencionado anteriormente Nav3D de m6io, que prescinde por completo de herramientas gráficas.
+Esta comparativa general queda reflejada de manera resumida en la Tabla~\ref{tab:alternativas}.
+
+\begin{table}[htp]
+  \centering
+  \rowcolors{2}{white}{udcgray!25}
+  \begin{tabular}{c|c|c|c}
+  \rowcolor{udcpink!25}
+  \textbf{Herramienta} & \textbf{Plataforma} & \textbf{Enfoque} & \textbf{Precio} \\\hline
+  Mercuna & Multiplataforma & Multiparadigma & \pounds15000 + \\
+  \makecell{Nav3D \\ (Softbrix Studio)} & Unity & Volumétrica & 64,39\euro \\
+  Nav3D (m6io) & Unity & Volumétrica & 59,80\euro \\
+  HyperNav & Unity & \makecell{Volumétrica + \\ Superficies} & 82,80\euro \\
+  Spatial Pathfinding & Unity & Volumétrica & 27,59\euro \\
+  \end{tabular}
+  \caption{Resumen de las alternativas existentes}
+  \label{tab:alternativas}
+\end{table}
+
+\subsection{Justificación del entorno de desarrollo}
+\label{sec:justificacionentorno}
+
+En base a las soluciones analizadas, la elección de Unity como entorno para de desarrollo resulta óptima para este trabajo.
+El ecosistema de la Asset Store garantiza no solo que la solución responda a una demanda real, sino que también asegura un canal con la visibilidad suficiente para su correcta difusión.
+
+A este factor se suma una ventaja técnica fundamental: la disponibilidad de herramientas orientadas al alto rendimiento integradas de forma nativa en el motor, como es el caso del Burst Compiler.
+Esta tecnología permite compilar código C\# en código máquina altamente optimizado mediante el uso de la infraestructura \gls{llvm}~\cite{llvm2004}.
+Dado que la navegación volumétrica implica una carga computacional intensiva, aprovechar el Burst Compiler facilita la ejecución de estas rutinas matemáticas en \textit{hilos secundarios} con un impacto mínimo en el \textit{hilo principal de procesamiento}, preservando así la tasa de refresco del entorno interactivo.
+
+\section{\texorpdfstring{\acrshort{dafo}}{DAFO}}
+
+Con el propósito de evaluar la viabilidad estratégica y justificar el desarrollo del proyecto, se ha llevado a cabo un análisis \acrshort{dafo}.
+Este estudio se estructura en un bloque de \textbf{análisis interno} (orientado a identificar las fortalezas y debilidades inherentes a la propuesta), un bloque de \textbf{análisis externo} (centrado en discernir las oportunidades y amenazas que presenta el mercado actual) y un apartado de conclusiones.
+
+\subsection{Análisis interno}
+
+La principal fortaleza del sistema propuesto radica en su condición de ser la primera herramienta de código abierto específicamente orientada a la navegación volumétrica.
+A diferencia de las alternativas comerciales cerradas, este enfoque permite a los usuarios auditar el sistema, adaptarlo mediante modificaciones personalizadas según las necesidades de su proyecto y, potencialmente, contribuir a la evolución de este.
+Asimismo, la transparencia en el diseño del algoritmo permite a los desarrolladores prever con precisión el impacto en el rendimiento de cada componente.
+
+Por el contrario, la principal debilidad se asocia a su naturaleza como proyecto emergente dentro de un mercado maduro y consolidado por soluciones veteranas.
+Esto puede generar una percepción inicial de falta de madurez o robustez, lo que exigirá un proceso continuo de iteración y refinamiento técnico basado en la retroalimentación recibida tras las fases iniciales de despliegue.
+
+\subsection{Análisis externo}
+
+Las oportunidades del proyecto emergen ante la carencia de soluciones integradas o gratuitas de navegación volumétrica en las versiones nativas de los motores gráficos actuales.
+En este contexto, la existencia de un mercado centralizado como la Asset Store, permitirá dar a conocer la herramienta directamente a desarrolladores independientes.
+
+Por último, las amenazas provienen del dinamismo y la constante evolución tecnológica que caracterizan al sector de los videojuegos.
+El auge de motores alternativos de código abierto, como Godot~\cite{godot}, los cuales incorporan continuamente nuevas capacidades~\cite{salmela2022game}, representa un factor de competitividad externa.
+Asimismo, la eventual inclusión de una herramienta de navegación tridimensional oficial y nativa por parte de la propia compañía Unity constituye el riesgo más significativo para soluciones desarrolladas por terceros.
+
+\begin{table}[htp]
+  \centering
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{|p{0.46\textwidth}|p{0.46\textwidth}|}
+  \hline
+  \rowcolor{udcpink!25}
+  \textbf{Fortalezas} & \textbf{Debilidades} \\ \hline
+  \small
+  \textbullet\ Primera herramienta de código abierto en su campo.\newline
+  \textbullet\ Transparencia total, permitiendo optimización y adaptabilidad por parte del usuario.\newline & 
+  \small
+  \textbullet\ Proyecto emergente en un mercado con alternativas consolidadas.\newline
+  \textbullet\ Necesidad inicial de cambios para adaptarse a los requisitos de la comunidad.\\ \hline
+  \rowcolor{udcpink!25}
+  \textbf{Oportunidades} & \textbf{Amenazas} \\ \hline
+  \small
+  \textbullet\ Carencia de herramientas integradas gratuitas de navegación volumétrica.\newline
+  \textbullet\ Gran canal de difusión directa a través de la Asset Store. & 
+  \small
+  \textbullet\ Sector de los videojuegos en constante cambio y evolución.\newline
+  \textbullet\ Crecimiento de motores emergentes competitivos (ej. Godot).\newline
+  \textbullet\ Riesgo de aparición de una herramienta oficial integrada en el motor. \\ \hline
+  \end{tabular}
+  \caption[Matriz DAFO del proyecto]{Matriz \acrshort{dafo} del proyecto}
+  \label{tab:dafo}
+\end{table}
+
+\subsection{Conclusiones}
+
+A partir de la matriz \acrshort{dafo} expuesta en la Tabla~\ref{tab:dafo}, se concluye que el desarrollo de este sistema es altamente viable.
+Si bien el proyecto deberá competir con soluciones comerciales maduras, su naturaleza de código abierto representa una ventaja competitiva crítica.
+En definitiva, el proyecto se posiciona como una alternativa democratizadora y accesible, con un claro potencial de adopción dentro del vasto ecosistema de desarrolladores de Unity.
