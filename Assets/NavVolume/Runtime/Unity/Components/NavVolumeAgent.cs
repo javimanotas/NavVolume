@@ -445,5 +445,15 @@ namespace NavVolume
                 _angularSpeed * Time.deltaTime
             );
         }
+
+        void OnValidate()
+        {
+            if (GetComponent<NavVolumeObstacle>() != null)
+            {
+                Debug.LogError(
+                    "[NavVolume][NavVolumeAgent] NavVolumeAgent and NavVolumeObstacle cannot be on the same GameObject."
+                );
+            }
+        }
     }
 }
