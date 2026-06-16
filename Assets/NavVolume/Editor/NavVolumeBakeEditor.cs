@@ -8,10 +8,10 @@ using UnityEngine.Rendering;
 namespace NavVolume.Editor
 {
     /// <summary>
-    /// Custom editor for the <see cref="NavVolumeSpace"/> component.
+    /// Custom inspector and scene gizmos for <see cref="NavVolumeSpace"/>.
     /// </summary>
     /// <remarks>
-    /// Its responsibility is to manage the serialized data and provide a way to bake it.
+    /// Edits the build settings, bakes the volume, and visualizes the resulting SVO in the scene view.
     /// </remarks>
     [CustomEditor(typeof(NavVolumeSpace))]
     public class NavVolumeBakeEditor : UnityEditor.Editor
@@ -780,12 +780,8 @@ namespace NavVolume.Editor
                 return;
             }
 
-            // Shared profiler: the builder records its phases, then we append the post-build
-            // (serialize + disk save) phases so the whole bake is reported as one unified log.
             var profiler = new BakeProfiler();
 
-            // Cancelable progress bar. The reporter throws on cancel so the in-flight bake unwinds
-            // at the next phase boundary without writing a partial asset.
             static void Report(string phase, float fraction)
             {
                 if (EditorUtility.DisplayCancelableProgressBar("Baking NavVolume", phase, fraction))

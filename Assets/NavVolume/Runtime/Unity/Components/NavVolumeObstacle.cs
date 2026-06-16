@@ -13,6 +13,7 @@ namespace NavVolume
     /// </remarks>
     [AddComponentMenu("NavVolume/NavVolume Obstacle")]
     [DisallowMultipleComponent]
+    [HelpURL("https://github.com/javimanotas/NavVolume")]
     public class NavVolumeObstacle : MonoBehaviour
     {
         [SerializeField]

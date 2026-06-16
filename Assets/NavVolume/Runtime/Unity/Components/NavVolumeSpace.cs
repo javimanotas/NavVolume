@@ -18,6 +18,7 @@ namespace NavVolume
     /// </summary>
     [AddComponentMenu("NavVolume/NavVolume Space")]
     [DisallowMultipleComponent]
+    [HelpURL("https://github.com/javimanotas/NavVolume")]
     public class NavVolumeSpace : MonoBehaviour
     {
         static readonly List<NavVolumeSpace> s_Instances = new();

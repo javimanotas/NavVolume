@@ -13,6 +13,7 @@ namespace NavVolume
     /// </summary>
     [AddComponentMenu("NavVolume/NavVolume Agent")]
     [DisallowMultipleComponent]
+    [HelpURL("https://github.com/javimanotas/NavVolume")]
     public class NavVolumeAgent : MonoBehaviour
     {
         [field: SerializeField]

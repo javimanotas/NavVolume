@@ -6,10 +6,10 @@ using UnityEngine;
 namespace NavVolume.Editor
 {
     /// <summary>
-    /// Draws path gizmos for a selected <see cref="NavVolumeAgent"/>.
+    /// Custom inspector and scene gizmos for <see cref="NavVolumeAgent"/>.
     /// </summary>
     /// <remarks>
-    /// Renders the raw A* waypoints alongside the smoothed/spline waypoints and highlights the next waypoint the agent is moving toward.
+    /// Draws the raw and smoothed path waypoints and highlights the next one the agent is moving toward.
     /// </remarks>
     [CustomEditor(typeof(NavVolumeAgent))]
     public class NavVolumeAgentEditor : UnityEditor.Editor
@@ -214,7 +214,6 @@ namespace NavVolume.Editor
                     $"{stats.WaypointsRemovedByLOS:N0} / {stats.RawWaypointsCount:N0}  ({pct * 100f:F1}%)"
                 );
 
-                // Visual bar showing the LOS-removed fraction on the same red, yellow, green palette.
                 var barRow = EditorGUILayout.GetControlRect(false, 8f);
                 var barRect = new Rect(
                     barRow.x + EditorGUIUtility.labelWidth,
@@ -238,7 +237,6 @@ namespace NavVolume.Editor
 
             using (new EditorGUILayout.HorizontalScope())
             {
-                // Match indentation of sibling property labels rendered by PropertyField.
                 var indentPx = EditorGUI.indentLevel * 15f;
                 GUILayout.Space(indentPx);
                 GUILayout.Label(
@@ -246,8 +244,6 @@ namespace NavVolume.Editor
                     GUILayout.Width(EditorGUIUtility.labelWidth - indentPx)
                 );
 
-                // Reset indent locally — EditorGUILayout.Toggle re-applies indentLevel,
-                // which pushes the checkbox 15 px away from its axis label otherwise.
                 var savedIndent = EditorGUI.indentLevel;
                 EditorGUI.indentLevel = 0;
 
