@@ -123,7 +123,7 @@ namespace NavVolume
         /// <summary>
         /// Returns the active NavVolume instance that better suits the target agent.
         /// </summary>
-        public static bool FindBetterInstanceFor(
+        internal static bool FindBetterInstanceFor(
             NavVolumeAgent agent,
             out NavVolumeSpace navVolumeSpace
         )
