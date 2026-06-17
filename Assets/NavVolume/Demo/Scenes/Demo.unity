@@ -147,12 +147,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7142049}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2, y: 8.6, z: 6}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 14.46, y: 8.6, z: 6}
   m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
   m_ConstrainProportionsScale: 1
   m_Children: []
-  m_Father: {fileID: 1350544971}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7142051
 MonoBehaviour:
@@ -256,7 +256,7 @@ GameObject:
   - component: {fileID: 74025356}
   - component: {fileID: 74025355}
   m_Layer: 0
-  m_Name: Obstacle
+  m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -348,12 +348,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 74025354}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 2.56, y: -1.24, z: 16.14}
   m_LocalScale: {x: 24.77, y: 9.55, z: 22.95}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1350544971}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &185549915
 GameObject:
@@ -368,7 +368,7 @@ GameObject:
   - component: {fileID: 185549917}
   - component: {fileID: 185549916}
   m_Layer: 0
-  m_Name: Obstacle (1)
+  m_Name: Cube (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -460,12 +460,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 185549915}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 15.61, y: 0.46, z: 11.78}
   m_LocalScale: {x: 24.77, y: 9.55, z: 22.95}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1350544971}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &550571122
 GameObject:
@@ -480,7 +480,7 @@ GameObject:
   - component: {fileID: 550571125}
   - component: {fileID: 550571124}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: Dynamic Obstacle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -736,11 +736,11 @@ Transform:
   m_GameObject: {fileID: 944326617}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 13, y: 8.6, z: -6}
+  m_LocalPosition: {x: -3.19, y: -9.49, z: 8.39}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1350544971}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1342004213
 GameObject:
@@ -805,7 +805,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1350544971}
   m_Layer: 0
-  m_Name: GameObject (1)
+  m_Name: Geometry
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -824,8 +824,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 7142050}
-  - {fileID: 944326618}
+  - {fileID: 74025358}
+  - {fileID: 185549919}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1844648342
@@ -962,7 +962,7 @@ SceneRoots:
   - {fileID: 763831583}
   - {fileID: 1844648344}
   - {fileID: 1342004216}
-  - {fileID: 74025358}
-  - {fileID: 185549919}
   - {fileID: 1350544971}
+  - {fileID: 7142050}
+  - {fileID: 944326618}
   - {fileID: 550571126}
