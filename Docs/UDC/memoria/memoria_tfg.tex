@@ -37,6 +37,46 @@
 % \usepackage{tabu}        % permite táboas flexibles
 % \usepackage{tabularx}    % permite táboas con columnas de anchura determinada
   \usepackage{makecell}
+  \usepackage{tikz}
+  \usetikzlibrary{positioning, arrows.meta, fit, backgrounds}
+
+% Estilos compartidos para los diagramas TikZ del documento.
+\tikzset{
+  >={Stealth[length=3mm]},
+  caja/.style={rounded corners=3pt, draw, thick, align=center, inner sep=6pt},
+  modulo/.style={caja, minimum width=3.4cm, minimum height=1.5cm},
+  contenedor/.style={rounded corners=4pt, draw=udcpink, thick, fill=udcpink!10, inner sep=10pt},
+  ns/.style={rounded corners=2pt, draw=udcpink!60!black, fill=white, align=center,
+             minimum width=2.1cm, minimum height=9mm, font=\footnotesize\ttfamily},
+  paso/.style={caja, fill=ficblue!12, draw=ficblue, minimum width=2.5cm, minimum height=0.95cm, font=\footnotesize},
+  almacen/.style={caja, fill=udcgray!25, draw=udcgray!85!black, minimum width=2.4cm, minimum height=0.95cm, font=\footnotesize},
+  dep/.style={dashed, ->, thick, draw=black!70},
+  flecha/.style={->, thick, draw=black!75},
+  celda/.style={draw=black!55, line width=0.4pt},
+  ocupado/.style={celda, fill=udcpink!75},
+  resaltado/.style={celda, fill=ficblue!30},
+  obstaculo/.style={draw=udcgray!85!black, fill=udcgray!45, thick},
+  agente/.style={draw=ficblue, very thick, fill=ficblue!25},
+  nodo/.style={circle, draw=black!70, thick, minimum size=5mm, inner sep=0pt, font=\scriptsize},
+}
+
+% Comando auxiliar para marcar figuras o diagramas pendientes de incluir.
+% El primer argumento describe el contenido que debe ilustrar la figura,
+% el segundo es la leyenda y el tercero la etiqueta para las referencias.
+\newcommand{\pendientefig}[3]{%
+  \begin{figure}[htp]
+    \centering
+    \fbox{%
+      \parbox[c][3.6cm][c]{0.85\textwidth}{%
+        \centering\itshape [Figura pendiente de incluir]\\[6pt]%
+        \normalfont\small #1%
+      }%
+    }%
+    \caption{#2}%
+    \label{#3}%
+  \end{figure}%
+}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Corpo                                                                        %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -75,7 +115,7 @@
  \include{contido/fundamentos}
  \include{contido/estadodelacuestion}
  \include{contido/metodologiayplanificacion}
-%  \include{contido/desarrollo}
+ \include{contido/desarrollo}
 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  % Apéndices, glosarios e bibliografía  %
@@ -83,7 +123,8 @@
 
 %  \appendix
 %  \appendixpage
-%  \include{anexos/adicional}
+%  \include{anexos/manual_instalacion}
+%  \include{anexos/manual_usuario}
 
  \printglossary[type=\acronymtype,title=\nomeglosarioacronimos]
  \printglossary[title=\nomeglosariotermos]

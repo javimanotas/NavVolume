@@ -1,9 +1,10 @@
 \chapter{Fundamentos}
 
 Para abordar el desarrollo de un sistema de navegación volumétrica, es necesario comprender tanto las tecnologías con las que se va a trabajar como los principios matemáticos o algorítmicos que se usarán en el sistema.
-En consecuencia, el presente capítulo se divide en dos grandes bloques.
+En consecuencia, el presente capítulo se estructura en tres bloques.
 En primer lugar, se tratarán los fundamentos tecnológicos, detallando la arquitectura del motor gráfico seleccionado y las herramientas de alto rendimiento necesarias para garantizar su viabilidad y funcionamiento óptimo.
-En segundo lugar, se profundizará en los fundamentos teóricos, los cuales establecerán las bases de las estructuras de datos y las técnicas algorítmicas empleadas en el proyecto.
+En segundo lugar, se describirán las herramientas y el entorno de desarrollo empleados a lo largo del proyecto, desde el control de versiones hasta la integración continua.
+Por último, se profundizará en los fundamentos teóricos, los cuales establecerán las bases de las estructuras de datos y las técnicas algorítmicas empleadas en el proyecto.
 
 \section{Fundamentos tecnológicos}
 
@@ -107,7 +108,23 @@ Las siguientes técnicas minimizan el impacto del recolector de memoria y reduce
 A este conjunto de técnicas se añade la manipulación de bits.
 Esta técnica permite codificar varios campos en una única variable entera, reduciendo drásticamente el uso de memoria.
 
-TODO hacer referencia a cuando estos se comenten en la fase de desarrollo a modo de ejemplo.
+Estas técnicas de bajo nivel se aplican de forma recurrente a lo largo del Capítulo~\ref{chap:desarrollo}.
+A modo de ejemplo, la manipulación de bits resulta esencial en la codificación compacta de las hojas y los punteros de la estructura de datos espacial (Sección~\ref{sec:iter-representacion}). El acceso por referencia de solo lectura (\texttt{ref readonly}) se emplea para optimizar las rutas más críticas del buscador (Sección~\ref{sec:iter-api-opt}).
+Por último, la reserva de memoria en el \gls{stack} mediante \texttt{stackalloc}, junto con su manipulación a través de estructuras \texttt{Span\textless T\textgreater}, se aprovecha en el solucionador de evasión local, que se ejecuta en cada frame del sistema por lo que se debe evitar generar presión sobre el recolector de basura (Sección~\ref{sec:iter-evasion}).
+
+\section{Herramientas y entorno de desarrollo}
+\label{sec:herramientas}
+
+A parte de las tecnologías que se emplean en el sistema, su desarrollo requirió un conjunto de herramientas que conformasen un entorno de trabajo productivo.
+A continuación se recogen todas aquellas que fueron empleadas a lo largo del proyecto:
+
+\begin{itemize}
+    \item \textbf{Entorno de programación:} la creación de escenas, la configuración de los componentes y la depuración visual se realizan sobre el editor del motor Unity~\cite{unity}, mientras que la escritura del código fuente en C\# se apoya en el entorno de desarrollo integrado Visual Studio~\cite{visualstudio}, que ofrece asistencia a la edición, navegación por el código y depuración.
+    \item \textbf{Control de versiones:} la evolución del código se gestiona con el sistema de control de versiones distribuido Git~\cite{git}, empleando la plataforma GitHub~\cite{github} como servicio de alojamiento remoto del repositorio y soporte para la revisión e integración de los cambios.
+    \item \textbf{Integración continua:} la verificación automática del proyecto se delega en un sistema de \acrfull{ci} implementado mediante GitHub Actions~\cite{githubactions}, que ejecuta de forma desatendida la batería de pruebas en una máquina remota ante cada propuesta o integración de cambios.
+    \item \textbf{Calidad y estilo del código:} la consistencia del formato se garantiza con el formateador CSharpier~\cite{csharpier}, que aplica de manera automática una guía de estilo común a todo el código fuente.
+    \item \textbf{Pruebas automatizadas:} la validación del comportamiento se construye sobre el Unity Test Framework~\cite{unity_test_framework}, que permite definir pruebas tanto en modo de edición (\textit{EditMode}) como en modo de ejecución (\textit{PlayMode}).
+\end{itemize}
 
 \section{Fundamentos teóricos}
 

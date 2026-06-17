@@ -1,20 +1,3 @@
-% Comando auxiliar para marcar figuras o diagramas pendientes de incluir.
-% El primer argumento describe el contenido que debe ilustrar la figura,
-% el segundo es la leyenda y el tercero la etiqueta para las referencias.
-\newcommand{\pendientefig}[3]{%
-  \begin{figure}[htp]
-    \centering
-    \fbox{%
-      \parbox[c][3.6cm][c]{0.85\textwidth}{%
-        \centering\itshape [Figura pendiente de incluir]\\[6pt]%
-        \normalfont\small #1%
-      }%
-    }%
-    \caption{#2}%
-    \label{#3}%
-  \end{figure}%
-}
-
 \chapter{Desarrollo}
 \label{chap:desarrollo}
 
@@ -45,11 +28,55 @@ La estructura resultante se divide en tres grandes bloques, ilustrados en la Fig
 
 Internamente, el módulo \textit{Runtime} se subdivide a su vez en espacios de nombres cohesivos: \texttt{Core} (las estructuras de datos fundamentales), \texttt{Builder} (la construcción del volumen), \texttt{Pathfinding} (la búsqueda y el postprocesado), \texttt{Avoidance} (la evasión local) y \texttt{Unity} (los componentes que exponen el sistema al motor).
 
-\pendientefig{Diagrama de la arquitectura modular: los tres \textit{assemblies} (Runtime, Editor y Tests) representados como bloques, con flechas que indiquen las dependencias unidireccionales (Editor y Tests dependen de Runtime). Debe mostrarse también la subdivisión interna de Runtime en sus espacios de nombres (Core, Builder, Pathfinding, Avoidance y Unity).}{Arquitectura modular del sistema y sus dependencias.}{fig:arquitectura}
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}[
+      font=\small,
+      modulo/.style={rounded corners=3pt, draw, thick, align=center,
+                     inner sep=8pt, minimum width=3.4cm, minimum height=1.5cm},
+      contenedor/.style={rounded corners=4pt, draw=udcpink, thick, fill=udcpink!10,
+                         inner sep=10pt},
+      ns/.style={rounded corners=2pt, draw=udcpink!60!black, fill=white, align=center,
+                 minimum width=2.1cm, minimum height=9mm, font=\footnotesize\ttfamily},
+      dep/.style={dashed, -{Stealth[length=3mm]}, thick, draw=black!70}
+    ]
+
+    % Espacios de nombres internos del modulo Runtime
+    \node[ns] (core) {Core};
+    \node[ns, right=3mm of core]    (builder) {Builder};
+    \node[ns, right=3mm of builder] (path)    {Pathfinding};
+    \node[ns, right=3mm of path]    (avoid)   {Avoidance};
+    \node[ns, right=3mm of avoid]   (unity)   {Unity};
+
+    % Contenedor Runtime (en capa de fondo para no tapar los nodos)
+    \begin{scope}[on background layer]
+      \node[contenedor, fit=(core)(builder)(path)(avoid)(unity),
+            label={[font=\bfseries]above:Runtime}] (runtime) {};
+    \end{scope}
+
+    % Modulos Editor y Tests
+    \node[modulo, fill=ficblue!15, draw=ficblue,
+          above=16mm of runtime.north west, anchor=south west]
+      (editor) {\textbf{Editor}\\[2pt]\footnotesize Herramientas de\\configuración y\\visualización};
+    \node[modulo, fill=udcgray!40, draw=udcgray!80!black,
+          above=16mm of runtime.north east, anchor=south east]
+      (tests) {\textbf{Tests}\\[2pt]\footnotesize Pruebas \textit{EditMode}\\y \textit{PlayMode}};
+
+    % Dependencias unidireccionales hacia Runtime
+    \draw[dep] (editor.south) -- (editor.south |- runtime.north);
+    \draw[dep] (tests.south)  -- (tests.south  |- runtime.north);
+
+  \end{tikzpicture}
+  \caption[Arquitectura modular del sistema y sus dependencias.]
+  {Arquitectura modular del sistema y sus dependencias.
+  Los módulos \textit{Editor} y \textit{Tests} dependen del módulo \textit{Runtime} (flechas discontinuas), pero nunca a la inversa;
+  únicamente \textit{Runtime} se incluye en la versión final del producto.}
+  \label{fig:arquitectura}
+\end{figure}
 
 Sobre estos cimientos se configuró el flujo de trabajo basado en \textit{pull requests} y el sistema de \acrshort{ci}, descritos en la Sección~\ref{sec:metodologiadesarrollo}.
-Desde el primer momento se adoptó una guía de estilo común, cuya adhesión se verifica automáticamente mediante el formateador CSharpier en cada integración.
-De este modo, la deuda técnica asociada al formato y la consistencia del código se mantuvo controlada a lo largo de todo el proyecto.
+Una de las primeras garantías de calidad que ejecuta este sistema de \acrshort{ci} es la verificación automática del estilo: ante cada \textit{pull request}, una comprobación de formato (\textit{format check}) con el formateador CSharpier impide la integración del código si este no se ajusta a la guía de estilo común adoptada.
+De este modo, la deuda técnica asociada al formato y la consistencia del código se mantuvo controlada, sin intervención manual, a lo largo de todo el proyecto.
 
 \section{Iteración 1: Representación del espacio navegable}
 \label{sec:iter-representacion}
@@ -67,7 +94,35 @@ Esta decisión de diseño es deliberada y responde a los principios del \acrshor
 Almacenar cada hoja como una rejilla densa de 64 \glspl{voxel}, en lugar de seguir subdividiendo el árbol cuatro niveles más, reduce drásticamente el número de nodos y, sobre todo, mantiene los datos contiguos en memoria.
 La búsqueda de un nodo dentro de una capa se resuelve mediante una \textbf{búsqueda binaria} sobre el vector ordenado, aprovechando que los códigos de Morton preservan la localidad espacial.
 
-\pendientefig{Representación de una hoja del \acrshort{svo}: un cubo subdividido en una rejilla de $4\times4\times4$ vóxeles, con algunos vóxeles marcados como ocupados. Junto a él, la cadena de 64 bits correspondiente, evidenciando la correspondencia entre cada vóxel ocupado y su bit a 1.}{Hoja del \acrshort{svo} y su máscara de ocupación de 64 bits.}{fig:hoja-mascara}
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}[font=\small]
+    % Una capa 4x4 de la hoja; voxeles ocupados en rosa
+    \foreach \c/\r in {1/0, 3/0, 0/2, 2/2, 2/3}
+      \fill[ocupado] (\c*0.72,-\r*0.72) rectangle ++(0.72,-0.72);
+    \foreach \c in {0,1,2,3}
+      \foreach \r in {0,1,2,3}
+        \draw[celda] (\c*0.72,-\r*0.72) rectangle ++(0.72,-0.72);
+    \node[font=\footnotesize, anchor=south] at (1.44,0.12) {Hoja (una capa $4\times4$)};
+
+    % Flecha de codificacion
+    \draw[flecha] (3.2,-1.44) -- ++(1.45,0) node[midway, above, font=\scriptsize] {1 bit/vóxel};
+
+    % Mascara de 64 bits (8x8)
+    \begin{scope}[xshift=5cm, yshift=0.35cm]
+      \foreach \c/\r in {1/0,3/0,5/1,0/2,2/2,6/3,2/3,4/4,7/5,1/6,3/6,5/7}
+        \fill[ocupado] (\c*0.34,-\r*0.34) rectangle ++(0.34,-0.34);
+      \foreach \c in {0,...,7}
+        \foreach \r in {0,...,7}
+          \draw[celda] (\c*0.34,-\r*0.34) rectangle ++(0.34,-0.34);
+      \node[font=\footnotesize, anchor=south] at (1.36,0.12) {Máscara de 64 bits (\texttt{ulong})};
+    \end{scope}
+  \end{tikzpicture}
+  \caption[Hoja del \acrshort{svo} y su máscara de ocupación de 64 bits.]
+  {Hoja del \acrshort{svo} y su máscara de ocupación de 64 bits.
+  Cada hoja apila cuatro capas de $4\times4$ vóxeles; cada uno de esos $4\times4\times4=64$ vóxeles se corresponde con un bit de un único entero de 64 bits (\texttt{ulong}): los ocupados (en rosa) fijan su bit a~1 y los libres a~0.}
+  \label{fig:hoja-mascara}
+\end{figure}
 
 \subsection{Codificación de las hojas mediante manipulación de bits}
 
@@ -143,7 +198,40 @@ La construcción se realiza con una estrategia \textbf{de lo grueso a lo fino} (
 En lugar de muestrear de golpe la totalidad del espacio a máxima resolución, el barrido comienza en una capa cercana a la raíz y, en cada nivel, solo subdivide aquellas celdas que contienen geometría, descartando subárboles enteros vacíos (véase la Figura~\ref{fig:coarse-to-fine}).
 Este descarte temprano es la primera de las dos grandes optimizaciones de la fase de construcción.
 
-\pendientefig{Esquema bidimensional del barrido de lo grueso a lo fino: una rejilla gruesa donde solo algunas celdas contienen un obstáculo, y cómo únicamente esas celdas se subdividen en el siguiente nivel, mientras las celdas vacías se descartan por completo.}{Barrido jerárquico de lo grueso a lo fino durante la rasterización.}{fig:coarse-to-fine}
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}[font=\small]
+    % Izquierda: nivel grueso
+    \begin{scope}
+      \fill[obstaculo, rounded corners=2pt] (1.0,-1.0) rectangle (2.7,-2.7);
+      \foreach \c in {0,1,2,3}\foreach \r in {0,1,2,3}
+        \draw[celda, line width=0.7pt] (\c*0.8,-\r*0.8) rectangle ++(0.8,-0.8);
+      \foreach \c/\r in {1/1,2/1,1/2,2/2}
+        \draw[draw=udcpink, very thick] (\c*0.8,-\r*0.8) rectangle ++(0.8,-0.8);
+      \node[font=\footnotesize, anchor=north, text width=3.4cm, align=center] at (1.6,-3.5)
+        {Nivel grueso: se detectan las celdas con geometría};
+    \end{scope}
+    % Flecha
+    \draw[flecha] (3.5,-1.6) -- ++(1.3,0) node[midway, above, font=\scriptsize] {subdivisión};
+    % Derecha: nivel fino
+    \begin{scope}[xshift=5.3cm]
+      \fill[obstaculo, rounded corners=2pt] (1.0,-1.0) rectangle (2.7,-2.7);
+      \foreach \c in {0,1,2,3}\foreach \r in {0,1,2,3}
+        \draw[celda, line width=0.7pt] (\c*0.8,-\r*0.8) rectangle ++(0.8,-0.8);
+      \foreach \c/\r in {1/1,2/1,1/2,2/2}
+        \foreach \sc in {0,1}\foreach \sr in {0,1}
+          \draw[celda] (\c*0.8+\sc*0.4,-\r*0.8-\sr*0.4) rectangle ++(0.4,-0.4);
+      \foreach \c/\r in {1/1,2/1,1/2,2/2}
+        \draw[draw=udcpink, very thick] (\c*0.8,-\r*0.8) rectangle ++(0.8,-0.8);
+      \node[font=\footnotesize, anchor=north, text width=3.6cm, align=center] at (1.6,-3.5)
+        {Nivel fino: solo esas celdas se subdividen};
+    \end{scope}
+  \end{tikzpicture}
+  \caption[Barrido jerárquico de lo grueso a lo fino durante la rasterización.]
+  {Barrido jerárquico de lo grueso a lo fino durante la rasterización.
+  Las celdas vacías se descartan por completo; únicamente las que contienen geometría (resaltadas en rosa) se subdividen en el siguiente nivel de resolución.}
+  \label{fig:coarse-to-fine}
+\end{figure}
 
 \subsection{Optimización: descarte de hojas vacías}
 \label{sec:descarte-hojas}
@@ -189,7 +277,33 @@ para cada j en supervivientes:
 \label{fig:empty-leaf-pseudo}
 \end{figure}
 
-\pendientefig{Comparación visual de las dos pasadas sobre una misma hoja: a la izquierda, la pasada gruesa con una sola caja envolvente que cubre la hoja entera; a la derecha, la pasada fina con las 64 cajas individuales que solo se evalúan si la pasada gruesa detectó geometría.}{Pasada gruesa de descarte frente a pasada fina de muestreo.}{fig:empty-leaf}
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}[font=\small]
+    % Izquierda: pasada gruesa, 1 caja envolvente
+    \begin{scope}
+      \foreach \c in {0,1,2,3}\foreach \r in {0,1,2,3}
+        \draw[celda] (\c*0.7,-\r*0.7) rectangle ++(0.7,-0.7);
+      \draw[draw=ficblue, very thick, rounded corners=2pt] (-0.12,0.12) rectangle (2.92,-2.92);
+      \node[font=\footnotesize, anchor=north, text width=3.4cm, align=center] at (1.4,-3.2)
+        {Pasada gruesa:\\ \textbf{1} consulta envolvente};
+    \end{scope}
+    \draw[flecha] (3.4,-1.4) -- ++(1.2,0);
+    % Derecha: pasada fina, 1 caja por voxel
+    \begin{scope}[xshift=5cm]
+      \foreach \c in {0,1,2,3}\foreach \r in {0,1,2,3} {
+        \draw[celda] (\c*0.7,-\r*0.7) rectangle ++(0.7,-0.7);
+        \draw[draw=ficblue, thick] (\c*0.7+0.07,-\r*0.7-0.07) rectangle ++(0.56,-0.56);
+      }
+      \node[font=\footnotesize, anchor=north, text width=3.7cm, align=center] at (1.4,-3.2)
+        {Pasada fina:\\ \textbf{64} consultas individuales};
+    \end{scope}
+  \end{tikzpicture}
+  \caption[Pasada gruesa de descarte frente a pasada fina de muestreo.]
+  {Pasada gruesa de descarte frente a pasada fina de muestreo.
+  La pasada gruesa resuelve la hoja entera con una única consulta envolvente; solo si esta detecta geometría se ejecuta la pasada fina, con una consulta por vóxel (64 en una hoja de $4\times4\times4$).}
+  \label{fig:empty-leaf}
+\end{figure}
 
 \subsection{Enlazado de la vecindad}
 \label{sec:enlazado-vecinos}
@@ -201,7 +315,32 @@ Para cada nodo y dirección, se busca primero si existe un vecino del mismo tama
 Si no existe, en lugar de buscar exhaustivamente vecinos de distinto tamaño, el nodo simplemente \textbf{hereda el enlace del vecino de su padre} (un nodo de mayor tamaño).
 Esta solución, ilustrada en la Figura~\ref{fig:neighbor-link}, resuelve de forma elegante y eficiente la transición entre regiones de distinta resolución, que es uno de los aspectos más delicados de la navegación sobre estructuras jerárquicas.
 
-\pendientefig{Esquema bidimensional del enlazado de vecinos con herencia del padre: un nodo pequeño que, al carecer de un vecino de su mismo tamaño en una dirección, hereda como vecino el nodo grande adyacente a su padre.}{Enlazado de la vecindad mediante herencia del nodo padre.}{fig:neighbor-link}
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}[font=\small]
+    % Vecino grande (nivel del padre)
+    \draw[celda, very thick, fill=ficblue!12] (0,0) rectangle (2.6,-2.6);
+    \node[font=\footnotesize, align=center] at (1.3,-1.3) {Vecino de\\mayor tamaño};
+    % Nodo a enlazar, subdividido
+    \begin{scope}[xshift=2.6cm]
+      \draw[celda, very thick] (0,0) rectangle (2.6,-2.6);
+      \draw[celda] (1.3,0) -- (1.3,-2.6);
+      \draw[celda] (0,-1.3) -- (2.6,-1.3);
+      \foreach \sc in {0,1}\foreach \sr in {0,1}
+        \draw[celda] (\sc*0.65,-\sr*0.65) rectangle ++(0.65,-0.65);
+      \fill[udcpink!65] (0,0) rectangle (0.65,-0.65);
+      \draw[celda] (0,0) rectangle (0.65,-0.65);
+    \end{scope}
+    \node[font=\scriptsize, anchor=west] at (3.4,-0.32) {nodo pequeño};
+    % Enlace heredado del padre
+    \draw[flecha, draw=udcpink, very thick] (2.6,-0.32) to[out=180, in=0] (1.7,-0.95);
+    \node[font=\scriptsize, text=udcpink!80!black, anchor=north] at (2.15,-1.05) {vecino heredado};
+  \end{tikzpicture}
+  \caption[Enlazado de la vecindad mediante herencia del nodo padre.]
+  {Enlazado de la vecindad mediante herencia del nodo padre.
+  Cuando un nodo pequeño carece de un vecino de su mismo tamaño en una dirección, hereda como vecino el nodo de mayor tamaño adyacente a su padre, evitando una búsqueda exhaustiva entre celdas de distinto tamaño.}
+  \label{fig:neighbor-link}
+\end{figure}
 
 Al término de esta iteración el sistema es ya capaz de transformar una escena tridimensional en un \acrshort{svo} completamente enlazado y navegable.
 
@@ -222,7 +361,42 @@ El algoritmo gestiona esta heterogeneidad combinando tres comportamientos durant
     \item Si un vecino es una \textbf{hoja parcialmente ocupada}, se expande directamente en sus \glspl{voxel} libres, descartando los ocupados.
 \end{itemize}
 
-\pendientefig{Visualización bidimensional de la expansión de A* sobre el \acrshort{svo}: una ruta que cruza una región abierta mediante saltos grandes y que, al aproximarse a un obstáculo, se ramifica en nodos y vóxeles cada vez más pequeños para bordearlo con precisión.}{Expansión de A* sobre un grafo de resolución heterogénea.}{fig:astar-multinivel}
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}[font=\small]
+    % Marco exterior
+    \draw[celda, line width=0.7pt] (0,0) rectangle (6.4,-3.6);
+    % Zona abierta (izquierda): pocas celdas grandes
+    \draw[celda, line width=0.7pt] (1.8,0) -- (1.8,-3.6);
+    \draw[celda, line width=0.7pt] (3.6,0) -- (3.6,-3.6);
+    \draw[celda, line width=0.7pt] (0,-1.8) -- (3.6,-1.8);
+    % Zona fina (derecha, cerca del obstaculo)
+    \foreach \c in {0,...,3}\foreach \r in {0,...,7}
+      \draw[celda] (3.6+\c*0.7,-\r*0.45) rectangle ++(0.7,-0.45);
+    % Obstaculo
+    \fill[obstaculo, rounded corners=2pt] (4.2,-1.0) rectangle (5.6,-2.7);
+    \node[font=\footnotesize, text=white] at (4.9,-1.85) {obstáculo};
+    % Ruta A*
+    \node[nodo, fill=ficblue!40] (s) at (0.7,-0.9) {};
+    \node[font=\scriptsize, anchor=south] at (0.7,-0.62) {inicio};
+    \coordinate (a) at (2.7,-0.9);
+    \coordinate (b) at (3.9,-0.7);
+    \coordinate (c) at (5.0,-0.55);
+    \coordinate (d) at (5.95,-1.2);
+    \coordinate (e) at (5.95,-2.6);
+    \coordinate (f) at (5.2,-3.15);
+    \node[nodo, fill=udcpink!75] (g) at (4.4,-3.15) {};
+    \node[font=\scriptsize, anchor=north] at (4.4,-3.35) {meta};
+    \draw[flecha, draw=udcpink, very thick] (s) -- (a) -- (b) -- (c) -- (d) -- (e) -- (f) -- (g);
+    \foreach \p in {a,b,c,d,e,f} \fill[udcpink] (\p) circle (1.7pt);
+    \node[font=\scriptsize, text=udcpink!80!black, anchor=south] at (1.7,-0.85) {salto grande};
+    \node[font=\scriptsize, text=udcpink!80!black, anchor=west] at (6.0,-1.95) {pasos finos};
+  \end{tikzpicture}
+  \caption[Expansión de A* sobre un grafo de resolución heterogénea.]
+  {Expansión de A* sobre un grafo de resolución heterogénea.
+  En el espacio abierto la búsqueda avanza con saltos grandes entre nodos de gran tamaño; al aproximarse al obstáculo, se ramifica en nodos y vóxeles cada vez más pequeños para bordearlo con precisión.}
+  \label{fig:astar-multinivel}
+\end{figure}
 
 \begin{figure}[H]
 \begin{lstlisting}
@@ -381,12 +555,44 @@ La solución consiste en \textbf{inflar} los obstáculos por el radio del agente
 De este modo, cualquier ruta que el buscador considere libre garantiza, por construcción, el espacio de holgura necesario para que el agente no colisione.
 La Figura~\ref{fig:clipping} ilustra el problema y su corrección.
 
-\pendientefig{Comparación antes/después del tratamiento del radio del agente: a la izquierda, una trayectoria que recorta la esquina de un obstáculo y provoca colisión; a la derecha, el obstáculo inflado por el radio del agente y la nueva trayectoria, que mantiene la holgura necesaria.}{Corrección del \textit{clipping} mediante el inflado de obstáculos por el radio del agente.}{fig:clipping}
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}[font=\small]
+    % ===== Izquierda: sin tratar el radio (colision) =====
+    \begin{scope}
+      \fill[obstaculo, rounded corners=1pt] (1.6,-1.2) rectangle (3.0,-2.6);
+      \node[font=\footnotesize, text=white] at (2.3,-1.9) {obstáculo};
+      \draw[flecha, draw=udcpink, very thick] (0,-0.2) -- (3.6,-2.05);
+      \fill[ficblue!25, opacity=0.75] (1.85,-1.05) circle (0.34);
+      \draw[agente] (1.85,-1.05) circle (0.34);
+      \node[font=\scriptsize, text=udcpink!80!black, anchor=south west] at (1.55,-0.95) {colisión};
+      \node[font=\footnotesize, anchor=north, text width=3.9cm, align=center] at (1.8,-3.05)
+        {Sin tratar el radio: la trayectoria recorta la esquina};
+    \end{scope}
+    % ===== Derecha: obstaculo inflado (holgura) =====
+    \begin{scope}[xshift=5.4cm]
+      \draw[dashed, draw=udcpink, thick, rounded corners=4pt] (1.3,-0.9) rectangle (3.3,-2.9);
+      \fill[obstaculo, rounded corners=1pt] (1.6,-1.2) rectangle (3.0,-2.6);
+      \node[font=\footnotesize, text=white] at (2.3,-1.9) {obstáculo};
+      \draw[flecha, draw=ficblue, very thick] (0,-0.2) -- (1.15,-0.5) -- (3.45,-0.5) -- (3.8,-2.0);
+      \draw[<->, thin, draw=udcpink!80!black] (2.3,-0.5) -- (2.3,-0.9);
+      \node[font=\scriptsize, text=udcpink!80!black, anchor=west] at (2.4,-0.7) {holgura $=$ radio};
+      \node[font=\footnotesize, anchor=north, text width=4.0cm, align=center] at (1.9,-3.25)
+        {Obstáculo inflado por el radio: trayectoria con holgura};
+    \end{scope}
+  \end{tikzpicture}
+  \caption[Corrección del \textit{clipping} mediante el inflado de obstáculos por el radio del agente.]
+  {Corrección del \textit{clipping} mediante el inflado de obstáculos por el radio del agente.
+  Si no se considera el tamaño del agente, una trayectoria que recorta una esquina provoca colisión (izquierda).
+  Al inflar el obstáculo por el radio del agente (margen discontinuo), la trayectoria conserva siempre la holgura necesaria (derecha).}
+  \label{fig:clipping}
+\end{figure}
 
 \subsection{Validación intensiva mediante pruebas}
 
 Diagnosticar de forma fiable este tipo de errores geométricos, intermitentes y dependientes de la configuración concreta de la escena, exigió el desarrollo de una batería de pruebas considerablemente más extensa de la prevista.
 A las pruebas en modo de edición se sumaron pruebas en modo de ejecución (\textit{PlayMode}), capaces de instanciar escenas completas, construir el volumen y validar la navegabilidad de las trayectorias resultantes contra el motor de físicas real.
+Tanto estas pruebas en modo de ejecución como las pruebas en modo de edición existentes se ejecutan de forma automática en el sistema de \acrshort{ci} ante cada \textit{pull request}, de modo que cualquier regresión queda detectada antes de integrar los cambios en la rama principal.
 Este esfuerzo de validación, aunque desplazó ligeramente el calendario, resultó determinante para consolidar un núcleo fiable sobre el que sustentar el resto de funcionalidades.
 
 \section{Iteración 7: Integración en Unity y telemetría}
@@ -484,10 +690,38 @@ La búsqueda de rutas descrita hasta ahora calcula trayectorias sobre la geometr
 Para resolverlo se implementó el algoritmo \acrshort{orca}~\cite{van2011reciprocal}, introducido en los fundamentos, que razona sobre el espacio de velocidades para calcular, en cada instante, una velocidad segura y próxima a la deseada.
 La implementación es un port de las rutinas de programación lineal en tres dimensiones de la biblioteca de referencia RVO2-3D~\cite{rvo2_3d}.
 El solucionador busca la velocidad óptima que satisface todas las restricciones (semiplanos de velocidad) y, cuando el problema resulta infactible (demasiadas restricciones simultáneas), recurre a una relajación que minimiza la penetración en las restricciones (véase la Figura~\ref{fig:orca}).
+Dado que este solucionador se ejecuta para cada agente y en cada fotograma, sus estructuras temporales se reservan en el \gls{stack} mediante \texttt{stackalloc} y se manipulan a través de \texttt{Span\textless T\textgreater}, lo que evita reservas en el \gls{heap} y la consiguiente presión sobre el recolector de basura en una de las rutas más críticas del sistema.
 
 Una particularidad de la integración es que el sistema no solo considera la evasión recíproca entre agentes, sino que también deriva restricciones a partir de los \glspl{voxel} ocupados del \acrshort{svo} cercano, de modo que la evasión local respeta igualmente la geometría estática del entorno.
 
-\pendientefig{Esquema del espacio de velocidades de ORCA para un agente: la velocidad preferida, los semiplanos de velocidades prohibidas inducidos por los agentes vecinos y por la geometría, y la nueva velocidad óptima resultante dentro de la región factible.}{Resolución de la velocidad segura en el espacio de velocidades de ORCA.}{fig:orca}
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}[font=\small]
+    % Region de velocidades prohibidas (semiplano sombreado)
+    \fill[udcpink!16] (-2.6,0.1) -- (2.4,2.6) -- (2.8,2.8) -- (-2.6,2.8) -- cycle;
+    % Ejes del espacio de velocidades
+    \draw[->, thick] (-2.7,0) -- (2.9,0) node[right, font=\footnotesize] {$v_x$};
+    \draw[->, thick] (0,-2.4) -- (0,2.9) node[above, font=\footnotesize] {$v_y$};
+    \node[font=\scriptsize, anchor=north east] at (-0.05,-0.05) {$0$};
+    % Recta de restriccion ORCA
+    \draw[udcpink, thick] (-2.6,0.1) -- (2.4,2.6);
+    \node[font=\scriptsize, text=udcpink, rotate=26] at (-1.35,0.95) {restricción ORCA};
+    % Etiquetas de regiones
+    \node[font=\scriptsize, text=udcpink!85!black] at (-1.3,2.1) {velocidades prohibidas};
+    \node[font=\scriptsize, text=black!65] at (1.5,-1.2) {velocidades permitidas};
+    % Velocidad preferida (cae en zona prohibida)
+    \draw[->, very thick, draw=ficblue] (0,0) -- (0.9,2.2) node[above, font=\scriptsize, text=ficblue] {$v^{\mathrm{pref}}$};
+    % Velocidad optima (proyectada a la frontera segura)
+    \draw[->, very thick, draw=black] (0,0) -- (1.75,1.18);
+    \node[font=\scriptsize, anchor=west] at (1.82,1.2) {$v^{\mathrm{new}}$};
+    \fill[black] (1.75,1.18) circle (1.3pt);
+  \end{tikzpicture}
+  \caption[Resolución de la velocidad segura en el espacio de velocidades de ORCA.]
+  {Resolución de la velocidad segura en el espacio de velocidades de ORCA.
+  Cada agente vecino y la geometría inducen un semiplano de velocidades prohibidas (zona sombreada).
+  Como la velocidad preferida $v^{\mathrm{pref}}$ cae en una región prohibida, el algoritmo escoge la velocidad factible $v^{\mathrm{new}}$ más próxima, sobre la frontera de la región segura.}
+  \label{fig:orca}
+\end{figure}
 
 \subsection{Integración con el sistema de \textit{jobs}}
 
@@ -507,7 +741,41 @@ Esta fase concentra deliberadamente el grueso del coste computacional (las consu
 Por otro lado, una fase de \textbf{ejecución en tiempo real}, que carga el volumen precalculado de forma inmediata y, sobre él, resuelve peticiones de ruta (búsqueda, atajo y suavizado) y simula la evasión local entre agentes.
 El diseño de esta fase está dominado por la preocupación por el rendimiento: estructuras de datos compactas y contiguas, paralelización mediante el \textit{Job System} y Burst, y un uso cuidadoso de la memoria que minimiza la intervención del recolector de basura.
 
-\pendientefig{Diagrama de flujo de datos global del sistema: a la izquierda, la fase de preprocesado en el editor (escena $\rightarrow$ rasterización $\rightarrow$ \acrshort{svo} $\rightarrow$ serialización en disco); a la derecha, la fase de ejecución (carga del volumen $\rightarrow$ búsqueda A* $\rightarrow$ postprocesado $\rightarrow$ evasión local $\rightarrow$ movimiento del agente).}{Flujo de datos global del sistema, del preprocesado a la ejecución.}{fig:flujo-datos}
+\begin{figure}[htp]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[font=\small, node distance=7mm and 9mm]
+    % --- Fase de preprocesado (editor) ---
+    \node[paso] (escena) {Escena};
+    \node[paso, right=of escena] (raster) {Rasterización};
+    \node[paso, right=of raster] (svo) {\acrshort{svo}};
+    \node[almacen, below=of svo] (disco) {Volumen\\en disco};
+    % --- Fase de ejecucion (tiempo real) ---
+    \node[paso, below=16mm of escena] (carga) {Carga del\\volumen};
+    \node[paso, right=of carga] (astar) {Búsqueda A*};
+    \node[paso, right=of astar] (postp) {Post-\\procesado};
+    \node[paso, right=of postp] (evasion) {Evasión\\local};
+    \node[paso, right=of evasion] (movim) {Movimiento\\del agente};
+    % --- Conexiones ---
+    \draw[flecha] (escena) -- (raster);
+    \draw[flecha] (raster) -- (svo);
+    \draw[flecha] (svo) -- (disco);
+    \draw[flecha] (disco) -| (carga);
+    \draw[flecha] (carga) -- (astar);
+    \draw[flecha] (astar) -- (postp);
+    \draw[flecha] (postp) -- (evasion);
+    \draw[flecha] (evasion) -- (movim);
+    % --- Rotulos de fase ---
+    \node[font=\footnotesize\itshape, text=ficblue, anchor=west] at ([yshift=6mm]escena.north west) {Preprocesado (editor)};
+    \node[font=\footnotesize\itshape, text=ficblue, anchor=west] at ([yshift=6mm]carga.north west) {Ejecución (tiempo real)};
+  \end{tikzpicture}%
+  }
+  \caption[Flujo de datos global del sistema, del preprocesado a la ejecución.]
+  {Flujo de datos global del sistema, del preprocesado a la ejecución.
+  En el editor, la escena se rasteriza para construir el \acrshort{svo}, que se serializa en disco.
+  En tiempo de ejecución, el volumen se carga y, sobre él, se resuelven las consultas de ruta (búsqueda, postprocesado y evasión local) que culminan en el movimiento del agente.}
+  \label{fig:flujo-datos}
+\end{figure}
 
 A lo largo del desarrollo, varias decisiones de diseño transversales han demostrado su valor.
 La representación dispersa y la codificación compacta de la información (las máscaras de bits de las hojas y los enlaces de 32 bits) reducen tanto el consumo de memoria como los fallos de caché.

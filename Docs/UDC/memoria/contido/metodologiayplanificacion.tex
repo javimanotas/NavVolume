@@ -1,39 +1,22 @@
 \chapter{Metodología y planificación}
 
 El presente capítulo detalla los aspectos relativos a la gestión del proyecto.
-En primer lugar, expone la metodología de desarrollo software adoptada, detallando tanto el modelo de ciclo de vida empleado como las prácticas de ingeniería que garantizan la calidad y estabilidad del producto.
-A continuación, presenta la planificación inicial con la estimación de tiempos y costes asociados al desarrollo.
-Finalmente, se lleva a cabo un seguimiento crítico de dicha planificación, contrastando las previsiones iniciales con la ejecución real del trabajo.
+Para ello, primero se define la metodología de desarrollo software adoptada, detallando tanto el modelo de ciclo de vida empleado como las prácticas de ingeniería que garantizan la calidad y estabilidad del producto.
+Posteriormente, se presenta la planificación inicial con la estimación de tiempos y costes asociados al desarrollo.
+Por último, se lleva a cabo un seguimiento crítico de dicha planificación, contrastando las previsiones iniciales con la ejecución real del trabajo.
 
 \section{Metodología de desarrollo}
 \label{sec:metodologiadesarrollo}
 
-Para el desarrollo del proyecto se ha adoptado una metodología iterativa e incremental.
-Este enfoque es ideal para gestionar la complejidad de un sistema de navegación volumétrica, ya que permite dividir el problema global en incrementos funcionales más manejables.
+Para el desarrollo del proyecto se ha adoptado una metodología iterativa e incremental~\cite{pressman2010ingenieria}.
+Se estima que este enfoque se ajusta de manera óptima para gestionar la complejidad de un sistema de navegación volumétrica, ya que permite dividir el problema global en incrementos funcionales más manejables.
 De este modo, en lugar de afrontar la construcción del sistema como un bloque monolítico, el producto avanza por fases.
-Cabe destacar que, dentro de cada una de estas iteraciones, se ejecutan una serie de fases que engloba las tareas de análisis de requisitos, diseño técnico, implementación de la solución y pruebas.
+Cada iteración engloba tareas de análisis de requisitos, diseño técnico, implementación y pruebas.
 Esta estructura garantiza que cada nuevo componente sea robusto antes de integrarse en el conjunto, lo que facilita la detección temprana de errores y la validación continua tras cada ciclo.
 
 El punto de partida es un producto mínimo viable centrado en la viabilidad técnica: la construcción de la estructura de datos espacial en tiempo de ejecución y una primera versión de la búsqueda de rutas.
 A partir de este núcleo, cada iteración incorpora una nueva funcionalidad o mejora, evaluando siempre la corrección del comportamiento y su impacto en el rendimiento global.
-Para facilitar esta validación, el código se divide en módulos con responsabilidades bien delimitadas mediante ensamblados.
-Esto permite excluir el código de edición de las compilaciones finales.
-
-Para gestionar este proceso y preservar la estabilidad, el desarrollo se apoya en el sistema de control de versiones Git~\cite{git}, empleando la plataforma GitHub~\cite{github} como servicio de alojamiento remoto del repositorio.
-El flujo de trabajo se organiza mediante ramas (\textit{branches}), tomando como referencia la rama principal (\textit{main}), que alberga siempre una versión estable del sistema.
-Cada nueva funcionalidad o corrección se desarrolla de forma aislada en una rama independiente.
-Esta práctica garantiza que el trabajo en curso no interfiera con la base del proyecto.
-
-Una vez se da por concluido el trabajo de una rama, los cambios se integran a través de una \textit{pull request}.
-Este mecanismo permite proponer la fusión de código y funciona como un punto de control para revisar las modificaciones.
-Tras revisar y validar la \textit{pull request}, su contenido se incorpora a la rama principal mediante la estrategia de \textit{squash and merge}, que condensa la totalidad de los \textit{commits} de la rama en uno solo.
-Así, el historial de \textit{main} se mantiene limpio, asociando cada entrada a una funcionalidad completa.
-
-Un punto clave de cada iteración es la validación de la corrección del código.
-Para automatizar esta tarea se ha recurrido al sistema de \acrfull{ci} que ofrece GitHub.
-Esta herramienta ejecuta la batería de pruebas en una máquina remota cada vez que se abre una \textit{pull request} o se actualiza la rama principal.
-A esta verificación se suma una comprobación del estilo del código mediante el formateador CSharpier~\cite{csharpier}, asegurando un estilo consistente.
-Al delegar estas comprobaciones en un proceso automático, se evita que el código defectuoso llegue a la rama principal y se refuerza la fiabilidad del sistema.
+Para facilitar esta validación, el código se divide en módulos con responsabilidades bien delimitadas mediante ensamblados, lo que permite excluir el código de edición de las compilaciones finales.
 
 \section{Planificación inicial}
 \label{sec:planificacioninicial}
@@ -45,7 +28,7 @@ Esto implica unas \textbf{360} horas de trabajo, distribuidas a lo largo del seg
 
 Siguiendo la metodología iterativa, el trabajo se organizó en las siguientes fases:
 
-\begin{itemize}
+\begin{enumerate}
     \item \textbf{Estudio previo y análisis del estado de la cuestión:} revisión bibliográfica de las técnicas de navegación, análisis de soluciones comerciales y formación en las tecnologías de alto rendimiento del motor.
     \item \textbf{Diseño de la arquitectura:} definición de la estructura modular y selección de algoritmos y estructuras de datos.
     \item \textbf{Implementación de la estructura de datos volumétrica:} construcción del espacio navegable mediante un \acrshort{svo}, incluyendo su rasterización y serialización en disco.
@@ -53,10 +36,10 @@ Siguiendo la metodología iterativa, el trabajo se organizó en las siguientes f
     \item \textbf{Integración en Unity:} desarrollo de los componentes, las herramientas de editor y los indicadores visuales \texttt{Gizmos} que dan acceso al sistema al usuario final.
     \item \textbf{Evaluación de rendimiento y optimización:} diseño de escenas de prueba representativas y medición de los tiempos de construcción y búsqueda, así como del consumo de memoria, orientando las sucesivas optimizaciones.
     \item \textbf{Redacción de la memoria:} documentación del diseño, la implementación, los resultados y las conclusiones del proyecto.
-\end{itemize}
+\end{enumerate}
 
 La distribución temporal de estas fases se recoge en el diagrama de Gantt de la Figura~\ref{fig:gantt}.
-Conviene destacar el solapamiento entre varias de ellas, consecuencia de que el diseño puede comenzar antes de haber solventado por completo los errores de las etapas previas.
+Es importante señalar el solapamiento entre varias de ellas, consecuencia de que el diseño puede comenzar antes de haber solventado por completo los errores de las etapas previas.
 Tanto las tareas de validación y pruebas como la propia redacción de la memoria se prolongan a lo largo de prácticamente todo el proyecto.
 
 \begin{figure}[htp]
@@ -64,36 +47,41 @@ Tanto las tareas de validación y pruebas como la propia redacción de la memori
   \resizebox{\textwidth}{!}{%
     \setlength{\tabcolsep}{2pt}%
     \renewcommand{\arraystretch}{1.3}%
-    \begin{tabular}{|l|*{13}{p{0.42cm}|}}
+    \begin{tabular}{|l|*{14}{>{\centering\arraybackslash}p{0.5cm}|}}
     \hline
     \rowcolor{udcpink!25}
-    \textbf{Fase} & \multicolumn{1}{c|}{\textbf{Mar.}} & \multicolumn{4}{c|}{\textbf{Abril}} & \multicolumn{4}{c|}{\textbf{Mayo}} & \multicolumn{4}{c|}{\textbf{Junio}} \\ \hline
-    Estado del arte y estudio previo & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & \\ \hline
-    Diseño de la arquitectura & & & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & \\ \hline
-    Estructura de datos volumétrica & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & \\ \hline
-    Búsqueda y postprocesado de rutas & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & \\ \hline
-    Integración en Unity & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \\ \hline
-    Evaluación y optimización & & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \\ \hline
-    Validación y pruebas (CI) & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \\ \hline
-    Redacción de la memoria & & & & & & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \\ \hline
+    \textbf{Fase} & \multicolumn{2}{c|}{\textbf{Marzo}} & \multicolumn{4}{c|}{\textbf{Abril}} & \multicolumn{4}{c|}{\textbf{Mayo}} & \multicolumn{4}{c|}{\textbf{Junio}} \\ \hline
+    \textbf{Semana} & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 14 \\ \hline
+    Estado del arte y estudio previo & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & & \\ \hline
+    Diseño de la arquitectura & & & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & \\ \hline
+    Estructura de datos volumétrica & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & \\ \hline
+    Búsqueda y postprocesado de rutas & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & \\ \hline
+    Integración en Unity & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \\ \hline
+    Evaluación y optimización & & & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \\ \hline
+    Validación y pruebas (CI) & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
+    Redacción de la memoria & & & & & & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
+    \textbf{Hitos} & & & $\blacklozenge$ & & & & $\blacklozenge$ & & & $\blacklozenge$ & & & $\blacklozenge$ & $\blacklozenge$ \\ \hline
     \end{tabular}%
   }
   \caption[Diagrama de Gantt de la planificación temporal inicial.]
   {Diagrama de Gantt de la planificación temporal inicial.
-  Las barras de color rosado representan las fases principales del desarrollo, mientras que las azuladas corresponden a las tareas de carácter transversal.}
+  Cada columna representa una semana de trabajo.
+  Las barras rosadas corresponden a las fases principales y las azuladas a las tareas transversales. Los rombos ($\blacklozenge$) señalan los hitos.}
   \label{fig:gantt}
 \end{figure}
+
+Los hitos marcados se corresponden con: \textbf{H1} (semana~3), cierre del estudio del estado de la cuestión; \textbf{H2} (semana~7), finalización de la estructura de datos volumétrica; \textbf{H3} (semana~10), primer cálculo de rutas funcional, que constituye el producto mínimo viable; \textbf{H4} (semana~13), integración en Unity y optimización completadas; y \textbf{H5} (semana~14), entrega de la memoria.
 
 \subsection{Estimación de costes}
 
 El presupuesto del proyecto tiene en cuenta costes de personal, equipamiento, software y gastos indirectos, siendo el coste personal la parte principal.
-Partiendo del hecho de que el salario medio en España para un programador \textit{junior} es de 21\,955\,\euro~\cite{Indeed_SueldosProgramadorJunior}, se estima que el total correspondiente a las 360 horas es de 4114,80\,\euro.
+Partiendo del hecho de que el salario medio en España para un programador \textit{junior} es de 21.955\,\euro~\cite{Indeed_SueldosProgramadorJunior}, se estima que el total correspondiente a las 360 horas es de 4.114,80\,\euro.
 
-El equipamiento requiere un ordenador de gama media valorado en unos 1200\,\euro.
+El equipamiento requiere un ordenador de gama media valorado en unos 1.200\,\euro.
 Aplicando una amortización lineal a cuatro años por los tres meses y medio de uso, su coste es de 87,50\,\euro.
 Respecto al software, todas las herramientas (Unity Personal, Visual Studio Community, Git y GitHub) son gratuitas para este caso de uso, por lo que no generan gastos.
 Finalmente, se calculan unos costes indirectos (electricidad, internet) del 5\,\% sobre los costes directos.
-El presupuesto total, resumido en la Tabla~\ref{tab:presupuesto}, asciende a 4412,42\,\euro.
+El presupuesto total, resumido en la Tabla~\ref{tab:presupuesto}, asciende a 4.412,42\,\euro.
 
 \begin{table}[htp]
   \centering
@@ -101,11 +89,11 @@ El presupuesto total, resumido en la Tabla~\ref{tab:presupuesto}, asciende a 441
   \begin{tabular}{l|r}
   \rowcolor{udcpink!25}
   \textbf{Concepto} & \textbf{Coste} \\\hline
-  Recursos humanos (360\,h $\times$ 11,43\,\euro/h) & 4114,80\,\euro \\
+  Recursos humanos (360\,h $\times$ 11,43\,\euro/h) & 4.114,80\,\euro \\
   Amortización del equipo de desarrollo & 87,50\,\euro \\
   Licencias de software & 0,00\,\euro \\
   Costes indirectos (5\,\%) & 210,12\,\euro \\\hline
-  \textbf{Total} & \textbf{4412,42\,\euro} \\
+  \textbf{Total} & \textbf{4.412,42\,\euro} \\
   \end{tabular}
   \caption{Presupuesto estimado del proyecto.}
   \label{tab:presupuesto}
@@ -114,8 +102,8 @@ El presupuesto total, resumido en la Tabla~\ref{tab:presupuesto}, asciende a 441
 \section{Seguimiento}
 \label{sec:seguimiento}
 
-Aunque la planificación inicial se cumplió en gran medida, sugieron algunas desviaciones que alargaron el desarrollo debido a la naturaleza del proyecto.
-Sin embargo, la metodología iterativa fue clave para solucionar estos imprevistos sin comprometer la totalidad del desarollo.
+Aunque la planificación inicial se cumplió en gran medida, surgieron algunas desviaciones que alargaron el desarrollo debido a la naturaleza del proyecto.
+Sin embargo, la metodología iterativa fue clave para solucionar estos imprevistos sin comprometer la estabilidad del sistema.
 
 La desviación más significativa se localizó en la fase de búsqueda de rutas.
 Si bien la primera versión del algoritmo se completó a tiempo, garantizar su robustez requirió más esfuerzo del estimado.
@@ -125,3 +113,60 @@ La corrección de este comportamiento exigió varias iteraciones sucesivas y, so
 Este esfuerzo adicional desplazó ligeramente el calendario de las fases posteriores.
 Sin embargo, al validar cada incremento por separado, fue posible reorganizar las tareas y recuperar el ritmo sin descartar objetivos.
 De hecho, la holgura obtenida permitió añadir una funcionalidad de evasión local entre agentes y obstáculos dinámicos que no estaba prevista inicialmente.
+
+La Figura~\ref{fig:gantt-real} recoge el diagrama de Gantt actualizado con la ejecución real del proyecto.
+Destacan dos diferencias con respecto a la planificación inicial.
+La primera es la aparición de una fase de robustez geométrica, dedicada a resolver el \textit{clipping}, que desplazó las etapas posteriores.
+Adicionalmente se incorporó el incremento no planificado de evasión local.
+En conjunto, estas desviaciones prolongaron el proyecto una semana, hasta las quince, y retrasaron el hito del producto mínimo viable de la semana~10 a la~12.
+
+\begin{figure}[htp]
+  \centering
+  \resizebox{\textwidth}{!}{%
+    \setlength{\tabcolsep}{2pt}%
+    \renewcommand{\arraystretch}{1.3}%
+    \begin{tabular}{|l|*{15}{>{\centering\arraybackslash}p{0.5cm}|}}
+    \hline
+    \rowcolor{udcpink!25}
+    \textbf{Fase} & \multicolumn{2}{c|}{\textbf{Marzo}} & \multicolumn{4}{c|}{\textbf{Abril}} & \multicolumn{4}{c|}{\textbf{Mayo}} & \multicolumn{4}{c|}{\textbf{Junio}} & \multicolumn{1}{c|}{\textbf{Jul.}} \\ \hline
+    \textbf{Semana} & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 14 & 15 \\ \hline
+    Estado del arte y estudio previo & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & & & \\ \hline
+    Diseño de la arquitectura & & & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & & \\ \hline
+    Estructura de datos volumétrica & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & \\ \hline
+    Búsqueda y postprocesado de rutas & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & \\ \hline
+    Robustez geométrica (\textit{clipping}) & & & & & & & & & \cellcolor{udcgray!60} & \cellcolor{udcgray!60} & \cellcolor{udcgray!60} & & & & \\ \hline
+    Integración en Unity & & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & \\ \hline
+    Evaluación y optimización & & & & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & & \\ \hline
+    Evasión local (no planificada) & & & & & & & & & & & & & \cellcolor{udcgray!60} & \cellcolor{udcgray!60} & \\ \hline
+    Validación y pruebas (CI) & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
+    Redacción de la memoria & & & & & & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
+    \textbf{Hitos} & & & $\blacklozenge$ & & & & $\blacklozenge$ & & & & & $\blacklozenge$ & & $\blacklozenge$ & $\blacklozenge$ \\ \hline
+    \end{tabular}%
+  }
+  \caption[Diagrama de Gantt de la ejecución real del proyecto.]
+  {Diagrama de Gantt de la ejecución real del proyecto.
+  Cada columna representa una semana.
+  En gris se resaltan las desviaciones respecto al plan inicial (la fase de robustez geométrica y el incremento no planificado de evasión local); en rosado, las fases que se ajustaron a lo previsto; y en azul, las tareas transversales. Los rombos ($\blacklozenge$) señalan los hitos.}
+  \label{fig:gantt-real}
+\end{figure}
+
+En esta ocasión los hitos son: \textbf{H1} (semana~3), cierre del estudio del estado de la cuestión; \textbf{H2} (semana~7), finalización de la estructura de datos volumétrica; \textbf{H3} (semana~12), cálculo de rutas robusto una vez resuelto el \textit{clipping}, que consolida el producto mínimo viable; \textbf{H4} (semana~14), integración y optimización completadas; y \textbf{H5} (semana~15), entrega de la memoria.
+
+Este sobreesfuerzo se traslada también al presupuesto.
+La dedicación real ascendió a unas \textbf{400} horas, frente a las 360 previstas, lo que, manteniendo el resto de partidas, eleva el coste total a 4.892,48\,\euro, tal y como recoge la Tabla~\ref{tab:presupuesto-real}.
+
+\begin{table}[htp]
+  \centering
+  \rowcolors{2}{white}{udcgray!25}
+  \begin{tabular}{l|r}
+  \rowcolor{udcpink!25}
+  \textbf{Concepto} & \textbf{Coste} \\\hline
+  Recursos humanos (400\,h $\times$ 11,43\,\euro/h) & 4.572,00\,\euro \\
+  Amortización del equipo de desarrollo & 87,50\,\euro \\
+  Licencias de software & 0,00\,\euro \\
+  Costes indirectos (5\,\%) & 232,98\,\euro \\\hline
+  \textbf{Total} & \textbf{4.892,48\,\euro} \\
+  \end{tabular}
+  \caption{Presupuesto final del proyecto tras el seguimiento.}
+  \label{tab:presupuesto-real}
+\end{table}

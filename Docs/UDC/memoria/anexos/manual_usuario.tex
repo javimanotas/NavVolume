@@ -1,0 +1,71 @@
+\chapter{Manual de usuario}
+\label{anexo:manualusuario}
+
+Este apéndice describe el uso de la herramienta desde el editor de Unity, orientado tanto a perfiles técnicos como a diseñadores de niveles y artistas.
+Se recorren los componentes que el sistema pone a disposición del usuario, su configuración en el inspector y las ayudas visuales que facilitan la comprensión y la depuración de la navegación.
+Para la instalación previa del paquete, consúltese el Apéndice~\ref{anexo:instalacion}.
+
+\section{El componente NavVolume Space}
+
+El componente \textit{NavVolume Space} es el punto de entrada del sistema: define la región del espacio sobre la que se calculará la navegación y centraliza su configuración.
+Se añade a un objeto vacío de la escena desde el menú de componentes y expone, en su inspector, los parámetros fundamentales del volumen: su tamaño, el número de capas (que determina la resolución), la máscara de capas de física que se consideran obstáculos y el modo de construcción (véase la Figura~\ref{fig:manual-space}).
+
+\pendientefig{Captura del inspector del componente \textit{NavVolume Space}, con las secciones de configuración (tamaño del volumen, número de capas y máscara de colisión), el modo de construcción y el panel de estadísticas desplegados.}{Inspector del componente \textit{NavVolume Space}.}{fig:manual-space}
+
+\section{Definición del volumen en la escena}
+
+El tamaño y la posición del volumen pueden ajustarse cómodamente desde la vista de escena.
+Al activar la edición, aparecen unos manejadores (\textit{handles}) que permiten redimensionar la caja del volumen de forma interactiva, sin necesidad de introducir valores numéricos a mano (véase la Figura~\ref{fig:manual-handles}).
+
+\pendientefig{Captura de la vista de escena mostrando el volumen de navegación delimitado por su caja envolvente y los manejadores interactivos para redimensionarlo.}{Definición y redimensionado del volumen en la vista de escena.}{fig:manual-handles}
+
+\section{Construcción y precálculo (\textit{bake})}
+
+El sistema ofrece tres modos de construcción del volumen, seleccionables en el inspector: \textit{precalculado} (\textit{Baked}), que carga una estructura previamente generada y almacenada en disco; \textit{construido al inicio} (\textit{BuildOnAwake}), que la genera al arrancar la escena; y \textit{manual}.
+En el modo precalculado, un botón de \textit{Bake} lanza la construcción y muestra una barra de progreso cancelable mientras se procesa la escena (véase la Figura~\ref{fig:manual-bake}).
+
+\pendientefig{Captura del botón de \textit{Bake} en el inspector y de la barra de progreso que se muestra durante la construcción del volumen.}{Proceso de construcción (\textit{bake}) del volumen.}{fig:manual-bake}
+
+\section{Visualización del SVO mediante Gizmos}
+
+Para facilitar la comprensión y la depuración del sistema, al seleccionar el volumen se representa su estructura interna en la vista de escena mediante Gizmos.
+Un código de colores distingue los nodos vacíos, los que contienen geometría, las hojas parcialmente ocupadas y los \glspl{voxel} ocupados, lo que permite verificar de un vistazo que la ocupación calculada se corresponde con los obstáculos de la escena (véase la Figura~\ref{fig:manual-gizmos}).
+
+\pendientefig{Captura de la visualización del \acrshort{svo} en la vista de escena mediante Gizmos, sobre un escenario con obstáculos, mostrando el código de colores que distingue los distintos tipos de nodo y los vóxeles ocupados.}{Visualización del \acrshort{svo} mediante Gizmos.}{fig:manual-gizmos}
+
+\section{Panel de estadísticas}
+
+El inspector incorpora un panel de estadísticas que ayuda a dimensionar y ajustar el volumen.
+En él se muestran el tamaño de vóxel resultante, el número de \glspl{voxel} reservados frente al total teórico (con su porcentaje de ahorro), una estimación de la memoria ocupada y un desglose de los tiempos de la última construcción (véase la Figura~\ref{fig:manual-stats}).
+
+\pendientefig{Captura del panel de estadísticas del inspector: tamaño de vóxel, vóxeles reservados frente al total teórico, memoria estimada, gráfico de nodos por capa y desglose de tiempos de construcción.}{Panel de estadísticas del volumen.}{fig:manual-stats}
+
+\section{El componente NavVolume Agent}
+
+El componente \textit{NavVolume Agent} dota a un objeto de la capacidad de navegar de forma autónoma por el volumen.
+Su inspector permite configurar los parámetros de movimiento del agente y asociarlo a un tipo de agente concreto (véase la Figura~\ref{fig:manual-agent}).
+Durante la ejecución, la trayectoria calculada para el agente puede representarse mediante Gizmos, lo que facilita comprobar visualmente el resultado de la búsqueda y del suavizado (véase la Figura~\ref{fig:manual-agent-path}).
+
+\pendientefig{Captura del inspector del componente \textit{NavVolume Agent} con sus parámetros de movimiento y de configuración.}{Inspector del componente \textit{NavVolume Agent}.}{fig:manual-agent}
+
+\pendientefig{Captura de la vista de escena mostrando, mediante Gizmos, la trayectoria calculada para un agente desde su posición hasta su destino.}{Visualización de la trayectoria de un agente mediante Gizmos.}{fig:manual-agent-path}
+
+\section{El componente NavVolume Obstacle}
+
+El componente \textit{NavVolume Obstacle} marca a un objeto como obstáculo dinámico, de modo que los agentes lo tengan en cuenta durante la evasión local en tiempo de ejecución.
+Su inspector permite ajustar la forma y las dimensiones del obstáculo (véase la Figura~\ref{fig:manual-obstacle}).
+
+\pendientefig{Captura del inspector del componente \textit{NavVolume Obstacle}, con la configuración de su forma y dimensiones.}{Inspector del componente \textit{NavVolume Obstacle}.}{fig:manual-obstacle}
+
+\section{Tipos de agente}
+
+Los tipos de agente se definen como recursos reutilizables (\textit{assets}) que encapsulan los parámetros comunes a un conjunto de agentes, como su radio.
+De este modo, un mismo volumen puede atender a varias clases de agente, y cada agente se asocia al tipo que le corresponde (véase la Figura~\ref{fig:manual-agenttype}).
+
+\pendientefig{Captura del inspector de un recurso de tipo de agente (\textit{Agent Type}) mostrando sus parámetros configurables.}{Inspector de un tipo de agente.}{fig:manual-agenttype}
+
+\section{Uso desde código}
+
+Más allá de la configuración visual, el sistema expone una interfaz de programación para los usuarios que requieran un control más fino.
+A través de ella es posible solicitar rutas, comprobar si un punto del espacio es navegable, ajustar una posición al punto navegable más cercano u obtener puntos navegables aleatorios, entre otras operaciones.
+La documentación detallada de esta interfaz queda fuera del alcance de este manual.
