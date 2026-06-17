@@ -21,12 +21,13 @@ Esta separación no es meramente organizativa: al aislar el código de edición 
 La estructura resultante se divide en tres grandes bloques, ilustrados en la Figura~\ref{fig:arquitectura}:
 
 \begin{itemize}
-    \item \textbf{Runtime:} contiene la totalidad de la lógica de navegación (representación del espacio, construcción, búsqueda de rutas y evasión). Es el único módulo que se incluye en la versión final del producto.
+    \item \textbf{Runtime:} contiene la totalidad de la lógica de navegación (representación del espacio, construcción y búsqueda de rutas). Es el único módulo que se incluye en la versión final del producto.
     \item \textbf{Editor:} alberga las herramientas de configuración y visualización integradas en el editor de Unity. Depende del módulo \textit{Runtime}, pero nunca a la inversa.
     \item \textbf{Tests:} agrupa las pruebas automatizadas, divididas a su vez en pruebas en modo de edición (\textit{EditMode}) y en modo de ejecución (\textit{PlayMode}).
 \end{itemize}
 
-Internamente, el módulo \textit{Runtime} se subdivide a su vez en espacios de nombres cohesivos: \texttt{Core} (las estructuras de datos fundamentales), \texttt{Builder} (la construcción del volumen), \texttt{Pathfinding} (la búsqueda y el postprocesado), \texttt{Avoidance} (la evasión local) y \texttt{Unity} (los componentes que exponen el sistema al motor).
+Internamente, el módulo \textit{Runtime} se subdivide a su vez en espacios de nombres cohesivos: \texttt{Core} (las estructuras de datos fundamentales), \texttt{Builder} (la construcción del volumen), \texttt{Pathfinding} (la búsqueda y el postprocesado) y \texttt{Unity} (los componentes que exponen el sistema al motor).
+Esta organización inicial se ampliaría más adelante, a medida que el sistema crecía, con nuevos espacios de nombres —en particular \texttt{Avoidance} (la evasión local), incorporado en la última iteración—; la arquitectura definitiva se recoge en la discusión final (Figura~\ref{fig:arquitectura-final}).
 
 \begin{figure}[htp]
   \centering
@@ -45,12 +46,11 @@ Internamente, el módulo \textit{Runtime} se subdivide a su vez en espacios de n
     \node[ns] (core) {Core};
     \node[ns, right=3mm of core]    (builder) {Builder};
     \node[ns, right=3mm of builder] (path)    {Pathfinding};
-    \node[ns, right=3mm of path]    (avoid)   {Avoidance};
-    \node[ns, right=3mm of avoid]   (unity)   {Unity};
+    \node[ns, right=3mm of path]    (unity)   {Unity};
 
     % Contenedor Runtime (en capa de fondo para no tapar los nodos)
     \begin{scope}[on background layer]
-      \node[contenedor, fit=(core)(builder)(path)(avoid)(unity),
+      \node[contenedor, fit=(core)(builder)(path)(unity),
             label={[font=\bfseries]above:Runtime}] (runtime) {};
     \end{scope}
 
@@ -182,12 +182,135 @@ El bit más significativo distingue si el enlace apunta a un nodo interno o a un
 Esta compacidad no solo ahorra memoria, sino que permite que el enlace se utilice directamente como clave en las colecciones \textit{hash} del buscador de rutas.
 Para que esto resulte eficiente, el tipo implementa la interfaz \texttt{IEquatable}, evitando así el \textit{boxing} y la comparación por reflexión en la ruta más caliente del algoritmo.
 
+Una vez introducidos todos sus elementos, la Figura~\ref{fig:core-clases} sintetiza las estructuras de datos del espacio de nombres \texttt{Core} y las relaciones de composición y de referencia que las vinculan.
+
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}[
+      font=\small,
+      clase/.style={draw=ficblue!75!black, fill=ficblue!7, thick, rounded corners=1pt,
+                    rectangle split, rectangle split parts=3, align=left,
+                    text width=3.3cm, inner xsep=5pt, inner ysep=3.5pt, font=\scriptsize},
+      comp/.style={draw=ficblue!75!black, thick,
+                   -{Diamond[length=2.8mm, width=1.9mm, fill=ficblue!75!black]}},
+      deref/.style={draw=black!65, dashed, -{Stealth[length=2.2mm]}, thick},
+      etiq/.style={font=\scriptsize, fill=white, inner sep=1pt},
+      mult/.style={font=\scriptsize, inner sep=1.5pt}
+    ]
+
+    % --- Clases ---
+    \node[clase] (svo) at (0,0) {
+      {\itshape class}\\[-1pt]\textbf{SVO}
+      \nodepart{two}\ttfamily Layers : SVONode[][]\\ LeafNodes : SVOLeaf[]
+      \nodepart{three}\ttfamily GetNode(SVOLink)\\ TryFindNodeIndex()\\ IsVoxelOccupied()
+    };
+
+    \node[clase] (node) at (0,-3.7) {
+      {\itshape struct}\\[-1pt]\textbf{SVONode}
+      \nodepart{two}\ttfamily MortonCode\\ FirstChild : SVOLink\\ Parent : SVOLink\\ Neighbors : NeighborSet
+      \nodepart{three}\ttfamily HasChildren : bool
+    };
+
+    \node[clase] (leaf) at (4.7,-3.7) {
+      {\itshape struct}\\[-1pt]\textbf{SVOLeaf}
+      \nodepart{two}\ttfamily occupiedSubnodes : ulong
+      \nodepart{three}\ttfamily IsOccupied(i)\\ IsEmpty / IsFull
+    };
+
+    \node[clase] (morton) at (-4.4,-7.6) {
+      {\itshape struct}\\[-1pt]\textbf{MortonCode}
+      \nodepart{two}\ttfamily code : uint
+      \nodepart{three}\ttfamily ParentCode\\ ChildCode(i)\\ TryGetNeighborCode()
+    };
+
+    \node[clase] (nset) at (0,-7.6) {
+      {\itshape struct}\\[-1pt]\textbf{NeighborSet}
+      \nodepart{two}\ttfamily posX, negX, posY,\\ negY, posZ, negZ : SVOLink
+      \nodepart{three}\ttfamily this[Direction]
+    };
+
+    \node[clase] (link) at (4.4,-7.6) {
+      {\itshape struct}\\[-1pt]\textbf{SVOLink}
+      \nodepart{two}\ttfamily link : uint
+      \nodepart{three}\ttfamily IsNode(out layer)\\ IsVoxel(out sub)\\ Offset
+    };
+
+    % --- Relaciones (rombo en el contenedor, flecha discontinua para referencias) ---
+    \draw[comp] (node.north) -- node[etiq, midway] {Layers} (svo.south);
+    \draw[comp] (leaf.north) -- node[etiq, pos=0.62] {LeafNodes} (svo.east);
+    \draw[comp] (morton.north) -- node[mult, pos=0.85, left] {1} (node.south west);
+    \draw[comp] (nset.north) -- node[etiq, midway] {Neighbors} (node.south);
+    \draw[comp] (link.west) -- node[mult, midway, above] {6} (nset.east);
+    \draw[deref] (node.south east) -- node[etiq, pos=0.55] {FirstChild / Parent} (link.north);
+
+  \end{tikzpicture}
+  \caption[Estructuras de datos del espacio de nombres \texttt{Core} y sus relaciones.]
+  {Estructuras de datos del espacio de nombres \texttt{Core} y sus relaciones.
+  Los rombos denotan composición (propiedad de un valor) y las flechas discontinuas, referencias mediante enlaces.
+  El \acrshort{svo} agrega las capas de \texttt{SVONode} y el vector paralelo de \texttt{SVOLeaf}; cada nodo referencia a su primer hijo y a su padre, y agrega su conjunto de seis vecinos, todos ellos codificados como \texttt{SVOLink} (el puntero compacto de la Sección~\ref{sec:svolink}).}
+  \label{fig:core-clases}
+\end{figure}
+
 \section{Iteración 2: Construcción y rasterización del volumen}
 \label{sec:iter-construccion}
 
 Definida la estructura de datos, esta iteración aborda su construcción a partir de la geometría de una escena.
 Este proceso, conocido como rasterización, consiste en consultar qué regiones del espacio están ocupadas por obstáculos para poblar el \acrshort{svo}.
 Constituye una de las fases más costosas del sistema, por lo que su diseño está dominado por consideraciones de rendimiento.
+
+La construcción se organiza como una canalización (\textit{pipeline}) de etapas bien diferenciadas, resumida en la Figura~\ref{fig:build-pipeline}: cada etapa consume el producto de datos de la anterior, y las dos etapas dominadas por consultas físicas se delegan en el \textit{Job System}.
+Las subsecciones siguientes detallan estas etapas.
+
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}[
+      font=\small, node distance=5mm,
+      etapa/.style={paso, text width=3.9cm, minimum height=1.0cm},
+      tienda/.style={almacen, text width=3.9cm, minimum height=1.0cm},
+      dato/.style={draw=udcgray!70!black, fill=udcgray!12, rounded corners=2pt,
+                   align=left, font=\scriptsize, text width=3.0cm, inner sep=4pt},
+      job/.style={draw=ficblue!60, fill=ficblue!8, rounded corners=2pt,
+                  align=center, font=\scriptsize, text width=2.6cm, inner sep=4pt},
+      conector/.style={densely dotted, draw=udcgray!75},
+      conjob/.style={densely dotted, draw=ficblue!65}
+    ]
+
+    % --- Columna central: etapas de la canalizacion ---
+    \node[tienda] (escena) {Escena\\[1pt]{\scriptsize(\textit{colliders})}};
+    \node[etapa, below=of escena] (s1) {\textbf{1.~Rasterización L1}\\[1pt]{\scriptsize barrido grueso-a-fino}};
+    \node[etapa, below=of s1] (s2) {\textbf{2.~Reserva de la capa 0}\\[1pt]{\scriptsize creación de nodos hoja}};
+    \node[etapa, below=of s2] (s3) {\textbf{3.~Rasterización de hojas}\\[1pt]{\scriptsize descarte grueso + muestreo fino}};
+    \node[etapa, below=of s3] (s4) {\textbf{4.~Capas superiores}\\[1pt]{\scriptsize de la raíz hacia las hojas}};
+    \node[etapa, below=of s4] (s5) {\textbf{5.~Enlazado padre--hijos}};
+    \node[etapa, below=of s5] (s6) {\textbf{6.~Enlazado de vecinos}};
+    \node[tienda, below=of s6] (out) {SVO enlazado\\[1pt]{\scriptsize(\textit{NavContext})}};
+
+    \foreach \a/\b in {escena/s1, s1/s2, s2/s3, s3/s4, s4/s5, s5/s6, s6/out}
+      \draw[flecha] (\a) -- (\b);
+
+    % --- Columna derecha: productos de datos ---
+    \node[dato, right=9mm of s1] (d1) {códigos Morton de las celdas L1 ocupadas};
+    \node[dato, right=9mm of s2] (d2) {\texttt{SVONode[]} de la capa 0};
+    \node[dato, right=9mm of s3] (d3) {máscaras de 64\,bits (\texttt{SVOLeaf[]})};
+    \node[dato, right=9mm of s4] (d4) {nodos internos por capa};
+    \node[dato, right=9mm of s5] (d5) {enlaces \texttt{FirstChild} / \texttt{Parent}};
+    \node[dato, right=9mm of s6] (d6) {\texttt{NeighborSet} (6 vecinos/nodo)};
+    \foreach \s/\d in {s1/d1, s2/d2, s3/d3, s4/d4, s5/d5, s6/d6}
+      \draw[conector] (\s.east) -- (\d.west);
+
+    % --- Columna izquierda: etapas paralelizadas ---
+    \node[job, left=9mm of s1] (j1) {\textit{Job System} + Burst\\[1pt]\texttt{OverlapBox} por lotes};
+    \node[job, left=9mm of s3] (j3) {\textit{Job System} + Burst\\[1pt]descarte / fino / reducción};
+    \draw[conjob] (j1.east) -- (s1.west);
+    \draw[conjob] (j3.east) -- (s3.west);
+
+  \end{tikzpicture}
+  \caption[Canalización de construcción del \acrshort{svo}.]
+  {Canalización de construcción del \acrshort{svo} durante el \gls{bake}.
+  Cada etapa (centro) consume el producto de datos de la anterior (derecha);
+  las etapas~1 y~3, dominadas por consultas físicas, se aceleran mediante el \textit{Job System} y Burst (izquierda) y se detallan en las Figuras~\ref{fig:coarse-to-fine} y~\ref{fig:empty-leaf}, mientras que el enlazado de la vecindad (etapa~6) se ilustra en la Figura~\ref{fig:neighbor-link}.}
+  \label{fig:build-pipeline}
+\end{figure}
 
 \subsection{Muestreo del espacio mediante consultas físicas paralelizadas}
 
@@ -320,7 +443,7 @@ Esta solución, ilustrada en la Figura~\ref{fig:neighbor-link}, resuelve de form
   \begin{tikzpicture}[font=\small]
     % Vecino grande (nivel del padre)
     \draw[celda, very thick, fill=ficblue!12] (0,0) rectangle (2.6,-2.6);
-    \node[font=\footnotesize, align=center] at (1.3,-1.3) {Vecino de\\mayor tamaño};
+    \node[font=\footnotesize, align=center] at (1.3,-1.85) {Vecino de\\mayor tamaño};
     % Nodo a enlazar, subdividido
     \begin{scope}[xshift=2.6cm]
       \draw[celda, very thick] (0,0) rectangle (2.6,-2.6);
@@ -333,8 +456,8 @@ Esta solución, ilustrada en la Figura~\ref{fig:neighbor-link}, resuelve de form
     \end{scope}
     \node[font=\scriptsize, anchor=west] at (3.4,-0.32) {nodo pequeño};
     % Enlace heredado del padre
-    \draw[flecha, draw=udcpink, very thick] (2.6,-0.32) to[out=180, in=0] (1.7,-0.95);
-    \node[font=\scriptsize, text=udcpink!80!black, anchor=north] at (2.15,-1.05) {vecino heredado};
+    \draw[flecha, draw=udcpink, very thick] (2.6,-0.32) to[out=180, in=0] (1.6,-0.78);
+    \node[font=\scriptsize, text=udcpink!80!black, anchor=north] at (1.5,-1.0) {vecino heredado};
   \end{tikzpicture}
   \caption[Enlazado de la vecindad mediante herencia del nodo padre.]
   {Enlazado de la vecindad mediante herencia del nodo padre.
@@ -565,7 +688,8 @@ La Figura~\ref{fig:clipping} ilustra el problema y su corrección.
       \draw[flecha, draw=udcpink, very thick] (0,-0.2) -- (3.6,-2.05);
       \fill[ficblue!25, opacity=0.75] (1.85,-1.05) circle (0.34);
       \draw[agente] (1.85,-1.05) circle (0.34);
-      \node[font=\scriptsize, text=udcpink!80!black, anchor=south west] at (1.55,-0.95) {colisión};
+      \node[font=\scriptsize, text=udcpink!80!black, anchor=south] at (1.1,-0.32) {colisión};
+      \draw[densely dotted, thin, draw=udcpink!80!black] (1.1,-0.42) -- (1.72,-1.0);
       \node[font=\footnotesize, anchor=north, text width=3.9cm, align=center] at (1.8,-3.05)
         {Sin tratar el radio: la trayectoria recorta la esquina};
     \end{scope}
@@ -664,6 +788,88 @@ Más allá del cálculo de rutas, se ofrecen consultas espaciales como la compro
 El cálculo de rutas se ofrece en dos variantes.
 La variante \textbf{síncrona} reutiliza una única instancia del buscador, mientras que la variante \textbf{asíncrona} ejecuta la búsqueda en un hilo secundario, evitando bloquear el hilo principal en escenarios con muchas peticiones.
 Esta última emplea una reserva (\textit{pool}) de buscadores para no incurrir en reservas de memoria repetidas, y admite la cancelación de la petición mediante un \textit{token}.
+La Figura~\ref{fig:seq-path} detalla la secuencia de una petición asíncrona, desde la llamada del agente hasta la entrega de la trayectoria suavizada.
+
+\begin{figure}[htp]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[
+      font=\small,
+      head/.style={draw=ficblue!70!black, fill=ficblue!12, thick, rounded corners=2pt,
+                   align=center, font=\footnotesize, minimum height=8mm, inner xsep=5pt},
+      life/.style={dashed, draw=black!45},
+      msg/.style={-{Stealth[length=2.4mm]}, thick},
+      ret/.style={-{Stealth[length=2.4mm]}, dashed, draw=black!60},
+      lbl/.style={font=\scriptsize, inner sep=1.5pt, fill=white},
+      act/.style={fill=ficblue!22, draw=ficblue!70!black, line width=0.3pt}
+    ]
+
+    % Coordenadas X de las lineas de vida
+    \def\xA{0}     % Agente
+    \def\xN{3.6}   % NavVolumeSpace
+    \def\xP{6.7}   % Pool
+    \def\xS{9.1}   % SVOPathfinder
+    \def\xM{11.9}  % PathSmoother
+    \def\ybot{-9.6}
+
+    % Cabeceras
+    \node[head] (hA) at (\xA,0) {Agente};
+    \node[head] (hN) at (\xN,0) {NavVolumeSpace};
+    \node[head] (hP) at (\xP,0) {Pool de\\buscadores};
+    \node[head] (hS) at (\xS,0) {SVOPathfinder\\(A*)};
+    \node[head] (hM) at (\xM,0) {PathSmoother};
+
+    % Lineas de vida
+    \foreach \x in {\xA,\xN,\xP,\xS,\xM}
+      \draw[life] (\x,-0.45) -- (\x,\ybot);
+
+    % Marco del trabajo en hilo secundario (capa normal, antes de barras y mensajes)
+    \draw[draw=udcgray!70, thick, rounded corners=2pt] (\xN-1.05,-2.2) rectangle (\xM+1.05,-8.5);
+
+    % Barras de activacion
+    \filldraw[act] (\xN-0.09,-1.0)  rectangle (\xN+0.09,-9.1);
+    \filldraw[act] (\xP-0.09,-2.8)  rectangle (\xP+0.09,-3.3);
+    \filldraw[act] (\xS-0.09,-3.9)  rectangle (\xS+0.09,-5.3);
+    \filldraw[act] (\xM-0.09,-5.9)  rectangle (\xM+0.09,-6.4);
+    \filldraw[act] (\xM-0.09,-7.0)  rectangle (\xM+0.09,-7.5);
+    \filldraw[act] (\xP-0.09,-8.1)  rectangle (\xP+0.09,-8.3);
+
+    % Mensajes
+    \draw[msg] (\xA,-1.0) -- (\xN,-1.0) node[lbl, midway, above] {FindPathAsync(request, token)};
+    \draw[ret] (\xN,-1.7) -- (\xA,-1.7) node[lbl, midway, above] {Task\textless PathResult\textgreater};
+
+    \draw[msg] (\xN,-2.8) -- (\xP,-2.8) node[lbl, midway, above] {TryTake()};
+    \draw[ret] (\xP,-3.3) -- (\xN,-3.3) node[lbl, midway, above] {buscador (o nuevo)};
+
+    \draw[msg] (\xN,-3.9) -- (\xS,-3.9) node[lbl, midway, above] {FindPath(ctx, request)};
+    % Bucle interno de A*
+    \draw[msg] (\xS+0.09,-4.5) -- ++(0.7,0) -- ++(0,-0.4) -- (\xS+0.09,-4.9);
+    \node[lbl, anchor=west] at (\xS+0.85,-4.7) {bucle A*};
+    \draw[ret] (\xS,-5.3) -- (\xN,-5.3) node[lbl, midway, above] {ruta en bruto};
+
+    \draw[msg] (\xN,-5.9) -- (\xM,-5.9) node[lbl, midway, above] {GreedyShortcut(raw)};
+    \draw[ret] (\xM,-6.4) -- (\xN,-6.4) node[lbl, midway, above] {atajo (LOS / DDA)};
+
+    \draw[msg] (\xN,-7.0) -- (\xM,-7.0) node[lbl, midway, above] {CatmullRomSpline(atajo)};
+    \draw[ret] (\xM,-7.5) -- (\xN,-7.5) node[lbl, midway, above] {ruta suavizada};
+
+    \draw[msg] (\xN,-8.1) -- (\xP,-8.1) node[lbl, midway, above] {Add(buscador)};
+
+    \draw[ret] (\xN,-9.1) -- (\xA,-9.1) node[lbl, midway, above] {PathResult};
+
+    % Etiqueta del fragmento, dibujada al final (opaca) para no quedar bajo la barra de NavVolumeSpace
+    \node[anchor=north west, fill=white, draw=udcgray!70, rounded corners=1pt,
+          inner xsep=4pt, inner ysep=2pt, font=\scriptsize\itshape, text=udcgray!85!black]
+      at (\xN-1.05,-2.2) {hilo secundario (\texttt{Task.Run})};
+
+  \end{tikzpicture}%
+  }
+  \caption[Secuencia de una petición de ruta asíncrona.]
+  {Secuencia de una petición de ruta asíncrona.
+  Tras devolver de inmediato una \texttt{Task}, el cálculo prosigue en un hilo secundario: se toma un buscador de la reserva, se ejecuta la búsqueda \gls{astar}, se postprocesa la ruta (atajo por línea de visión y suavizado por \textit{spline}) y se devuelve el buscador a la reserva antes de entregar el resultado.
+  La variante síncrona reutiliza un único buscador y prescinde del hilo secundario.}
+  \label{fig:seq-path}
+\end{figure}
 
 \subsection{Optimizaciones de rendimiento}
 
@@ -711,10 +917,11 @@ Una particularidad de la integración es que el sistema no solo considera la eva
     \node[font=\scriptsize, text=black!65] at (1.5,-1.2) {velocidades permitidas};
     % Velocidad preferida (cae en zona prohibida)
     \draw[->, very thick, draw=ficblue] (0,0) -- (0.9,2.2) node[above, font=\scriptsize, text=ficblue] {$v^{\mathrm{pref}}$};
-    % Velocidad optima (proyectada a la frontera segura)
-    \draw[->, very thick, draw=black] (0,0) -- (1.75,1.18);
-    \node[font=\scriptsize, anchor=west] at (1.82,1.2) {$v^{\mathrm{new}}$};
-    \fill[black] (1.75,1.18) circle (1.3pt);
+    % Velocidad optima: proyeccion ortogonal de v_pref sobre la recta de restriccion
+    \draw[dashed, thin, draw=black!55] (0.9,2.2) -- (1.04,1.92);
+    \draw[->, very thick, draw=black] (0,0) -- (1.04,1.92);
+    \fill[black] (1.04,1.92) circle (1.3pt);
+    \node[font=\scriptsize, anchor=west] at (1.12,1.72) {$v^{\mathrm{new}}$};
   \end{tikzpicture}
   \caption[Resolución de la velocidad segura en el espacio de velocidades de ORCA.]
   {Resolución de la velocidad segura en el espacio de velocidades de ORCA.
@@ -744,30 +951,37 @@ El diseño de esta fase está dominado por la preocupación por el rendimiento: 
 \begin{figure}[htp]
   \centering
   \resizebox{\textwidth}{!}{%
-  \begin{tikzpicture}[font=\small, node distance=7mm and 9mm]
-    % --- Fase de preprocesado (editor) ---
+  \begin{tikzpicture}[font=\small, node distance=7mm and 9mm,
+      contA/.style={rounded corners=5pt, draw=ficblue!70, very thick, fill=none, inner sep=8pt},
+      contB/.style={rounded corners=5pt, draw=udcpink!70, very thick, fill=none, inner sep=8pt}]
+    % --- Fase de preprocesado (editor): banda superior ---
     \node[paso] (escena) {Escena};
     \node[paso, right=of escena] (raster) {Rasterización};
     \node[paso, right=of raster] (svo) {\acrshort{svo}};
-    \node[almacen, below=of svo] (disco) {Volumen\\en disco};
-    % --- Fase de ejecucion (tiempo real) ---
+    \node[almacen, right=of svo] (disco) {Volumen\\en disco};
+    % --- Fase de ejecucion (tiempo real): banda inferior ---
     \node[paso, below=16mm of escena] (carga) {Carga del\\volumen};
     \node[paso, right=of carga] (astar) {Búsqueda A*};
     \node[paso, right=of astar] (postp) {Post-\\procesado};
     \node[paso, right=of postp] (evasion) {Evasión\\local};
     \node[paso, right=of evasion] (movim) {Movimiento\\del agente};
-    % --- Conexiones ---
+    % --- Conexiones dentro de cada banda ---
     \draw[flecha] (escena) -- (raster);
     \draw[flecha] (raster) -- (svo);
     \draw[flecha] (svo) -- (disco);
-    \draw[flecha] (disco) -| (carga);
     \draw[flecha] (carga) -- (astar);
     \draw[flecha] (astar) -- (postp);
     \draw[flecha] (postp) -- (evasion);
     \draw[flecha] (evasion) -- (movim);
-    % --- Rotulos de fase ---
-    \node[font=\footnotesize\itshape, text=ficblue, anchor=west] at ([yshift=6mm]escena.north west) {Preprocesado (editor)};
-    \node[font=\footnotesize\itshape, text=ficblue, anchor=west] at ([yshift=6mm]carga.north west) {Ejecución (tiempo real)};
+    % --- Traspaso entre fases: el volumen serializado se vuelve a cargar ---
+    \draw[flecha, rounded corners=3pt] (disco.south) -- ++(0,-5mm) -| (carga.north);
+    % --- Contenedores de fase (solo borde, en capa normal) ---
+    \node[contA, fit=(escena)(raster)(svo)(disco)] (cajaA) {};
+    \node[contB, fit=(carga)(astar)(postp)(evasion)(movim)] (cajaB) {};
+    \node[font=\footnotesize\itshape, text=ficblue, anchor=south west]
+      at ([yshift=1.5mm]cajaA.north west) {Preprocesado (editor)};
+    \node[font=\footnotesize\itshape, text=udcpink!85!black, anchor=north west]
+      at ([yshift=-1.5mm]cajaB.south west) {Ejecución (tiempo real)};
   \end{tikzpicture}%
   }
   \caption[Flujo de datos global del sistema, del preprocesado a la ejecución.]
@@ -781,6 +995,64 @@ A lo largo del desarrollo, varias decisiones de diseño transversales han demost
 La representación dispersa y la codificación compacta de la información (las máscaras de bits de las hojas y los enlaces de 32 bits) reducen tanto el consumo de memoria como los fallos de caché.
 La estrategia de lo grueso a lo fino, presente tanto en la rasterización como en la propia búsqueda de rutas, evita sistemáticamente trabajar a máxima resolución donde no es necesario.
 Y la separación modular del código, establecida desde la primera iteración, ha permitido validar cada incremento de forma aislada, sosteniendo la fiabilidad del conjunto.
+Esta separación, lejos de ser estática, creció de forma controlada a lo largo del proyecto: la Figura~\ref{fig:arquitectura-final} detalla la arquitectura final del módulo \textit{Runtime}, con sus cinco espacios de nombres definitivos —sus componentes principales y las dependencias que los relacionan— sobre el cimiento común que constituye \texttt{Core}.
+
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}[
+      font=\small,
+      nsbox/.style={rounded corners=3pt, draw=udcpink!60!black, fill=white, thick,
+                    align=center, text width=3.3cm, inner sep=5pt, minimum height=1.3cm,
+                    font=\footnotesize},
+      ancho/.style={text width=12.2cm},
+      usedep/.style={-{Stealth[length=2.6mm]}, semithick, draw=ficblue!75!black}
+    ]
+
+    % --- Capa intermedia: construccion, busqueda y evasion ---
+    \node[nsbox] (path) {\textbf{Pathfinding}\\[1pt]\scriptsize SVOPathfinder, PathSmoother,\\ SVORaycast (DDA), \textit{Api}};
+    \node[nsbox, left=9mm of path] (builder)
+      {\textbf{Builder}\\[1pt]\scriptsize SVOBuilder, SVORasterizer,\\ SVONeighborLinker,\\ \textit{Jobs}, \textit{Reporting}};
+    \node[nsbox, right=9mm of path] (avoid)
+      {\textbf{Avoidance}\\[1pt]\scriptsize AvoidanceSimulation,\\ \textit{Orca}, \textit{Spatial}};
+
+    % --- Cimiento (Core) y capa superior (Unity), a lo ancho ---
+    \node[nsbox, ancho, below=10mm of path] (core)
+      {\textbf{Core}\\[1pt]\scriptsize MortonCode, SVO, SVONode, SVOLeaf, SVOLink, NeighborSet};
+    \node[nsbox, ancho, above=10mm of path] (unity)
+      {\textbf{Unity}\\[1pt]\scriptsize NavVolumeSpace, NavVolumeAgent, NavVolumeObstacle, \textit{Hashing}};
+
+    % --- Dependencias (A -> B: A usa B) ---
+    \draw[usedep] (builder.south) -- (builder.south |- core.north);
+    \draw[usedep] (path.south)    -- (path.south    |- core.north);
+    \draw[usedep] (avoid.south)   -- (avoid.south   |- core.north);
+    \draw[usedep] (path.west)     -- (builder.east);
+    \draw[usedep] (unity.south -| builder.north) -- (builder.north);
+    \draw[usedep] (unity.south -| path.north)    -- (path.north);
+    \draw[usedep] (unity.south -| avoid.north)   -- (avoid.north);
+
+    % --- Contenedor Runtime ---
+    \begin{scope}[on background layer]
+      \node[contenedor, fit=(core)(builder)(path)(avoid)(unity),
+            label={[font=\bfseries]above:Runtime}] (runtime) {};
+    \end{scope}
+
+    % --- Modulos Editor y Tests (dependen solo de Runtime) ---
+    \node[modulo, fill=ficblue!15, draw=ficblue,
+          above=14mm of runtime.north west, anchor=south west]
+      (editor) {\textbf{Editor}\\[2pt]\footnotesize Herramientas de\\configuración y\\visualización};
+    \node[modulo, fill=udcgray!40, draw=udcgray!80!black,
+          above=14mm of runtime.north east, anchor=south east]
+      (tests) {\textbf{Tests}\\[2pt]\footnotesize Pruebas \textit{EditMode}\\y \textit{PlayMode}};
+    \draw[dep] (editor.south) -- (editor.south |- runtime.north);
+    \draw[dep] (tests.south)  -- (tests.south  |- runtime.north);
+
+  \end{tikzpicture}
+  \caption[Arquitectura final del módulo \textit{Runtime} y sus dependencias internas.]
+  {Arquitectura final del módulo \textit{Runtime} y sus dependencias internas.
+  Sobre el cimiento común \texttt{Core} se asientan \texttt{Builder}, \texttt{Pathfinding} y \texttt{Avoidance} (este último incorporado en la última iteración), y \texttt{Unity} orquesta a todos ellos exponiendo el sistema al motor.
+  Las flechas señalan las dependencias principales entre espacios de nombres; los módulos \textit{Editor} y \textit{Tests} siguen dependiendo únicamente de \textit{Runtime} (cf.\ Figura~\ref{fig:arquitectura}).}
+  \label{fig:arquitectura-final}
+\end{figure}
 
 En definitiva, el sistema resultante satisface los objetivos planteados: representa de forma eficiente el espacio navegable tridimensional, calcula sobre él trayectorias fluidas y libres de colisiones, y lo hace a través de una herramienta integrada en el motor y accesible para el usuario final.
 El análisis del rendimiento del sistema y las conclusiones derivadas se presentan en los capítulos siguientes.

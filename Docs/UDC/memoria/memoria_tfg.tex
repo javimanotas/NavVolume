@@ -38,7 +38,7 @@
 % \usepackage{tabularx}    % permite táboas con columnas de anchura determinada
   \usepackage{makecell}
   \usepackage{tikz}
-  \usetikzlibrary{positioning, arrows.meta, fit, backgrounds}
+  \usetikzlibrary{positioning, arrows.meta, fit, backgrounds, shapes.multipart, calc}
 
 % Estilos compartidos para los diagramas TikZ del documento.
 \tikzset{
@@ -121,10 +121,10 @@
  % Apéndices, glosarios e bibliografía  %
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%  \appendix
-%  \appendixpage
-%  \include{anexos/manual_instalacion}
-%  \include{anexos/manual_usuario}
+ \appendix
+ \appendixpage
+ \include{anexos/manual_instalacion}
+ \include{anexos/manual_usuario}
 
  \printglossary[type=\acronymtype,title=\nomeglosarioacronimos]
  \printglossary[title=\nomeglosariotermos]

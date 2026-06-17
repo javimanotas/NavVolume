@@ -1,71 +1,196 @@
 \chapter{Manual de usuario}
-\label{anexo:manualusuario}
 
 Este apéndice describe el uso de la herramienta desde el editor de Unity, orientado tanto a perfiles técnicos como a diseñadores de niveles y artistas.
-Se recorren los componentes que el sistema pone a disposición del usuario, su configuración en el inspector y las ayudas visuales que facilitan la comprensión y la depuración de la navegación.
-Para la instalación previa del paquete, consúltese el Apéndice~\ref{anexo:instalacion}.
+Para la instalación previa del paquete, consultar el Apéndice~\ref{anexo:instalacion}.
 
-\section{El componente NavVolume Space}
+\section{Agentes}
 
-El componente \textit{NavVolume Space} es el punto de entrada del sistema: define la región del espacio sobre la que se calculará la navegación y centraliza su configuración.
-Se añade a un objeto vacío de la escena desde el menú de componentes y expone, en su inspector, los parámetros fundamentales del volumen: su tamaño, el número de capas (que determina la resolución), la máscara de capas de física que se consideran obstáculos y el modo de construcción (véase la Figura~\ref{fig:manual-space}).
+El primer paso para el uso de la herramienta, es crear la configuración para un tipo de agente.
+Para ello se pulsa el click derecho sobre la ventana de proyecto y se selecciona la opción de "Create > NavVolume > Agent Type", tal y como se ilustra en la Figura~\ref{fig:creacionagente}.
 
-\pendientefig{Captura del inspector del componente \textit{NavVolume Space}, con las secciones de configuración (tamaño del volumen, número de capas y máscara de colisión), el modo de construcción y el panel de estadísticas desplegados.}{Inspector del componente \textit{NavVolume Space}.}{fig:manual-space}
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{imaxes/creacionagente.png}
+  \caption[Creación de la configuración para un agente.]
+  {Creación de la configuración para un agente.
+  Imagen obtenida por medio de una captura de pantalla.}
+  \label{fig:creacionagente}
+\end{figure}
 
-\section{Definición del volumen en la escena}
+Una vez se haya creado este fichero de configuración, si hacemos click sobre este podremos modificar una serie de parámetros, mostrados en la Figura~\ref{fig:configuracionagente}:
 
-El tamaño y la posición del volumen pueden ajustarse cómodamente desde la vista de escena.
-Al activar la edición, aparecen unos manejadores (\textit{handles}) que permiten redimensionar la caja del volumen de forma interactiva, sin necesidad de introducir valores numéricos a mano (véase la Figura~\ref{fig:manual-handles}).
+\begin{itemize}
+    \item \textbf{Radius:} radio del agente, empleado para evitar tanto la geometría del terreno como a otros agentes.
+    \item \textbf{Cost mode:} si se elige la opción de \textbf{Node Count} el agente ponderará en la búsqueda todos los nodos por igual, lo que se traduce en resultados que tardan menos en calcularse pero que tienden a moverse hacia el espacio más abierto.
+    En cambio, si se elige \textbf{Euclidean distance} los resultados serán más exactos a cambio de rendimiento.
+    En espacios muy abiertos es recomendable usar el primer método ya que el postprocesado de caminos suele compensar el error de precisión que cometen.
+    \item \textbf{Heuristic Weight:} peso que se le da a la heurística en la búsqueda de caminos.
+    En consecuencia si el valor es 1 devolverá el camino óptimo siempre y si es mayor calculará la ruta más rápido sacrificando la optimialidad.
+    \item \textbf{Avoidance Neighbor Range:} distancia máxima a la que otros agentes se consideran para la evasión.
+    \item \textbf{Avoidance Max Neighbors:} número máximo de agentes que se consideran a la vez para la evasión 
+    \item \textbf{Avoidance Time Horizon Agents:} cuántos segundos mira en el futuro para evitar colisiones con otros agentes.
+    \item \textbf{Avoidance Time Horizon Obstacles:}cuántos segundos mira en el futuro para evitar colisiones con obstáculos dinámicos.
+\end{itemize}
 
-\pendientefig{Captura de la vista de escena mostrando el volumen de navegación delimitado por su caja envolvente y los manejadores interactivos para redimensionarlo.}{Definición y redimensionado del volumen en la vista de escena.}{fig:manual-handles}
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{imaxes/configuracionagente.png}
+  \caption[Parámetros de configuración para un agente.]
+  {Parámetros de configuración para un agente.
+  Imagen obtenida por medio de una captura de pantalla.}
+  \label{fig:configuracionagente}
+\end{figure}
 
-\section{Construcción y precálculo (\textit{bake})}
+Para conseguir que un objeto se mueva, debemos añadirle el componente \texttt{NavVolumeAgent}, ilustrado en la Figura~\ref{fig:componenteagente}, y luego asignarle a este su configuración.
+Desde el inspector podemos modificar los siguientes parámetros:
 
-El sistema ofrece tres modos de construcción del volumen, seleccionables en el inspector: \textit{precalculado} (\textit{Baked}), que carga una estructura previamente generada y almacenada en disco; \textit{construido al inicio} (\textit{BuildOnAwake}), que la genera al arrancar la escena; y \textit{manual}.
-En el modo precalculado, un botón de \textit{Bake} lanza la construcción y muestra una barra de progreso cancelable mientras se procesa la escena (véase la Figura~\ref{fig:manual-bake}).
+\begin{itemize}
+    \item \textbf{Agent Type:} fichero de configuración del agente.
+    \item \textbf{Speed:} velocidad a la que se moverá el agente.
+    \item \textbf{Angular Speed:} velocidad a la que rotará el agente en $^\circ/\mathrm{s}$.
+    \item \textbf{Is Avoidance Enabled:} checkbox para activar o desactivar la evasión de otros agentes u obstáculos.
+    \item \textbf{Freeze Rotation:} por defecto un agente rota para estar orientado hacia donde se mueve.
+    Al marcar estas casillas podemos limitar la rotación en cierto eje.
+    Por ejemplo, si usamos un dron a modo de agente, queremos permitirle a este rotar solo alrededor del eje $Y$.
+\end{itemize}
 
-\pendientefig{Captura del botón de \textit{Bake} en el inspector y de la barra de progreso que se muestra durante la construcción del volumen.}{Proceso de construcción (\textit{bake}) del volumen.}{fig:manual-bake}
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{imaxes/componenteagente.png}
+  \caption[Parámetros del componente \texttt{NavVolumeAgent}.]
+  {Parámetros del componente \texttt{NavVolumeAgent}.
+  Imagen obtenida por medio de una captura de pantalla.}
+  \label{fig:componenteagente}
+\end{figure}
 
-\section{Visualización del SVO mediante Gizmos}
+Adicionalmente el agente también proporciona \textit{feedback} acerca de su comportamiento.
+En la figura~\ref{fig:agentestats} se muestran estadísticas acerca de su estado (en este caso está en movimiento) y del cómputo del camino.
 
-Para facilitar la comprensión y la depuración del sistema, al seleccionar el volumen se representa su estructura interna en la vista de escena mediante Gizmos.
-Un código de colores distingue los nodos vacíos, los que contienen geometría, las hojas parcialmente ocupadas y los \glspl{voxel} ocupados, lo que permite verificar de un vistazo que la ocupación calculada se corresponde con los obstáculos de la escena (véase la Figura~\ref{fig:manual-gizmos}).
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{imaxes/agentestats.png}
+  \caption[Parámetros de configuración para un agente.]
+  {Estadísticas en tiempo de ejecución de un agente.
+  Imagen obtenida por medio de una captura de pantalla.}
+  \label{fig:agentestats}
+\end{figure}
 
-\pendientefig{Captura de la visualización del \acrshort{svo} en la vista de escena mediante Gizmos, sobre un escenario con obstáculos, mostrando el código de colores que distingue los distintos tipos de nodo y los vóxeles ocupados.}{Visualización del \acrshort{svo} mediante Gizmos.}{fig:manual-gizmos}
+\section{Volumen de navegación}
 
-\section{Panel de estadísticas}
+TODO
 
-El inspector incorpora un panel de estadísticas que ayuda a dimensionar y ajustar el volumen.
-En él se muestran el tamaño de vóxel resultante, el número de \glspl{voxel} reservados frente al total teórico (con su porcentaje de ahorro), una estimación de la memoria ocupada y un desglose de los tiempos de la última construcción (véase la Figura~\ref{fig:manual-stats}).
+\section{Obstáculos dinámicos}
 
-\pendientefig{Captura del panel de estadísticas del inspector: tamaño de vóxel, vóxeles reservados frente al total teórico, memoria estimada, gráfico de nodos por capa y desglose de tiempos de construcción.}{Panel de estadísticas del volumen.}{fig:manual-stats}
+TODO
 
-\section{El componente NavVolume Agent}
+% % explicar como crear un tipo de agente
+% % poner imagen con el panel para crear tipo de agente
+% % explicar cada uno de los parámetros de este tipo de agente
+% % poner imagen con los parámetros del agente
 
-El componente \textit{NavVolume Agent} dota a un objeto de la capacidad de navegar de forma autónoma por el volumen.
-Su inspector permite configurar los parámetros de movimiento del agente y asociarlo a un tipo de agente concreto (véase la Figura~\ref{fig:manual-agent}).
-Durante la ejecución, la trayectoria calculada para el agente puede representarse mediante Gizmos, lo que facilita comprobar visualmente el resultado de la búsqueda y del suavizado (véase la Figura~\ref{fig:manual-agent-path}).
+% % explicar como crear un agente en el juego al añadir componente
+% % explicar cada uno de los parámetros de este componente.
+% % poner imagen de estos parámetros
 
-\pendientefig{Captura del inspector del componente \textit{NavVolume Agent} con sus parámetros de movimiento y de configuración.}{Inspector del componente \textit{NavVolume Agent}.}{fig:manual-agent}
+% \section{Volumen de navegación}
 
-\pendientefig{Captura de la vista de escena mostrando, mediante Gizmos, la trayectoria calculada para un agente desde su posición hasta su destino.}{Visualización de la trayectoria de un agente mediante Gizmos.}{fig:manual-agent-path}
+% % explicar que para que un agente se mueva requiere un volumen de navegación
+% % para eso se crea un objeto nuevo y se le añade el volumen de navegación y se le asigna el tipo de agente que queremos que haga uso de este volumen
+% % a los agentes se les asigna el volumen de navegación automáticamente. Dentro de los volumenes de navegación que compartan tipo con este se le asignará el que lo englobe y en caso de haber varios el que tenga mayor prioridad.
 
-\section{El componente NavVolume Obstacle}
+% % adicionalmente el volumen presenta parámetros para la construcción: explicar los 3 que son
+% % root size
 
-El componente \textit{NavVolume Obstacle} marca a un objeto como obstáculo dinámico, de modo que los agentes lo tengan en cuenta durante la evasión local en tiempo de ejecución.
-Su inspector permite ajustar la forma y las dimensiones del obstáculo (véase la Figura~\ref{fig:manual-obstacle}).
+% % añadir imagen componente volumen de navegación
 
-\pendientefig{Captura del inspector del componente \textit{NavVolume Obstacle}, con la configuración de su forma y dimensiones.}{Inspector del componente \textit{NavVolume Obstacle}.}{fig:manual-obstacle}
 
-\section{Tipos de agente}
 
-Los tipos de agente se definen como recursos reutilizables (\textit{assets}) que encapsulan los parámetros comunes a un conjunto de agentes, como su radio.
-De este modo, un mismo volumen puede atender a varias clases de agente, y cada agente se asocia al tipo que le corresponde (véase la Figura~\ref{fig:manual-agenttype}).
+% % muy importante que si el agente tiene collider asignado este sea ignorado por el builder
 
-\pendientefig{Captura del inspector de un recurso de tipo de agente (\textit{Agent Type}) mostrando sus parámetros configurables.}{Inspector de un tipo de agente.}{fig:manual-agenttype}
 
-\section{Uso desde código}
 
-Más allá de la configuración visual, el sistema expone una interfaz de programación para los usuarios que requieran un control más fino.
-A través de ella es posible solicitar rutas, comprobar si un punto del espacio es navegable, ajustar una posición al punto navegable más cercano u obtener puntos navegables aleatorios, entre otras operaciones.
-La documentación detallada de esta interfaz queda fuera del alcance de este manual.
+% % explicar que para crear un 
+
+
+% \section{Volumen de navegación}
+
+% % para que un agente se pueda mover necesitamos crear un volumen de navegación. 
+% % creamos un objeto nuevo en la escena y le añadimos el componente \texttt{NavVolume Space}.
+% % explicar que en el campo de tipo le ponemos el tipo de agente que queremos que navegue en este.
+% % explicar que 
+
+% En este disponemos de los siguientes parámetros, ilustrados en la Figura~\ref{fig:}:
+
+% \begin{itemize}
+%     \item \textbf{\textttt{Priority:}} A cada agente se le asignará automáticamente un volumen en función de en que volumen de su tipo esté dentro.
+%     En caso de haber varios tendrá preferencia el que tenga un valor más alto de esta prioridad.
+%     \item \textbf{\textttt{Agent Type:}} Tipo de agente que se desplazarán por este volumen.
+%     \item \textbf{\textttt{Root Size:}} Tamaño del lado del volumen de navegación en metros.
+
+% \end{itemize}
+
+% >> fig
+
+
+% Si se quisiese desplazar el volumen en su totalidad, se puede hacer uso del componente \texttt{Transform} ya que el centro de este se corresponde con la posición del objeto.
+% Adicionalmente, se proporciona una utilidad para manejar de manera más sencillo su tamaño: al presionar el botón situado a la derecha del campo numérico del \texttt{Root Size} se habilitan unos manejadores que se pueden arrastrar directamente con el ratón tal y como se muestra en la Figura~\ref{fig:}.
+
+% >> fig
+
+
+
+% El componente \textit{NavVolume Space} es el punto de entrada del sistema: define la región del espacio sobre la que se calculará la navegación y centraliza su configuración.
+% Se añade a un objeto vacío de la escena desde el menú de componentes y expone, en su inspector, los parámetros fundamentales del volumen: su tamaño, el número de capas (que determina la resolución), la máscara de capas de física que se consideran obstáculos y el modo de construcción (véase la Figura~\ref{fig:manual-space}).
+
+% \pendientefig{Captura del inspector del componente \textit{NavVolume Space}, con las secciones de configuración (tamaño del volumen, número de capas y máscara de colisión), el modo de construcción y el panel de estadísticas desplegados.}{Inspector del componente \textit{NavVolume Space}.}{fig:manual-space}
+
+% \section{Construcción y precálculo (\textit{bake})}
+
+% El sistema ofrece tres modos de construcción del volumen, seleccionables en el inspector: \textit{precalculado} (\textit{Baked}), que carga una estructura previamente generada y almacenada en disco; \textit{construido al inicio} (\textit{BuildOnAwake}), que la genera al arrancar la escena; y \textit{manual}.
+% En el modo precalculado, un botón de \textit{Bake} lanza la construcción y muestra una barra de progreso cancelable mientras se procesa la escena (véase la Figura~\ref{fig:manual-bake}).
+
+% \pendientefig{Captura del botón de \textit{Bake} en el inspector y de la barra de progreso que se muestra durante la construcción del volumen.}{Proceso de construcción (\textit{bake}) del volumen.}{fig:manual-bake}
+
+% \section{Visualización del SVO mediante Gizmos}
+
+% Para facilitar la comprensión y la depuración del sistema, al seleccionar el volumen se representa su estructura interna en la vista de escena mediante Gizmos.
+% Un código de colores distingue los nodos vacíos, los que contienen geometría, las hojas parcialmente ocupadas y los \glspl{voxel} ocupados, lo que permite verificar de un vistazo que la ocupación calculada se corresponde con los obstáculos de la escena (véase la Figura~\ref{fig:manual-gizmos}).
+
+% \pendientefig{Captura de la visualización del \acrshort{svo} en la vista de escena mediante Gizmos, sobre un escenario con obstáculos, mostrando el código de colores que distingue los distintos tipos de nodo y los vóxeles ocupados.}{Visualización del \acrshort{svo} mediante Gizmos.}{fig:manual-gizmos}
+
+% \section{Panel de estadísticas}
+
+% El inspector incorpora un panel de estadísticas que ayuda a dimensionar y ajustar el volumen.
+% En él se muestran el tamaño de vóxel resultante, el número de \glspl{voxel} reservados frente al total teórico (con su porcentaje de ahorro), una estimación de la memoria ocupada y un desglose de los tiempos de la última construcción (véase la Figura~\ref{fig:manual-stats}).
+
+% \pendientefig{Captura del panel de estadísticas del inspector: tamaño de vóxel, vóxeles reservados frente al total teórico, memoria estimada, gráfico de nodos por capa y desglose de tiempos de construcción.}{Panel de estadísticas del volumen.}{fig:manual-stats}
+
+% \section{El componente NavVolume Agent}
+
+% El componente \textit{NavVolume Agent} dota a un objeto de la capacidad de navegar de forma autónoma por el volumen.
+% Su inspector permite configurar los parámetros de movimiento del agente y asociarlo a un tipo de agente concreto (véase la Figura~\ref{fig:manual-agent}).
+% Durante la ejecución, la trayectoria calculada para el agente puede representarse mediante Gizmos, lo que facilita comprobar visualmente el resultado de la búsqueda y del suavizado (véase la Figura~\ref{fig:manual-agent-path}).
+
+% \pendientefig{Captura del inspector del componente \textit{NavVolume Agent} con sus parámetros de movimiento y de configuración.}{Inspector del componente \textit{NavVolume Agent}.}{fig:manual-agent}
+
+% \pendientefig{Captura de la vista de escena mostrando, mediante Gizmos, la trayectoria calculada para un agente desde su posición hasta su destino.}{Visualización de la trayectoria de un agente mediante Gizmos.}{fig:manual-agent-path}
+
+% \section{El componente NavVolume Obstacle}
+
+% El componente \textit{NavVolume Obstacle} marca a un objeto como obstáculo dinámico, de modo que los agentes lo tengan en cuenta durante la evasión local en tiempo de ejecución.
+% Su inspector permite ajustar la forma y las dimensiones del obstáculo (véase la Figura~\ref{fig:manual-obstacle}).
+
+% \pendientefig{Captura del inspector del componente \textit{NavVolume Obstacle}, con la configuración de su forma y dimensiones.}{Inspector del componente \textit{NavVolume Obstacle}.}{fig:manual-obstacle}
+
+% \section{Tipos de agente}
+
+% Los tipos de agente se definen como recursos reutilizables (\textit{assets}) que encapsulan los parámetros comunes a un conjunto de agentes, como su radio.
+% De este modo, un mismo volumen puede atender a varias clases de agente, y cada agente se asocia al tipo que le corresponde (véase la Figura~\ref{fig:manual-agenttype}).
+
+% \pendientefig{Captura del inspector de un recurso de tipo de agente (\textit{Agent Type}) mostrando sus parámetros configurables.}{Inspector de un tipo de agente.}{fig:manual-agenttype}
+
+% \section{Uso desde código}
+
+% Más allá de la configuración visual, el sistema expone una interfaz de programación para los usuarios que requieran un control más fino.
+% A través de ella es posible solicitar rutas, comprobar si un punto del espacio es navegable, ajustar una posición al punto navegable más cercano u obtener puntos navegables aleatorios, entre otras operaciones.
+% La documentación detallada de esta interfaz queda fuera del alcance de este manual.
