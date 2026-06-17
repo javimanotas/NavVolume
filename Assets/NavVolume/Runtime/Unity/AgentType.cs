@@ -8,7 +8,7 @@ namespace NavVolume.Runtime
     /// Defines parameters for an agent used both in the bake and pathfinding.
     /// </summary>
     [CreateAssetMenu(fileName = "NavVolumeAgentType", menuName = "NavVolume/Agent Type")]
-    public class AgentType : ScriptableObject
+    internal class AgentType : ScriptableObject
     {
         [field: Header("Agent")]
         [field: SerializeField]

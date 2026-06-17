@@ -82,7 +82,7 @@ namespace NavVolume
         internal BakeReport LastBuildReport { get; set; }
 
         internal BuildSettings CurrentSettings =>
-            new(transform.position, _rootSize, _numLayers, _collisionMask, 0);
+            new(transform.position, _rootSize, _numLayers, _collisionMask, _agentType.Radius);
 
         /// <summary>
         /// World-space axis-aligned bounding box of the cubic volume managed by this space.

@@ -18,7 +18,7 @@ namespace NavVolume
     {
         [field: SerializeField]
         [Tooltip("Type of the agent which determines its base parameters and behaviour.")]
-        public AgentType AgentType { get; private set; }
+        internal AgentType AgentType { get; private set; }
 
         [Tooltip("Movement speed in world units per second.")]
         [SerializeField]
