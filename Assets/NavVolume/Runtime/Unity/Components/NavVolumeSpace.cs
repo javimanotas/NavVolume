@@ -43,13 +43,13 @@ namespace NavVolume
         /// A tree needs at least a leaf layer plus a root layer.
         /// </para>
         /// <para>
-        /// Maximum 9: the layer-0 node count grows as <c>8^(NumLayers - 1)</c>.
-        /// A 10th layer with 8^9 = 134,217,728 nodes could overflow the <see cref="SVOLink.MAX_OFFSET_ALLOWED"/>.
+        /// Maximum 10: the <see cref="MortonCode"/> encoded into 32 bit integer so 11 bits * 3 coordinates will exceed their capacity.
+        /// WARNING: in compact scenes the pointers might not be able to reference all the nodes of the layer 10.
         /// </para>
         /// </summary>
         [SerializeField]
         [Tooltip("The detail of the navigable space.")]
-        [Range(2, 9)]
+        [Range(2, 10)]
         int _numLayers = 6;
 
         [SerializeField]
