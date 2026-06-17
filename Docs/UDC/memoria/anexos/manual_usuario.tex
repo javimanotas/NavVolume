@@ -209,6 +209,36 @@ Al ser un elemento de demostración y no parte del núcleo del sistema, no tiene
 
 \section{Uso desde código}
 
-La \acrshort{api} pública de la herramienta ofrece las siguientes funcionalidades:
+\subsection{\texttt{NavVolumeSpace}}
 
-TODO
+\begin{itemize}
+    \item \texttt{Bounds VolumeBounds \{ get; \}} Debuelve la caja de contorno (\textit{bounding box}) alineada con los ejes que delimita el volumen en coordenadas de mundo, centrada en la posición del \texttt{transform} y con el lado igual al tamaño configurado. Está disponible incluso antes de construir el volumen.
+    \item \texttt{bool IsReady \{ get; \}} Indica si los datos de navegación ya se han construido o cargado y, por tanto, el volumen puede responder consultas y peticiones de caminos. Mientras sea \texttt{false}, los métodos de consulta devuelven valores seguros por defecto en lugar de lanzar excepciones.
+    \item \texttt{event Action Rebuilt} Se lanza en el hilo principal justo después de (re)construir los datos del volumen. Permite refrescar cualquier elemento que dependa de la navegación.
+    Los agentes vinculados lo emplean para volver a solicitar sus rutas de forma automática.
+    \item \texttt{void Build()} Construye la estructura de navegación reemplazando los datos previos y disparando después el evento \texttt{Rebuilt}.
+    Se emplea con el modo de construcción \textit{Manual} o para forzar una reconstrucción en tiempo de ejecución.
+    \item \texttt{bool IsInsideVolume(Vector3 worldPos)} Devuelve \texttt{true} si el punto está dentro de la caja de contorno, con independencia de que la posición esté libre u ocupada.
+    No requiere que el volumen esté construido.
+    \item \texttt{bool IsNavigable(Vector3 worldPos)} Devuelve \texttt{true} si el punto está dentro del volumen y el vóxel que lo contiene está libre (no bloqueado por la geometría). Devuelve \texttt{false} si el volumen no está listo o el punto queda fuera u obstaculizado.
+    \item \texttt{Vector3 ClampToVolume(Vector3 worldPos)} Devuelve el punto más cercano a \texttt{worldPos} que queda dentro de la caja de contorno del volumen.
+    Si ya estaba dentro, lo devuelve sin cambios.
+    \item \texttt{bool TrySnapToNavigable(Vector3 worldPos, float maxDistance, out Vector3 result)} Busca el centro del vóxel libre más cercano a \texttt{worldPos}, explorando hacia afuera en capas concéntricas sobre la cuadrícula de vóxeles más fina, hasta un máximo de \texttt{maxDistance} metros (el punto de consulta se ajusta primero al interior del volumen).
+    Devuelve el punto hallado en \texttt{result} y retorna \texttt{true} si tiene éxito, o \texttt{false} si el volumen no está listo, \texttt{maxDistance} es negativo o no hay ningún vóxel libre dentro del rango.
+    \item \texttt{Vector3 GetRandomPoint()} Devuelve un punto navegable aleatorio dentro del volumen, o \texttt{Vector3.zero} si el volumen no está listo o no se encuentra ninguno.
+    \item \texttt{Vector3 GetRandomPointInBounds(Bounds bounds)} Como \texttt{GetRandomPoint}, pero restringido a la intersección entre \texttt{bounds} y el volumen.
+    \item \texttt{Vector3 GetRandomPointInSphere(Vector3 center, float radius)} Como \texttt{GetRandomPoint}, pero restringido a la intersección entre la esfera indicada y el volumen.
+    \item \texttt{bool TryGetRandomPoint(out Vector3 point, int maxAttempts = 30)} Trata de encontrar un punto navegable aleatorio dentro del volumen a tomando repetidamente una muestra completamente aleatoria hasta que sea válida o hasta llegar al máximo número de intentos.
+    \item \texttt{bool TryGetRandomPointInBounds(Bounds bounds, out Vector3 point, int maxAttempts = 30)} Igual que \texttt{TryGetRandomPoint}, muestreando dentro de la intersección entre \texttt{bounds} y el volumen.
+    \item \texttt{bool TryGetRandomPointInSphere(Vector3 center, float radius, out Vector3 point, int maxAttempts = 30)} Igual que \texttt{TryGetRandomPoint}, muestreando dentro de la intersección entre la esfera y el volumen.
+\end{itemize}
+
+\subsection{\texttt{NavVolumeAgent}}
+
+\begin{itemize}
+    \item \texttt{NavVolumeSpace NavVolumeSpace \{ get; \}} El volumen al que el agente está vinculado en ese momento, resuelto automáticamente al inicio.
+    \item \texttt{void SetDestination(Vector3 goal)} Solicita una ruta desde la posición actual del agente hasta \texttt{goal} y empieza a volar en cuanto la encuentra.
+    La búsqueda se ejecuta en segundo plano y, si se vuelve a llamar, cancela cualquier petición en curso.
+    El destino se recuerda, de modo que el agente recalcula la ruta automáticamente si su volumen se reconstruye.
+    El destino debería ser un punto navegable, en caso de duda, conviene ajustarlo antes con \texttt{TrySnapToNavigable}.
+\end{itemize}
