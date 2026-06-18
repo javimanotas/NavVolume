@@ -2,15 +2,18 @@
 \label{chap:desarrollo}
 
 En este capítulo se describe el proceso de construcción del sistema de navegación volumétrica, siguiendo la metodología iterativa e incremental expuesta en la Sección~\ref{sec:metodologiadesarrollo}.
-Cada sección se corresponde con una iteración del desarrollo y se organiza siguiendo las cuatro fases del ciclo de vida de cada incremento: el \textbf{análisis} del problema abordado, el \textbf{diseño} de la solución propuesta, su \textbf{implementación} y la \textbf{validación} del resultado obtenido.
+Cada iteración se corresponde con una de las tareas de la planificación (Sección~\ref{sec:planificacioninicial}) y se organiza siguiendo las cuatro fases del ciclo de vida de cada incremento: el \textbf{análisis} del problema abordado, el \textbf{diseño} de la solución propuesta, su \textbf{implementación} y la \textbf{validación} del resultado obtenido.
+El análisis de cada iteración se apoya, además, en los casos de uso del sistema, cuya descripción detallada y diagrama se recogen en el Anexo~\ref{anexo:casos-uso}.
 
-El desarrollo comienza con una iteración preparatoria para definir la arquitectura modular y el entorno de trabajo (Iteración~0).
-Sobre esta base se construye un producto mínimo viable, que incluye la representación del espacio navegable y una primera versión funcional de la búsqueda de rutas (Iteraciones~1 a~3).
-
-A partir de ahí, el sistema se amplía de forma progresiva siguiendo la planificación descrita en la Sección~\ref{sec:planificacioninicial}.
+El desarrollo comienza con una iteración preparatoria que define la arquitectura modular y el entorno de trabajo (Iteración~0).
+Sobre esa base se construyen la estructura de datos volumétrica (Iteración~1) y el cálculo de rutas (Iteración~2), que juntos conforman el producto mínimo viable.
+Las iteraciones posteriores añaden la robustez geométrica (Iteración~3), la integración en Unity (Iteración~4), la evaluación y optimización del rendimiento (Iteración~5) y la evasión local entre agentes (Iteración~6).
 El capítulo concluye con una discusión global que resume la arquitectura final.
 
 \section{Iteración 0: Cimientos del proyecto}
+
+Esta iteración preparatoria se corresponde con la tarea \textbf{T2} de la planificación (Sección~\ref{sec:planificacioninicial}), el diseño de la arquitectura.
+No produce todavía funcionalidad de navegación, sino que establece la estructura modular del proyecto y el entorno de trabajo sobre los que se apoyan el resto de iteraciones.
 
 \subsection{Análisis}
 
@@ -93,17 +96,26 @@ Al no existir todavía funcionalidad de navegación, la validación de esta iter
 Cuando la comprobación de formato o alguna prueba falla, los cambios quedan bloqueados y deben revisarse antes de integrarse en la rama principal.
 Esta infraestructura de validación automática, establecida desde el inicio, respalda la verificación de todos los incrementos descritos en las iteraciones siguientes.
 
-\section{Iteración 1: Representación del espacio navegable}
+\section{Iteración 1: Estructura de datos volumétrica}
 \label{sec:iter-representacion}
+
+Esta iteración cubre la tarea \textbf{T3} de la planificación (Sección~\ref{sec:planificacioninicial}), la construcción de la estructura de datos volumétrica.
+Reúne tres incrementos estrechamente relacionados: la representación compacta del espacio navegable, su construcción a partir de la geometría de la escena y su persistencia en disco para evitar reconstruirla en cada ejecución.
 
 \subsection{Análisis}
 
-El objetivo de esta iteración es implementar una estructura de datos para representar el espacio navegable de forma compacta.
-El requisito principal es la eficiencia en memoria: la representación debe abarcar grandes volúmenes tridimensionales sin un coste prohibitivo y mantener los datos contiguos para favorecer el acceso a la caché.
+El objetivo de esta iteración es construir el espacio navegable: una estructura de datos que represente de forma compacta el volumen libre de la escena, que se genere a partir de su geometría y que pueda guardarse en disco.
+Da respuesta a los casos de uso \textbf{CU-01} (construir el volumen de navegación), \textbf{CU-02} (precalcular y persistir el volumen) y \textbf{CU-03} (detectar un volumen obsoleto al cargar la escena), recogidos en el Anexo~\ref{anexo:casos-uso}.
+
+Del análisis se derivan tres requisitos.
+El primero es la eficiencia en memoria: la representación debe abarcar grandes volúmenes tridimensionales sin un coste prohibitivo y mantener los datos contiguos para favorecer el acceso a la caché.
+El segundo es el rendimiento de construcción, ya que rasterizar la escena es una de las fases con mayor coste computacional del sistema.
+El tercero es la persistencia fiable: el volumen debe poder guardarse y recuperarse sin pérdidas, y detectarse cuando la escena cambia tras el precálculo.
 Como se justificó en la Sección~\ref{sec:representacionespacionavegable}, se utiliza el \acrshort{svo}, una variante del \gls{octree} que únicamente subdivide las regiones con geometría.
 
 \subsection{Diseño}
 
+\textbf{Organización jerárquica.}
 El \acrshort{svo} se estructura en capas (\textit{layers}).
 Cada capa es un \textbf{vector plano} de nodos, ordenado según su código de Morton.
 Las capas superiores agrupan grandes volúmenes de espacio, mientras que las inferiores aumentan progresivamente el nivel de detalle.
@@ -143,6 +155,68 @@ Para encontrar un nodo en una capa, se aplica una \textbf{búsqueda binaria} rá
   \label{fig:hoja-mascara}
 \end{figure}
 
+\textbf{Canalización de construcción.}
+La construcción del volumen a partir de la geometría de la escena, denominada \textbf{rasterización}, se organiza como un flujo de trabajo (\textit{pipeline}) dividido en etapas independientes, resumido en la Figura~\ref{fig:build-pipeline}.
+Cada etapa consume los datos generados por la anterior, y aquellas que requieren un gran número de consultas físicas se delegan en el \textit{Job System} para su ejecución en paralelo.
+Como esta es una de las fases con mayor coste computacional del sistema, su diseño se orienta hacia el rendimiento mediante dos optimizaciones transversales: una estrategia jerárquica \textit{de lo grueso a lo fino}, que descarta cuanto antes las regiones vacías, y el descarte temprano de las hojas sin geometría.
+
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}[
+      font=\small, node distance=5mm,
+      etapa/.style={paso, text width=3.9cm, minimum height=1.0cm},
+      tienda/.style={almacen, text width=3.9cm, minimum height=1.0cm},
+      dato/.style={draw=udcgray!70!black, fill=udcgray!12, rounded corners=2pt,
+                   align=left, font=\scriptsize, text width=3.0cm, inner sep=4pt},
+      job/.style={draw=ficblue!60, fill=ficblue!8, rounded corners=2pt,
+                  align=center, font=\scriptsize, text width=2.6cm, inner sep=4pt},
+      conector/.style={densely dotted, draw=udcgray!75},
+      conjob/.style={densely dotted, draw=ficblue!65}
+    ]
+
+    % --- Columna central: etapas de la canalizacion ---
+    \node[tienda] (escena) {Escena\\[1pt]{\scriptsize(\textit{colliders})}};
+    \node[etapa, below=of escena] (s1) {\textbf{1.~Rasterización L1}\\[1pt]{\scriptsize barrido grueso-a-fino}};
+    \node[etapa, below=of s1] (s2) {\textbf{2.~Reserva de la capa 0}\\[1pt]{\scriptsize creación de nodos hoja}};
+    \node[etapa, below=of s2] (s3) {\textbf{3.~Rasterización de hojas}\\[1pt]{\scriptsize descarte grueso + muestreo fino}};
+    \node[etapa, below=of s3] (s4) {\textbf{4.~Capas superiores}\\[1pt]{\scriptsize de la raíz hacia las hojas}};
+    \node[etapa, below=of s4] (s5) {\textbf{5.~Enlazado padre--hijos}};
+    \node[etapa, below=of s5] (s6) {\textbf{6.~Enlazado de vecinos}};
+    \node[tienda, below=of s6] (out) {SVO enlazado\\[1pt]{\scriptsize(\textit{NavContext})}};
+
+    \foreach \a/\b in {escena/s1, s1/s2, s2/s3, s3/s4, s4/s5, s5/s6, s6/out}
+      \draw[flecha] (\a) -- (\b);
+
+    % --- Columna derecha: productos de datos ---
+    \node[dato, right=9mm of s1] (d1) {códigos Morton de las celdas L1 ocupadas};
+    \node[dato, right=9mm of s2] (d2) {\texttt{SVONode[]} de la capa 0};
+    \node[dato, right=9mm of s3] (d3) {máscaras de 64\,bits (\texttt{SVOLeaf[]})};
+    \node[dato, right=9mm of s4] (d4) {nodos internos por capa};
+    \node[dato, right=9mm of s5] (d5) {enlaces \texttt{FirstChild} / \texttt{Parent}};
+    \node[dato, right=9mm of s6] (d6) {\texttt{NeighborSet} (6 vecinos/nodo)};
+    \foreach \s/\d in {s1/d1, s2/d2, s3/d3, s4/d4, s5/d5, s6/d6}
+      \draw[conector] (\s.east) -- (\d.west);
+
+    % --- Columna izquierda: etapas paralelizadas ---
+    \node[job, left=9mm of s1] (j1) {\textit{Job System} + Burst\\[1pt]\texttt{OverlapBox} por lotes};
+    \node[job, left=9mm of s3] (j3) {\textit{Job System} + Burst\\[1pt]descarte / fino / reducción};
+    \draw[conjob] (j1.east) -- (s1.west);
+    \draw[conjob] (j3.east) -- (s3.west);
+
+  \end{tikzpicture}
+  \caption[Canalización de construcción del \acrshort{svo}.]
+  {Canalización de construcción del \acrshort{svo} durante el \gls{bake}.
+  Cada etapa (centro) consume el producto de datos de la anterior (derecha).
+  Las etapas~1 y~3, dominadas por consultas físicas, se aceleran mediante el \textit{Job System} y Burst (izquierda) y se detallan en las Figuras~\ref{fig:coarse-to-fine} y~\ref{fig:empty-leaf}, mientras que el enlazado de la vecindad (etapa~6) se ilustra en la Figura~\ref{fig:neighbor-link}.}
+  \label{fig:build-pipeline}
+\end{figure}
+
+\textbf{Serialización e integridad.}
+Reconstruir el \acrshort{svo} cada vez que se carga un escenario consumiría demasiado tiempo en ejecución, por lo que el volumen se precalcula en el editor (proceso de \gls{bake}) y se almacena en disco.
+Para ello se toman dos decisiones de diseño.
+El volumen se guarda como un \textbf{único bloque binario} (\textit{blob}), una representación plana y sin punteros que se carga de forma casi inmediata.
+Y, para detectar escenas obsoletas, ese bloque se acompaña de un \textit{hash} de la geometría, calculado durante el \gls{bake} y comparado al cargar el nivel.
+
 \subsection{Implementación}
 
 \subsubsection{Codificación de las hojas mediante manipulación de bits}
@@ -156,7 +230,7 @@ Para traducir las coordenadas tridimensionales de un \gls{voxel} a su posición 
 \subsubsection{Códigos de Morton}
 
 Para mapear las coordenadas 3D $(x, y, z)$ en un índice lineal que mantenga cercanos los nodos contiguos, se utilizan los códigos de Morton (basados en las curvas de orden Z de la Sección~\ref{sec:representacionespacionavegable}).
-Este código se calcula intercalando los bits de las tres coordenadas mediante desplazamientos y máscaras (Figura~\ref{fig:morton-interleave}).
+Este código se calcula intercalando los bits de las tres coordenadas mediante desplazamientos y máscaras, como muestra el siguiente fragmento de código.
 
 A modo de ejemplo numérico, supongamos las coordenadas $x = 5$, $y = 2$ y $z = 6$. Sus representaciones en binario (utilizando tres bits para simplificar) son $x = 101_2$, $y = 010_2$ y $z = 110_2$. Para calcular el código de Morton, se intercalan los bits de cada coordenada tomando un bit de cada una desde el más significativo al menos significativo (en el orden $z_i y_i x_i$):
 \begin{itemize}
@@ -166,7 +240,6 @@ A modo de ejemplo numérico, supongamos las coordenadas $x = 5$, $y = 2$ y $z = 
 \end{itemize}
 Al concatenar estos grupos, el código resultante en binario es $101110001_2$, que equivale al valor decimal $369$.
 
-\begin{figure}[H]
 \begin{lstlisting}[language={[Sharp]C}]
 // Intercala dos ceros entre cada bit del valor de entrada.
 static uint Interleave00(uint x)
@@ -184,9 +257,6 @@ public MortonCode(int x, int y, int z) =>
           | (Interleave00((uint)y) << 1)
           | (Interleave00((uint)z) << 2);
 \end{lstlisting}
-\caption{Codificación de un código de Morton mediante intercalado de bits.}
-\label{fig:morton-interleave}
-\end{figure}
 
 Este enfoque simplifica las operaciones jerárquicas.
 Para obtener el código de un nodo padre basta con desplazar sus coordenadas un bit a la derecha.
@@ -198,17 +268,13 @@ Al usar enteros de 32 bits, la resolución máxima del sistema queda limitada a 
 
 Por último, se implementó un mecanismo de referencia entre nodos más eficiente.
 En lugar de usar punteros estándar de C\#, se diseñó un \textbf{puntero compacto} de 32 bits.
-Este único entero contiene toda la información necesaria para localizar cualquier nodo o \gls{voxel} (Figura~\ref{fig:svolink-bits}).
+Este único entero contiene toda la información necesaria para localizar cualquier nodo o \gls{voxel}, con la disposición de bits que se muestra a continuación.
 
-\begin{figure}[H]
 \begin{lstlisting}[language={[Sharp]C}]
 const uint _IS_NODE_MASK       = 1u << 31;       // bit 31:    tipo (1 nodo, 0 voxel)
 const uint _OFFSET_MASK        = 0x1FFFFFF << 6; // bits 30..6: offset (25 bits)
 const uint _CONCRETE_DATA_MASK = 0x3F;           // bits  5..0: capa o subnodo (6 bits)
 \end{lstlisting}
-\caption{Disposición de los 32 bits del enlace (\texttt{SVOLink}).}
-\label{fig:svolink-bits}
-\end{figure}
 
 El bit más significativo indica si el puntero señala a un nodo o a un \gls{voxel}, los 25 bits centrales guardan la posición (desplazamiento) dentro de la capa y los 6 bits finales indican el nivel de la capa o el índice específico dentro de la hoja.
 Este diseño compacto ahorra memoria y permite usar el puntero directamente como clave en las tablas \textit{hash} de la búsqueda de rutas.
@@ -283,81 +349,7 @@ La Figura~\ref{fig:core-clases} muestra un resumen visual de las estructuras de 
   \label{fig:core-clases}
 \end{figure}
 
-\subsection{Validación}
-
-Dado que estas estructuras manipulan los datos a nivel de bits, su corrección es crítica y se verificó mediante pruebas unitarias automatizadas.
-Para cubrir el amplio rango de valores posibles se recurrió a \textbf{pruebas basadas en propiedades} (\textit{property-based testing}): en lugar de comprobar casos concretos, se generan entradas aleatorias y se verifica que se cumpla siempre una propiedad invariante.
-El ejemplo más representativo es la codificación de Morton, donde para cualquier coordenada $(x, y, z)$ generada al azar dentro del rango válido, decodificar su código de Morton debe devolver exactamente la coordenada original (propiedad de ida y vuelta).
-La misma estrategia se aplicó a la conversión entre coordenadas y máscara de bits de las hojas y a la codificación y decodificación de los punteros compactos (\texttt{SVOLink}), garantizando que la información empaquetada en cada entero se recupera sin pérdidas.
-
-\section{Iteración 2: Construcción y rasterización del volumen}
-\label{sec:iter-construccion}
-
-\subsection{Análisis}
-
-Una vez definida la estructura de datos, esta iteración se centra en su construcción a partir de la geometría de la escena.
-Este proceso, denominado \textbf{rasterización}, consiste en identificar qué regiones del espacio están ocupadas por obstáculos para rellenar el \acrshort{svo}.
-Al ser una de las fases con mayor coste computacional del sistema, el principal requisito de esta iteración es el rendimiento, por lo que su diseño se orienta completamente hacia la optimización.
-
-\subsection{Diseño}
-
-La construcción se organiza como un flujo de trabajo (\textit{pipeline}) dividido en etapas independientes, el cual se resume en la Figura~\ref{fig:build-pipeline}.
-Cada etapa consume los datos generados por la anterior, y aquellas que requieren un gran número de consultas físicas se delegan en el \textit{Job System} para su ejecución en paralelo.
-Sobre esta canalización se aplican dos optimizaciones transversales que guían todo el diseño: una estrategia jerárquica \textit{de lo grueso a lo fino}, que descarta cuanto antes las regiones vacías, y el descarte temprano de las hojas sin geometría.
-A continuación se detallan las etapas y las técnicas que las implementan.
-
-\begin{figure}[htp]
-  \centering
-  \begin{tikzpicture}[
-      font=\small, node distance=5mm,
-      etapa/.style={paso, text width=3.9cm, minimum height=1.0cm},
-      tienda/.style={almacen, text width=3.9cm, minimum height=1.0cm},
-      dato/.style={draw=udcgray!70!black, fill=udcgray!12, rounded corners=2pt,
-                   align=left, font=\scriptsize, text width=3.0cm, inner sep=4pt},
-      job/.style={draw=ficblue!60, fill=ficblue!8, rounded corners=2pt,
-                  align=center, font=\scriptsize, text width=2.6cm, inner sep=4pt},
-      conector/.style={densely dotted, draw=udcgray!75},
-      conjob/.style={densely dotted, draw=ficblue!65}
-    ]
-
-    % --- Columna central: etapas de la canalizacion ---
-    \node[tienda] (escena) {Escena\\[1pt]{\scriptsize(\textit{colliders})}};
-    \node[etapa, below=of escena] (s1) {\textbf{1.~Rasterización L1}\\[1pt]{\scriptsize barrido grueso-a-fino}};
-    \node[etapa, below=of s1] (s2) {\textbf{2.~Reserva de la capa 0}\\[1pt]{\scriptsize creación de nodos hoja}};
-    \node[etapa, below=of s2] (s3) {\textbf{3.~Rasterización de hojas}\\[1pt]{\scriptsize descarte grueso + muestreo fino}};
-    \node[etapa, below=of s3] (s4) {\textbf{4.~Capas superiores}\\[1pt]{\scriptsize de la raíz hacia las hojas}};
-    \node[etapa, below=of s4] (s5) {\textbf{5.~Enlazado padre--hijos}};
-    \node[etapa, below=of s5] (s6) {\textbf{6.~Enlazado de vecinos}};
-    \node[tienda, below=of s6] (out) {SVO enlazado\\[1pt]{\scriptsize(\textit{NavContext})}};
-
-    \foreach \a/\b in {escena/s1, s1/s2, s2/s3, s3/s4, s4/s5, s5/s6, s6/out}
-      \draw[flecha] (\a) -- (\b);
-
-    % --- Columna derecha: productos de datos ---
-    \node[dato, right=9mm of s1] (d1) {códigos Morton de las celdas L1 ocupadas};
-    \node[dato, right=9mm of s2] (d2) {\texttt{SVONode[]} de la capa 0};
-    \node[dato, right=9mm of s3] (d3) {máscaras de 64\,bits (\texttt{SVOLeaf[]})};
-    \node[dato, right=9mm of s4] (d4) {nodos internos por capa};
-    \node[dato, right=9mm of s5] (d5) {enlaces \texttt{FirstChild} / \texttt{Parent}};
-    \node[dato, right=9mm of s6] (d6) {\texttt{NeighborSet} (6 vecinos/nodo)};
-    \foreach \s/\d in {s1/d1, s2/d2, s3/d3, s4/d4, s5/d5, s6/d6}
-      \draw[conector] (\s.east) -- (\d.west);
-
-    % --- Columna izquierda: etapas paralelizadas ---
-    \node[job, left=9mm of s1] (j1) {\textit{Job System} + Burst\\[1pt]\texttt{OverlapBox} por lotes};
-    \node[job, left=9mm of s3] (j3) {\textit{Job System} + Burst\\[1pt]descarte / fino / reducción};
-    \draw[conjob] (j1.east) -- (s1.west);
-    \draw[conjob] (j3.east) -- (s3.west);
-
-  \end{tikzpicture}
-  \caption[Canalización de construcción del \acrshort{svo}.]
-  {Canalización de construcción del \acrshort{svo} durante el \gls{bake}.
-  Cada etapa (centro) consume el producto de datos de la anterior (derecha).
-  Las etapas~1 y~3, dominadas por consultas físicas, se aceleran mediante el \textit{Job System} y Burst (izquierda) y se detallan en las Figuras~\ref{fig:coarse-to-fine} y~\ref{fig:empty-leaf}, mientras que el enlazado de la vecindad (etapa~6) se ilustra en la Figura~\ref{fig:neighbor-link}.}
-  \label{fig:build-pipeline}
-\end{figure}
-
-\subsection{Implementación}
+Una vez definida la estructura en memoria, su construcción a partir de la geometría de la escena se organiza en las etapas que se detallan a continuación.
 
 \subsubsection{Muestreo del espacio mediante consultas físicas paralelizadas}
 
@@ -416,7 +408,7 @@ Esto se debe a una característica del diseño de niveles: en un entorno tridime
 Los obstáculos (como paredes, edificios o el terreno) ocupan una fracción pequeña del volumen total, por lo que la mayor parte de las hojas están vacías.
 Esta propiedad es la que justifica el uso de una representación dispersa.
 
-Para aprovecharla, la rasterización de las hojas se divide en dos pasadas consecutivas (ilustradas en las Figuras~\ref{fig:empty-leaf-pseudo} y~\ref{fig:empty-leaf}):
+Para aprovecharla, la rasterización de las hojas se divide en dos pasadas consecutivas (ilustradas en la Figura~\ref{fig:empty-leaf} y resumidas en el pseudocódigo posterior):
 
 \begin{enumerate}
     \item \textbf{Pasada gruesa de descarte:} Se realiza una \textbf{única} consulta \texttt{OverlapBox} que abarca la totalidad de la hoja.
@@ -428,7 +420,6 @@ Para aprovecharla, la rasterización de las hojas se divide en dos pasadas conse
 Dado que las hojas con obstáculos son una minoría, esta optimización reduce el número de consultas físicas en un factor cercano a 64 en la mayor parte del volumen.
 Finalmente, un \textit{job} de reducción condensa el resultado de la pasada fina en la máscara de 64 bits de cada hoja.
 
-\begin{figure}[H]
 \begin{lstlisting}
 // --- Pasada gruesa: una consulta por hoja completa ---
 lanzar  BuildCoarseLeafCommands   -> comandos_gruesos   (1 por hoja)
@@ -447,9 +438,6 @@ hojas[*] = Vacia
 para cada j en supervivientes:
     hojas[j] = DesdeBits(mascara[j])
 \end{lstlisting}
-\caption{Pseudocódigo de rasterización de hojas en dos pasadas: descarte grueso y muestreo fino.}
-\label{fig:empty-leaf-pseudo}
-\end{figure}
 
 \begin{figure}[htp]
   \centering
@@ -519,21 +507,77 @@ Esta estrategia, ilustrada en la Figura~\ref{fig:neighbor-link}, resuelve la tra
 
 Al concluir esta etapa, el sistema ya es capaz de transformar cualquier escena tridimensional en un \acrshort{svo} completamente conectado y listo para la navegación.
 
+\subsubsection{Serialización en un único bloque binario}
+\label{sec:iter-persistencia}
+
+El \acrshort{svo} se serializa en un \textbf{único bloque binario} o \textit{blob} que se almacena dentro de un archivo de datos (\textit{asset}) del propio motor.
+Cada hoja se guarda como un entero de 64 bits, mientras que cada nodo se representa mediante nueve enteros de 32 bits, los cuales almacenan su código de Morton, los enlaces a su primer hijo y a su padre, y sus seis vecinos.
+Esta representación plana y sin punteros resulta muy compacta.
+Además, acelera la carga en tiempo de ejecución, ya que el sistema se limita a leer de forma secuencial el flujo de bytes sin necesidad de reconstruir la jerarquía ni recalcular los vecinos.
+
+\subsubsection{Integridad de la escena: reinterpretación de los bits de un \textit{float}}
+\label{sec:hash-float}
+
+Un problema habitual al almacenar estos datos es que el escenario cambie después de realizar el \gls{bake}, lo que dejaría el volumen obsoleto.
+Para solucionar esto, el sistema calcula un \textit{hash} de la geometría relevante durante el \gls{bake} y lo compara con el de la escena actual al cargar el nivel.
+Se emplea el algoritmo \gls{fnv1a} en lugar del método por defecto de C\#, ya que este último no garantiza el determinismo entre distintas ejecuciones del programa.
+
+El algoritmo \gls{fnv1a} procesa los datos byte a byte.
+Sin embargo, las posiciones, rotaciones y escalas de los objetos se definen con números en coma flotante (\texttt{float}).
+Alimentar el algoritmo requiere obtener el patrón de bits \textbf{exacto} de cada \texttt{float} y no su valor numérico, el cual podría sufrir pérdidas por redondeo.
+El inconveniente es que C\# no permite reinterpretar de forma directa los bits de un tipo de dato como si fuesen de otro.
+
+La solución implementada consiste en crear una \textbf{unión}, una estructura común en lenguajes como C.
+Como se muestra en el siguiente fragmento de código, mediante el atributo \texttt{[StructLayout(LayoutKind.Explicit)]} se define una estructura donde un \texttt{float} y un \texttt{int} comparten la misma posición de memoria con \texttt{[FieldOffset(0)]}.
+Al asignar el valor al campo \texttt{float}, es posible leer de forma inmediata el campo \texttt{int}, obteniendo la representación binaria exacta en forma de entero.
+Esta técnica no realiza reservas de memoria adicionales, lo que garantiza el rendimiento y el determinismo necesarios para que el \textit{hash} sea fiable en cualquier sesión.
+
+\begin{lstlisting}[language={[Sharp]C}]
+[StructLayout(LayoutKind.Explicit)]
+struct FloatIntUnion
+{
+    [FieldOffset(0)] public float Float;
+    [FieldOffset(0)] public int   Int;
+}
+
+// Devuelve el int cuya representacion de bits coincide con la del float.
+public static int FloatBitsAsInt(float value) =>
+    new FloatIntUnion { Float = value }.Int;
+\end{lstlisting}
+
+Finalmente, para evitar que el \textit{hash} dependa del orden aleatorio en el que el motor procesa los elementos, los componentes de colisión (\textit{colliders}) se ordenan de manera fija según sus transformaciones antes de ser procesados por el algoritmo.
+
 \subsection{Validación}
+
+La corrección de estas estructuras, que manipulan los datos a nivel de bits, se verificó mediante pruebas unitarias automatizadas.
+Para cubrir el amplio rango de valores posibles se recurrió a \textbf{pruebas basadas en propiedades} (\textit{property-based testing}): en lugar de comprobar casos concretos, se generan entradas aleatorias y se verifica que se cumpla siempre una propiedad invariante.
+El ejemplo más representativo es la codificación de Morton, donde para cualquier coordenada $(x, y, z)$ generada al azar dentro del rango válido, decodificar su código de Morton debe devolver exactamente la coordenada original (propiedad de ida y vuelta).
+La misma estrategia se aplicó a la conversión entre coordenadas y máscara de bits de las hojas y a la codificación y decodificación de los punteros compactos (\texttt{SVOLink}).
 
 La construcción se validó comprobando que el volumen resultante refleja fielmente la geometría de la escena.
 Para ello se emplearon pruebas en modo de ejecución (\textit{PlayMode}), que levantan escenas con obstáculos conocidos, ejecutan la rasterización y verifican que los \glspl{voxel} marcados como ocupados se corresponden con la geometría real consultada al motor de físicas.
 La optimización de descarte de hojas vacías recibió especial atención: se contrastó que el resultado de la pasada en dos fases coincide con el de un muestreo exhaustivo \gls{voxel} a \gls{voxel}, asegurando que la aceleración no introduce falsos negativos.
-Finalmente, el enlazado de la vecindad se verificó mediante pruebas de integración que recorren el árbol y comprueban la \textbf{simetría} de los vínculos (si un nodo apunta a un vecino, ese vecino debe reconocerlo en la dirección opuesta), un invariante imprescindible para que la búsqueda de rutas sea correcta.
+El enlazado de la vecindad se verificó mediante pruebas de integración que recorren el árbol y comprueban la \textbf{simetría} de los vínculos (si un nodo apunta a un vecino, ese vecino debe reconocerlo en la dirección opuesta), un invariante imprescindible para que la búsqueda de rutas sea correcta.
 
-\section{Iteración 3: Búsqueda de rutas tridimensional}
+Por último, se comprobó la persistencia.
+Se verificó que la serialización es reversible: un volumen construido en memoria, guardado y vuelto a cargar produce una estructura idéntica a la original, \gls{voxel} a \gls{voxel} y enlace a enlace.
+Y se validó el mecanismo de integridad mediante pruebas que calculan el \textit{hash} de una escena, la modifican mínimamente (desplazando o reescalando un obstáculo) y confirman que el valor resultante cambia, mientras que permanece idéntico entre ejecuciones distintas cuando la geometría no varía, lo que valida el determinismo de \gls{fnv1a}.
+
+\section{Iteración 2: Búsqueda y postprocesado de rutas}
 \label{sec:iter-pathfinding}
+
+Esta iteración cubre la tarea \textbf{T4} de la planificación (Sección~\ref{sec:planificacioninicial}), la búsqueda y el postprocesado de rutas.
+Sobre el volumen ya construido, calcula trayectorias libres de colisiones y las refina para que el movimiento del agente resulte natural.
+Con ella se alcanza el producto mínimo viable del proyecto.
 
 \subsection{Análisis}
 
-Esta iteración desarrolla el núcleo del sistema y completa el producto mínimo viable: calcular una trayectoria libre de colisiones entre dos puntos.
-Para lograrlo, se adapta el algoritmo \gls{astar} para que opere sobre el \acrshort{svo}, tal como se planteó en el capítulo de fundamentos.
+El objetivo de esta iteración es el núcleo del sistema: calcular una trayectoria libre de colisiones entre dos puntos y refinarla para que el movimiento resulte natural.
+Da respuesta a los casos de uso \textbf{CU-04} (solicitar una ruta navegable entre dos puntos) y \textbf{CU-05} (obtener una trayectoria suavizada y libre de colisiones), recogidos en el Anexo~\ref{anexo:casos-uso}.
+
+Para el cálculo de la ruta se adapta el algoritmo \gls{astar} para que opere sobre el \acrshort{svo}, tal como se planteó en el capítulo de fundamentos.
 El principal reto es que, a diferencia de una implementación clásica de \gls{astar} sobre una cuadrícula uniforme, este buscador opera sobre un grafo de \textbf{resolución heterogénea}: un único salto puede cruzar desde un nodo gigante de espacio abierto hasta un pequeño \gls{voxel} pegado a un obstáculo.
+Además, las rutas obtenidas directamente sobre el volumen discretizado suelen parecer artificiales, ya que están formadas por múltiples segmentos rígidos alineados con la cuadrícula, por lo que requieren un postprocesado que las suavice sin comprometer su seguridad.
 
 \subsection{Diseño}
 
@@ -586,7 +630,8 @@ Para gestionar esta diferencia de tamaños, el algoritmo adapta su comportamient
   \label{fig:astar-multinivel}
 \end{figure}
 
-\begin{figure}[H]
+El esquema general del bucle principal de la búsqueda se resume en el siguiente pseudocódigo.
+
 \begin{lstlisting}
 empujar(inicio, f = h(inicio))
 mientras lista_abierta no vacia:
@@ -605,9 +650,6 @@ mientras lista_abierta no vacia:
             g[m] = g_nuevo;  procedencia[m] = n
             empujar(m, g_nuevo + h(m))
 \end{lstlisting}
-\caption{Esquema del bucle principal de la búsqueda \gls{astar} adaptada.}
-\label{fig:astar-pseudo}
-\end{figure}
 
 \subsubsection{Función de coste y heurística}
 
@@ -624,7 +666,17 @@ La heurística utilizada es la distancia en línea recta hasta la meta, multipli
 En el modo de \textit{conteo de nodos}, dado que el coste $g$ no representa una distancia física, la heurística se divide por el tamaño del nodo más grande.
 De esta forma, se garantiza que ambos valores mantengan la misma escala al aplicar la fórmula $f(n) = g(n) + W \cdot h(n)$.
 
+\subsubsection{Postprocesado de trayectorias}
+\label{sec:iter-postprocesado}
+
+Para dotar al agente de un movimiento más orgánico sin comprometer la seguridad de la trayectoria, se implementa un postprocesado dividido en dos fases complementarias, tal y como se describió en los fundamentos.
+La primera es un \textbf{atajo voraz} basado en comprobaciones de línea de visión, que elimina los nodos redundantes de la ruta.
+La segunda \textbf{suaviza} la trayectoria resultante mediante una \textit{spline} de Catmull-Rom.
+Ambas fases se conciben para preservar la seguridad de la ruta: cada una opera únicamente sobre puntos que ya se han verificado como libres de colisión.
+
 \subsection{Implementación}
+
+\subsubsection{Bucle de búsqueda y reconstrucción}
 
 El buscador usa una cola de prioridad para la lista abierta.
 El puntero compacto (\texttt{SVOLink}) sirve de clave en las tablas \textit{hash} que registran el coste acumulado y la procedencia de cada nodo.
@@ -639,34 +691,9 @@ Este proceso también maneja casos especiales:
   \item \textbf{Caminos muy costosos:} establece un límite máximo de nodos a explorar para evitar que el sistema se bloquee buscando rutas imposibles.
 \end{itemize}
 
-\subsection{Validación}
-
-El buscador se validó con pruebas unitarias en modo de edición (\textit{EditMode}) que ejercitan escenarios controlados: rutas en volúmenes vacíos, coincidencia entre el punto de inicio y el de fin, y trazados que deben rodear obstáculos sencillos.
-Estas pruebas comprueban tanto que la ruta encontrada es continua (cada nodo es vecino del siguiente) como que el algoritmo termina correctamente en los casos límite, devolviendo un fallo controlado cuando la meta es inalcanzable o cuando se supera el límite de nodos explorados.
-
-Al finalizar esta iteración, se alcanza el objetivo mínimo del proyecto: el sistema ya es capaz de generar el volumen y trazar rutas navegables sobre él.
-Sin embargo, garantizar que estas rutas sean fiables y se ajusten a las dimensiones físicas del agente resultó más difícil de lo previsto, como se verá en la Iteración~6 (Sección~\ref{sec:iter-robustez}).
-
-\section{Iteración 4: Postprocesado de trayectorias}
-\label{sec:iter-postprocesado}
-
-\subsection{Análisis}
-
-Las rutas generadas directamente sobre el volumen discretizado suelen parecer artificiales, ya que están formadas por múltiples segmentos rígidos alineados con la cuadrícula.
-El objetivo de esta iteración es dotar al agente de un movimiento más orgánico sin comprometer la seguridad de la trayectoria.
-
-\subsection{Diseño}
-
-Para lograrlo se implementa un postprocesado dividido en dos fases complementarias, tal y como se describió en los fundamentos.
-La primera es un \textbf{atajo voraz} basado en comprobaciones de línea de visión, que elimina los nodos redundantes de la ruta.
-La segunda \textbf{suaviza} la trayectoria resultante mediante una \textit{spline} de Catmull-Rom.
-Ambas fases se conciben para preservar la seguridad de la ruta: cada una opera únicamente sobre puntos que ya se han verificado como libres de colisión.
-
-\subsection{Implementación}
-
 \subsubsection{Atajo voraz mediante línea de visión}
 
-La primera fase aplica una variante voraz del algoritmo \textit{string pulling} para eliminar los nodos redundantes de la ruta.
+La primera fase del postprocesado aplica una variante voraz del algoritmo \textit{string pulling} para eliminar los nodos redundantes de la ruta.
 Empezando por el primer punto, el algoritmo intenta trazar una línea recta hasta el punto más lejano posible.
 Si existe \textbf{línea de visión directa} entre ambos (es decir, ningún obstáculo bloquea el paso), se descartan todos los nodos intermedios.
 
@@ -674,9 +701,8 @@ Comprobar esta línea de visión es un proceso crítico tanto para la precisión
 Para abordarlo de forma eficiente, se utiliza el algoritmo \acrshort{dda}, que recorre de forma progresiva los \glspl{voxel} que atraviesa la línea recta para verificar si alguno está ocupado por geometría.
 En cada paso, el recorrido avanza por el eje cuyo límite (el plano del \gls{voxel}) esté más cerca.
 Esto garantiza que no se omita ningún \gls{voxel} ni se evalúe el mismo dos veces.
-El procedimiento se resume en la Figura~\ref{fig:dda-pseudo}.
+El procedimiento se resume en el siguiente pseudocódigo.
 
-\begin{figure}[H]
 \begin{lstlisting}
 celda   = floor(inicio)              // voxel inicial
 paso    = signo(direccion)           // +1 o -1 por eje
@@ -693,9 +719,6 @@ mientras dentro de la rejilla:
 
 devolver true
 \end{lstlisting}
-\caption{Recorrido \acrshort{dda} para la comprobación de línea de visión.}
-\label{fig:dda-pseudo}
-\end{figure}
 
 \subsubsection{Suavizado mediante \textit{splines} de Catmull-Rom}
 
@@ -705,9 +728,8 @@ Como se justificó en los fundamentos (Figura~\ref{fig:catmull_rom}), se ha eleg
 Esta propiedad es clave para que el movimiento sea seguro.
 La fase anterior de línea de visión ya confirmó que los puntos de control están en espacio libre.
 Obligar a la curva a pasar exactamente por ellos evita que el suavizado genere colisiones contra las paredes o el entorno.
-La implementación para evaluar un punto en esta curva se muestra en la Figura~\ref{fig:catmull-eval}.
+La implementación para evaluar un punto en esta curva se muestra a continuación.
 
-\begin{figure}[H]
 \begin{lstlisting}[language={[Sharp]C}]
 static Vector3 EvaluateCatmullRom(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t) =>
     0.5f * (
@@ -717,91 +739,31 @@ static Vector3 EvaluateCatmullRom(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3
         + (-p0 + 3f * p1 - 3f * p2 + p3) * (t * t * t)
     );
 \end{lstlisting}
-\caption{Evaluación de un segmento del \textit{spline} de Catmull-Rom.}
-\label{fig:catmull-eval}
-\end{figure}
 
 \subsection{Validación}
 
-La validación de esta iteración se centró en confirmar que el postprocesado no introduce colisiones.
+El buscador se validó con pruebas unitarias en modo de edición (\textit{EditMode}) que ejercitan escenarios controlados: rutas en volúmenes vacíos, coincidencia entre el punto de inicio y el de fin, y trazados que deben rodear obstáculos sencillos.
+Estas pruebas comprueban tanto que la ruta encontrada es continua (cada nodo es vecino del siguiente) como que el algoritmo termina correctamente en los casos límite, devolviendo un fallo controlado cuando la meta es inalcanzable o cuando se supera el límite de nodos explorados.
+
+La validación del postprocesado se centró en confirmar que no introduce colisiones.
 Mediante pruebas que recorren la trayectoria final, se comprueba que tanto los segmentos del atajo como los puntos muestreados a lo largo de la \textit{spline} permanecen en espacio libre, contrastándolos con el motor de físicas.
 La comprobación de línea de visión, por su carácter crítico, se verificó de forma aislada con casos en los que la presencia o ausencia de un obstáculo entre dos puntos es conocida de antemano, asegurando que el recorrido \acrshort{dda} no omite ningún \gls{voxel} intermedio.
 
-\section{Iteración 5: Persistencia e integridad de la escena}
-\label{sec:iter-persistencia}
+Al finalizar esta iteración, se alcanza el objetivo mínimo del proyecto: el sistema ya es capaz de generar el volumen y trazar rutas navegables sobre él.
+Sin embargo, garantizar que estas rutas sean fiables y se ajusten a las dimensiones físicas del agente resultó más difícil de lo previsto, como se verá en la Iteración~3 (Sección~\ref{sec:iter-robustez}).
 
-\subsection{Análisis}
-
-Reconstruir el \acrshort{svo} cada vez que se carga un escenario consumiría demasiado tiempo en ejecución.
-Por ello, esta iteración aborda el proceso de \gls{bake}: la construcción anticipada del volumen desde el editor y su almacenamiento en disco para una carga inmediata posterior.
-El análisis revela además un riesgo asociado: si la escena se modifica después del \gls{bake}, el volumen almacenado quedaría obsoleto y dejaría de ser fiable.
-
-\subsection{Diseño}
-
-Para resolver ambas cuestiones se toman dos decisiones de diseño.
-El volumen se guarda como un \textbf{único bloque binario} (\textit{blob}), una representación plana y sin punteros que se carga de forma casi inmediata.
-Para detectar escenas obsoletas, ese bloque se acompaña de un \textit{hash} de la geometría, calculado durante el \gls{bake} y comparado al cargar el nivel.
-
-\subsection{Implementación}
-
-\subsubsection{Serialización en un único bloque binario}
-
-El \acrshort{svo} se serializa en un \textbf{único bloque binario} o \textit{blob} que se almacena dentro de un archivo de datos (\textit{asset}) del propio motor.
-Cada hoja se guarda como un entero de 64 bits, mientras que cada nodo se representa mediante nueve enteros de 32 bits, los cuales almacenan su código de Morton, los enlaces a su primer hijo y a su padre, y sus seis vecinos.
-Esta representación plana y sin punteros resulta muy compacta.
-Además, acelera la carga en tiempo de ejecución, ya que el sistema se limita a leer de forma secuencial el flujo de bytes sin necesidad de reconstruir la jerarquía ni recalcular los vecinos.
-
-\subsubsection{Integridad de la escena: reinterpretación de los bits de un \textit{float}}
-\label{sec:hash-float}
-
-Un problema habitual al almacenar estos datos es que el escenario cambie después de realizar el \gls{bake}, lo que dejaría el volumen obsoleto.
-Para solucionar esto, el sistema calcula un \textit{hash} de la geometría relevante durante el \gls{bake} y lo compara con el de la escena actual al cargar el nivel.
-Se emplea el algoritmo \gls{fnv1a} en lugar del método por defecto de C\#, ya que este último no garantiza el determinismo entre distintas ejecuciones del programa.
-
-El algoritmo \gls{fnv1a} procesa los datos byte a byte.
-Sin embargo, las posiciones, rotaciones y escalas de los objetos se definen con números en coma flotante (\texttt{float}).
-Alimentar el algoritmo requiere obtener el patrón de bits \textbf{exacto} de cada \texttt{float} y no su valor numérico, el cual podría sufrir pérdidas por redondeo.
-El inconveniente es que C\# no permite reinterpretar de forma directa los bits de un tipo de dato como si fuesen de otro.
-
-La solución implementada consiste en crear una \textbf{unión}, una estructura común en lenguajes como C.
-Como se muestra en la Figura~\ref{fig:float-union}, mediante el atributo \texttt{[StructLayout(LayoutKind.Explicit)]} se define una estructura donde un \texttt{float} y un \texttt{int} comparten la misma posición de memoria con \texttt{[FieldOffset(0)]}.
-Al asignar el valor al campo \texttt{float}, es posible leer de forma inmediata el campo \texttt{int}, obteniendo la representación binaria exacta en forma de entero.
-Esta técnica no realiza reservas de memoria adicionales, lo que garantiza el rendimiento y el determinismo necesarios para que el \textit{hash} sea fiable en cualquier sesión.
-
-\begin{figure}[H]
-\begin{lstlisting}[language={[Sharp]C}]
-[StructLayout(LayoutKind.Explicit)]
-struct FloatIntUnion
-{
-    [FieldOffset(0)] public float Float;
-    [FieldOffset(0)] public int   Int;
-}
-
-// Devuelve el int cuya representacion de bits coincide con la del float.
-public static int FloatBitsAsInt(float value) =>
-    new FloatIntUnion { Float = value }.Int;
-\end{lstlisting}
-\caption{Reinterpretación de los bits de un \texttt{float} como un \texttt{int} mediante una unión.}
-\label{fig:float-union}
-\end{figure}
-
-Finalmente, para evitar que el \textit{hash} dependa del orden aleatorio en el que el motor procesa los elementos, los componentes de colisión (\textit{colliders}) se ordenan de manera fija según sus transformaciones antes de ser procesados por el algoritmo.
-
-\subsection{Validación}
-
-Se comprobó, en primer lugar, que la serialización es reversible: un volumen construido en memoria, guardado y vuelto a cargar produce una estructura idéntica a la original, \gls{voxel} a \gls{voxel} y enlace a enlace.
-En segundo lugar, se verificó el mecanismo de integridad.
-Varias pruebas calculan el \textit{hash} de una escena, la modifican mínimamente (desplazando o reescalando un obstáculo) y confirman que el valor resultante cambia.
-Cuando la geometría no varía, en cambio, el \textit{hash} permanece idéntico entre ejecuciones distintas, lo que valida el determinismo de \gls{fnv1a}.
-
-\section{Iteración 6: Robustez geométrica y radio del agente}
+\section{Iteración 3: Robustez geométrica y radio del agente}
 \label{sec:iter-robustez}
+
+Esta iteración corresponde a la \textbf{extensión de la tarea T4} recogida en el seguimiento (Sección~\ref{sec:seguimiento}), la robustez geométrica.
+Surgió como una desviación no prevista al detectar que las rutas podían rozar la geometría del entorno, y se dedicó a garantizar que respeten el tamaño físico del agente.
 
 \subsection{Análisis}
 
 Las primeras versiones del buscador generaban, en ocasiones, trayectorias que rozaban o atravesaban la geometría del entorno.
 Este problema, conocido como \textit{clipping}, ocurría sobre todo cerca de las aristas y esquinas de los obstáculos.
 La causa de fondo era que el sistema trataba al agente como un simple punto sin volumen, por lo que ignoraba el espacio que este necesita para desplazarse.
+Resolver esta carencia es lo que exige el caso de uso \textbf{CU-06} (generar rutas con holgura suficiente para el tamaño del agente), recogido en el Anexo~\ref{anexo:casos-uso}.
 
 \subsection{Diseño}
 
@@ -845,7 +807,7 @@ La Figura~\ref{fig:clipping} ilustra este problema y su solución.
 
 \subsection{Implementación}
 
-El inflado se integra en la canalización de construcción descrita en la Iteración~2 sin necesidad de una fase adicional: basta con expandir las cajas de consulta (\texttt{OverlapBox}) con el radio del agente.
+El inflado se integra en la canalización de construcción descrita en la Iteración~1 sin necesidad de una fase adicional: basta con expandir las cajas de consulta (\texttt{OverlapBox}) con el radio del agente.
 Así, cualquier \gls{voxel} situado a una distancia de la geometría menor que el tamaño del agente queda marcado como ocupado de forma automática durante el muestreo.
 
 \subsection{Validación}
@@ -866,13 +828,17 @@ La función de reserva de nodos hermanos (\textit{allocate missing siblings}) po
 Para detectarlo se añadió una prueba de integración que comprueba los invariantes de la estructura tras la construcción.
 Aunque este esfuerzo extra de validación retrasó ligeramente la planificación, fue clave para asegurar la robustez del proyecto.
 
-\section{Iteración 7: Integración en Unity y telemetría}
+\section{Iteración 4: Integración en Unity}
 \label{sec:iter-integracion}
+
+Esta iteración cubre la tarea \textbf{T5} de la planificación (Sección~\ref{sec:planificacioninicial}), la integración en Unity.
+Expone el sistema al usuario final mediante componentes de editor, herramientas de depuración y una \acrshort{api} pública de navegación y consultas espaciales.
 
 \subsection{Análisis}
 
-Una vez consolidado el núcleo del sistema, esta iteración se centra en mejorar su usabilidad.
-El objetivo es proporcionar herramientas accesibles tanto para perfiles técnicos como para diseñadores de niveles y artistas, que permitan configurar, depurar y dimensionar el volumen sin necesidad de leer el código.
+Una vez consolidado el núcleo del sistema, esta iteración se centra en mejorar su usabilidad y en consolidar su interfaz pública.
+El objetivo es proporcionar herramientas accesibles tanto para perfiles técnicos como para diseñadores de niveles y artistas, que permitan configurar, depurar y dimensionar el volumen sin necesidad de leer el código, así como una \acrshort{api} clara para programar el comportamiento de los agentes.
+Esta iteración da respuesta a los casos de uso \textbf{CU-07} (configurar el volumen desde el editor), \textbf{CU-08} (depurar el volumen visualmente y consultar sus estadísticas), \textbf{CU-09} (realizar consultas espaciales sobre el volumen) y \textbf{CU-10} (solicitar rutas de forma asíncrona), recogidos en el Anexo~\ref{anexo:casos-uso}.
 
 \subsection{Diseño}
 
@@ -881,85 +847,6 @@ El objetivo es proporcionar herramientas accesibles tanto para perfiles técnico
 El elemento central es el componente \texttt{NavVolumeSpace}, que gestiona el volumen de navegación.
 Para adaptarse a diferentes flujos de trabajo, ofrece tres modos de construcción: \textbf{precalculado} (\textit{Baked}), que carga los datos guardados previamente en disco, \textbf{construido al inicio} (\textit{BuildOnAwake}) y \textbf{manual}, que se construye al invocar la función correspondiente desde código.
 Junto a este, se incluyen componentes adicionales para representar a las entidades del escenario, como los agentes y los obstáculos dinámicos.
-
-\subsection{Implementación}
-
-\subsubsection{Visualización mediante Gizmos}
-
-Para facilitar la depuración, se ha implementado una representación visual del \acrshort{svo} en la vista de escena mediante Gizmos.
-Esta herramienta muestra la estructura del árbol utilizando un código de colores para identificar el estado de cada elemento: nodos vacíos, nodos con geometría, hojas parciales y \glspl{voxel} ocupados (véase la Figura~\ref{fig:gizmos}).
-Como un volumen puede contener cientos de miles de nodos, el sistema de dibujado incluye dos medidas para mantener el rendimiento: un \textbf{límite máximo} de elementos a renderizar y un \textbf{descarte por distancia} respecto a la cámara, evitando dibujar detalles innecesarios en zonas alejadas.
-
-\begin{figure}[htp]
-  \centering
-  \includegraphics[width=0.75\textwidth]{imaxes/svogizmos.png}
-  \caption[Gizmos dibujados por el volumen.]
-  {Gizmos dibujados por el volumen.
-  En rojo cada uno de los vóxeles, en amarillo los nodos hoja y en verde el resto de nodos.
-  Imagen obtenida por medio de una captura de pantalla.}
-  \label{fig:gizmos}
-\end{figure}
-
-\subsubsection{Telemetría: el cálculo de la memoria estimada}
-\label{sec:memoria-estimada}
-
-El inspector de Unity incluye ahora un panel de estadísticas para ayudar al usuario a configurar el volumen correctamente (Figura~\ref{fig:stats-panel}).
-Las dos métricas principales son el porcentaje de \glspl{voxel} ahorrados frente a un modelo tradicional y una \textbf{estimación} de la memoria que ocupa la estructura.
-
-Este cálculo de memoria se basa en cómo C\# gestiona los objetos.
-En sistemas de 64 bits, cualquier objeto en memoria dinámica (\gls{heap}) incluye datos extra de control (\textit{overhead}), como una cabecera y, en el caso de los vectores (\textit{arrays}), el espacio para almacenar su longitud.
-Utilizando estas constantes aproximadas, el sistema recorre la jerarquía sumando la cabecera de cada vector al tamaño real de sus elementos (calculado mediante \texttt{Unsafe.SizeOf}), tal y como se detalla en la Figura~\ref{fig:memoria-pseudo}.
-
-\begin{figure}[H]
-\begin{lstlisting}[language={[Sharp]C}]
-const int _OBJECT_HEADER_BYTES = 24; // cabecera de objeto
-const int _ARRAY_HEADER_BYTES  = 24; // cabecera de objeto + longitud
-const int _REFERENCE_BYTES     = 8;  // tamano de una referencia
-
-int total = _OBJECT_HEADER_BYTES;
-
-// Vector de hojas: cada hoja es un ulong (8 bytes).
-total += _ARRAY_HEADER_BYTES + Unsafe.SizeOf<SVOLeaf>() * leaves.Length;
-
-// Vector externo de capas (un vector dentado de referencias).
-total += _ARRAY_HEADER_BYTES + _REFERENCE_BYTES * layers.Length;
-
-// Cada capa: su cabecera mas el tamano real de cada nodo.
-foreach (var layer in layers)
-    total += _ARRAY_HEADER_BYTES + Unsafe.SizeOf<SVONode>() * layer.Length;
-\end{lstlisting}
-\caption{Estimación de la memoria ocupada por el \acrshort{svo}.}
-\label{fig:memoria-pseudo}
-\end{figure}
-
-Conviene recordar que este valor es una \textbf{estimación} orientativa, pensada para comparar rápidamente distintas configuraciones.
-Por otro lado, el ahorro de espacio se calcula comparando los \glspl{voxel} que realmente se han creado en memoria frente a los que tendría un árbol completamente denso de la misma profundidad (el cual requiere $8^{(L-1)}$ hojas para $L$ capas).
-Esta cifra muestra con claridad la principal ventaja de una representación jerárquica dispersa.
-
-\begin{figure}[htp]
-  \centering
-  \includegraphics[width=0.75\textwidth]{imaxes/bakestats.png}
-  \caption[Estadísticas del volumen construido.]
-  {Estadísticas del volumen construido.
-  Imagen obtenida por medio de una captura de pantalla.}
-  \label{fig:stats-panel}
-\end{figure}
-
-\subsection{Validación}
-
-Por su carácter de herramientas de apoyo, estos componentes se validaron de forma mayoritariamente cualitativa y manual dentro del editor.
-La visualización mediante Gizmos cumple además una doble función, pues fue la principal herramienta para inspeccionar visualmente que el volumen construido se ajusta a la geometría de cada escena de prueba.
-El cálculo de la memoria estimada se contrastó comparando su resultado con el tamaño real de las estructuras en escenarios sencillos, confirmando que la aproximación se mantiene dentro de un margen razonable y resulta útil para comparar configuraciones.
-
-\section{Iteración 8: API pública, optimización del rendimiento}
-\label{sec:iter-api-opt}
-
-\subsection{Análisis}
-
-En esta iteración se consolida la interfaz pública del sistema y se abordan las tareas de evaluación y optimización del rendimiento.
-Se busca que la \acrshort{api} cubra los casos de uso más habituales y que el sistema rinda adecuadamente incluso en escenarios exigentes con numerosas peticiones de ruta.
-
-\subsection{Diseño}
 
 \subsubsection{API de navegación y consultas espaciales}
 
@@ -1060,10 +947,91 @@ La Figura~\ref{fig:seq-path} detalla la secuencia de una petición asíncrona, d
 
 \subsection{Implementación}
 
-\subsubsection{Optimizaciones de rendimiento}
+\subsubsection{Visualización mediante Gizmos}
+
+Para facilitar la depuración, se ha implementado una representación visual del \acrshort{svo} en la vista de escena mediante Gizmos.
+Esta herramienta muestra la estructura del árbol utilizando un código de colores para identificar el estado de cada elemento: nodos vacíos, nodos con geometría, hojas parciales y \glspl{voxel} ocupados (véase la Figura~\ref{fig:gizmos}).
+Como un volumen puede contener cientos de miles de nodos, el sistema de dibujado incluye dos medidas para mantener el rendimiento: un \textbf{límite máximo} de elementos a renderizar y un \textbf{descarte por distancia} respecto a la cámara, evitando dibujar detalles innecesarios en zonas alejadas.
+
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{imaxes/svogizmos.png}
+  \caption[Gizmos dibujados por el volumen.]
+  {Gizmos dibujados por el volumen.
+  En rojo cada uno de los vóxeles, en amarillo los nodos hoja y en verde el resto de nodos.
+  Imagen obtenida por medio de una captura de pantalla.}
+  \label{fig:gizmos}
+\end{figure}
+
+\subsubsection{Telemetría: el cálculo de la memoria estimada}
+\label{sec:memoria-estimada}
+
+El inspector de Unity incluye ahora un panel de estadísticas para ayudar al usuario a configurar el volumen correctamente (Figura~\ref{fig:stats-panel}).
+Las dos métricas principales son el porcentaje de \glspl{voxel} ahorrados frente a un modelo tradicional y una \textbf{estimación} de la memoria que ocupa la estructura.
+
+Este cálculo de memoria se basa en cómo C\# gestiona los objetos.
+En sistemas de 64 bits, cualquier objeto en memoria dinámica (\gls{heap}) incluye datos extra de control (\textit{overhead}), como una cabecera y, en el caso de los vectores (\textit{arrays}), el espacio para almacenar su longitud.
+Utilizando estas constantes aproximadas, el sistema recorre la jerarquía sumando la cabecera de cada vector al tamaño real de sus elementos (calculado mediante \texttt{Unsafe.SizeOf}), tal y como se detalla en el siguiente fragmento de código.
+
+\begin{lstlisting}[language={[Sharp]C}]
+const int _OBJECT_HEADER_BYTES = 24; // cabecera de objeto
+const int _ARRAY_HEADER_BYTES  = 24; // cabecera de objeto + longitud
+const int _REFERENCE_BYTES     = 8;  // tamano de una referencia
+
+int total = _OBJECT_HEADER_BYTES;
+
+// Vector de hojas: cada hoja es un ulong (8 bytes).
+total += _ARRAY_HEADER_BYTES + Unsafe.SizeOf<SVOLeaf>() * leaves.Length;
+
+// Vector externo de capas (un vector dentado de referencias).
+total += _ARRAY_HEADER_BYTES + _REFERENCE_BYTES * layers.Length;
+
+// Cada capa: su cabecera mas el tamano real de cada nodo.
+foreach (var layer in layers)
+    total += _ARRAY_HEADER_BYTES + Unsafe.SizeOf<SVONode>() * layer.Length;
+\end{lstlisting}
+
+Conviene recordar que este valor es una \textbf{estimación} orientativa, pensada para comparar rápidamente distintas configuraciones.
+Por otro lado, el ahorro de espacio se calcula comparando los \glspl{voxel} que realmente se han creado en memoria frente a los que tendría un árbol completamente denso de la misma profundidad (el cual requiere $8^{(L-1)}$ hojas para $L$ capas).
+Esta cifra muestra con claridad la principal ventaja de una representación jerárquica dispersa.
+
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{imaxes/bakestats.png}
+  \caption[Estadísticas del volumen construido.]
+  {Estadísticas del volumen construido.
+  Imagen obtenida por medio de una captura de pantalla.}
+  \label{fig:stats-panel}
+\end{figure}
+
+\subsection{Validación}
+
+La corrección funcional de la \acrshort{api} y de las consultas espaciales se aseguró con la batería de pruebas existente, que se ejecuta de forma automática en el sistema de \acrshort{ci}.
+Por su parte, las herramientas de apoyo se validaron de forma mayoritariamente cualitativa y manual dentro del editor.
+La visualización mediante Gizmos cumple además una doble función, pues fue la principal herramienta para inspeccionar visualmente que el volumen construido se ajusta a la geometría de cada escena de prueba.
+El cálculo de la memoria estimada se contrastó comparando su resultado con el tamaño real de las estructuras en escenarios sencillos, confirmando que la aproximación se mantiene dentro de un margen razonable y resulta útil para comparar configuraciones.
+
+\section{Iteración 5: Evaluación y optimización del rendimiento}
+\label{sec:iter-api-opt}
+
+Esta iteración cubre la tarea \textbf{T6} de la planificación (Sección~\ref{sec:planificacioninicial}), la evaluación y optimización del rendimiento.
+Una vez integrado el sistema, se perfila su comportamiento y se introducen mejoras de bajo nivel para que cumpla los objetivos de rendimiento sin alterar su funcionalidad.
+
+\subsection{Análisis}
+
+Esta iteración no añade nuevos casos de uso, sino que atiende un requisito \textbf{no funcional} transversal: que el sistema rinda adecuadamente incluso en escenarios exigentes, con numerosas peticiones de ruta simultáneas y volúmenes densos.
+El análisis parte del perfilado del sistema ya integrado para localizar los puntos críticos donde una optimización tiene mayor impacto.
+
+\subsection{Diseño}
 
 La fase de optimización se guió por el perfilado del rendimiento e introdujo mejoras de bajo nivel basadas en los principios del \acrshort{dod} (\textit{Data-Oriented Design}).
-Las más destacadas son:
+La idea común a todas ellas es reducir la presión sobre el recolector de basura y aprovechar mejor la caché, evitando copias y reservas de memoria innecesarias en las rutas de ejecución más frecuentes.
+
+\subsection{Implementación}
+
+\subsubsection{Optimizaciones de rendimiento}
+
+Las mejoras más destacadas son:
 
 \begin{itemize}
   \item \textbf{Reutilización de \textit{buffers}:} El buscador recicla las colecciones de su estado interno entre peticiones, reduciendo la carga sobre el recolector de basura (\textit{Garbage Collector}).
@@ -1077,20 +1045,21 @@ Al evitar reordenar las capas cuando no faltan nodos hermanos, se logró reducir
 
 \subsection{Validación}
 
-La validación de esta iteración tuvo una doble vertiente.
-Por un lado, la corrección funcional de la \acrshort{api} y de las consultas espaciales se aseguró con la batería de pruebas existente, que se ejecuta de forma automática en el sistema de \acrshort{ci} y evita que las optimizaciones introduzcan regresiones.
-Por otro, las mejoras de rendimiento se guiaron por el perfilado (\textit{profiling}).
+Las mejoras de rendimiento se guiaron por el perfilado (\textit{profiling}).
 Cada optimización se midió comparando el tiempo de ejecución y las reservas de memoria antes y después del cambio.
 Así se confirmó de forma objetiva la menor carga sobre el recolector de basura y la aceleración del \gls{bake}.
+La batería de pruebas existente, ejecutada en el sistema de \acrshort{ci}, garantizó que ninguna de estas optimizaciones introdujera regresiones en el comportamiento.
 
-\section{Iteración 9: Evasión local entre agentes}
+\section{Iteración 6: Evasión local entre agentes}
 \label{sec:iter-evasion}
+
+Esta última iteración corresponde a la tarea \textbf{T8} del seguimiento (Sección~\ref{sec:seguimiento}), un incremento no planificado inicialmente: la evasión local entre agentes.
+Aprovecha la holgura obtenida en la planificación para añadir una funcionalidad extra que enriquece el comportamiento del sistema.
 
 \subsection{Análisis}
 
-Esta última iteración introduce una funcionalidad extra (véase la Sección~\ref{sec:seguimiento}): la evasión local entre agentes.
 Hasta ahora, el cálculo de rutas evitaba la geometría estática, pero no impedía que los agentes colisionaran entre sí al moverse por el escenario.
-Resolver esa carencia es el objetivo de esta fase.
+Resolver esa carencia es el objetivo de esta fase, que da respuesta al caso de uso \textbf{CU-11} (evitar colisiones entre agentes en movimiento), recogido en el Anexo~\ref{anexo:casos-uso}.
 
 \subsection{Diseño}
 
@@ -1102,21 +1071,6 @@ La implementación se basó en adaptar las rutinas tridimensionales de la biblio
 
 El algoritmo busca la velocidad óptima respetando diversas restricciones, representadas como semiplanos.
 Si el problema resulta infactible por un exceso de restricciones simultáneas, aplica una relajación matemática para minimizar el impacto de la colisión, tal y como ilustra la Figura~\ref{fig:orca}.
-
-\subsection{Implementación}
-
-Dado que este cálculo se ejecuta para cada agente en cada fotograma, su optimización es crítica.
-Para evitar problemas de rendimiento en esta área del sistema:
-
-\begin{itemize}
-  \item Se utiliza \texttt{stackalloc} para reservar las estructuras temporales directamente en el \gls{stack}.
-  \item Se manipulan los datos mediante \texttt{Span\textless T\textgreater}.
-\end{itemize}
-
-Ambas técnicas evitan asignar memoria en el \gls{heap}, eliminando por completo la carga de trabajo sobre el recolector de basura.
-
-Además, el sistema no solo evita colisiones entre agentes, sino que también detecta los \glspl{voxel} bloqueados en el \acrshort{svo} cercano.
-De este modo, el comportamiento de evasión local también respeta la geometría estática del entorno de forma fluida.
 
 \begin{figure}[htp]
   \centering
@@ -1147,6 +1101,21 @@ De este modo, el comportamiento de evasión local también respeta la geometría
   Como la velocidad preferida $v^{\mathrm{pref}}$ cae en una región prohibida, el algoritmo escoge la velocidad factible $v^{\mathrm{new}}$ más próxima, sobre la frontera de la región segura.}
   \label{fig:orca}
 \end{figure}
+
+\subsection{Implementación}
+
+Dado que este cálculo se ejecuta para cada agente en cada fotograma, su optimización es crítica.
+Para evitar problemas de rendimiento en esta área del sistema:
+
+\begin{itemize}
+  \item Se utiliza \texttt{stackalloc} para reservar las estructuras temporales directamente en el \gls{stack}.
+  \item Se manipulan los datos mediante \texttt{Span\textless T\textgreater}.
+\end{itemize}
+
+Ambas técnicas evitan asignar memoria en el \gls{heap}, eliminando por completo la carga de trabajo sobre el recolector de basura.
+
+Además, el sistema no solo evita colisiones entre agentes, sino que también detecta los \glspl{voxel} bloqueados en el \acrshort{svo} cercano.
+De este modo, el comportamiento de evasión local también respeta la geometría estática del entorno de forma fluida.
 
 \subsubsection{Integración con el sistema de \textit{jobs}}
 
