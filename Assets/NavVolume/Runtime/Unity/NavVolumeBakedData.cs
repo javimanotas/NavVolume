@@ -9,7 +9,7 @@ namespace NavVolume
     /// Serializable data with the already built <see cref="NavContext"/>.
     /// </summary>
     [CreateAssetMenu(fileName = "NavVolumeBakedData", menuName = "NavVolume/Baked Data")]
-    public class NavVolumeBakedData : ScriptableObject
+    internal class NavVolumeBakedData : ScriptableObject
     {
         [SerializeField]
         [HideInInspector]

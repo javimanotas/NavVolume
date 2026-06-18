@@ -35,7 +35,7 @@ namespace NavVolume
 
         int _avoidanceHandle = -1;
 
-        public ObstacleShape Shape
+        internal ObstacleShape Shape
         {
             get => _shape;
             set => _shape = value;

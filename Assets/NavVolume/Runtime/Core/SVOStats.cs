@@ -20,7 +20,7 @@ namespace NavVolume.Runtime.Core
 
         public readonly float VoxelSize;
 
-        public readonly int TheoreticalVoxelsCount;
+        public readonly ulong TheoreticalVoxelsCount;
 
         public readonly int VoxelsCount;
 
@@ -42,7 +42,7 @@ namespace NavVolume.Runtime.Core
 
             VoxelSize = ctx.BuildSettings.VoxelSize;
 
-            TheoreticalVoxelsCount = (int)(
+            TheoreticalVoxelsCount = (ulong)(
                 Mathf.Pow(8, svo.Layers.Length - 1) * SVOLeaf.NUM_VOXELS
             );
 

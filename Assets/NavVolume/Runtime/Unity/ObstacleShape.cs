@@ -3,7 +3,7 @@ namespace NavVolume
     /// <summary>
     /// Shape of a <see cref="NavVolumeObstacle"/>.
     /// </summary>
-    public enum ObstacleShape
+    internal enum ObstacleShape
     {
         Sphere,
         Box,
