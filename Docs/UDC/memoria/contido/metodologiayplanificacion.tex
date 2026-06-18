@@ -21,7 +21,7 @@ Para facilitar esta validación, el código se divide en módulos con responsabi
 \section{Planificación inicial}
 \label{sec:planificacioninicial}
 
-La estimación inicial de tiempo se realizó conforme a la normativa de los créditos \acrfull{ects}.
+La estimación inicial de tiempo se realizó conforme a la normativa de los créditos \acrfull{ects}~\cite{rd_ects_2003}.
 Esto implica unas \textbf{360} horas de trabajo, distribuidas a lo largo del segundo cuatrimestre del curso, entre los meses de marzo y junio de 2026, en un período aproximado de catorce semanas.
 
 \subsection{Planificación temporal}
@@ -60,13 +60,14 @@ Tanto las tareas de validación y pruebas como la propia redacción de la memori
     Evaluación y optimización & & & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \\ \hline
     Validación y pruebas (CI) & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
     Redacción de la memoria & & & & & & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
-    \textbf{Hitos} & & & $\blacklozenge$ & & & & $\blacklozenge$ & & & $\blacklozenge$ & & & $\blacklozenge$ & $\blacklozenge$ \\ \hline
+    \textbf{Hitos} & & & \textbf{H1} & & & & \textbf{H2} & & & \textbf{H3} & & & \textbf{H4} & \textbf{H5} \\ \hline
     \end{tabular}%
   }
   \caption[Diagrama de Gantt de la planificación temporal inicial.]
   {Diagrama de Gantt de la planificación temporal inicial.
   Cada columna representa una semana de trabajo.
-  Las barras rosadas corresponden a las fases principales y las azuladas a las tareas transversales. Los rombos ($\blacklozenge$) señalan los hitos.}
+  Las barras rosadas corresponden a las fases principales y las azuladas a las tareas transversales.
+  Las etiquetas (H1-H5) señalan los hitos del proyecto.}
   \label{fig:gantt}
 \end{figure}
 
@@ -76,12 +77,14 @@ Los hitos marcados se corresponden con: \textbf{H1} (semana~3), cierre del estud
 
 El presupuesto del proyecto tiene en cuenta costes de personal, equipamiento, software y gastos indirectos, siendo el coste personal la parte principal.
 Partiendo del hecho de que el salario medio en España para un programador \textit{junior} es de 21.955\,\euro~\cite{Indeed_SueldosProgramadorJunior}, se estima que el total correspondiente a las 360 horas es de 4.114,80\,\euro.
+A esto hay que sumarle el coste estimado por parte de los tutores en las reuniones y revisiones.
+Teniendo en cuenta el sueldo promedio de un profesor universitario en España de 36.616\,\euro~\cite{Indeed_SueldosProfesorUniversitario} y una estimación de 10 horas por parte de cada tutor, se calcula un total de 572,10\,\euro.
 
 El equipamiento requiere un ordenador de gama media valorado en unos 1.200\,\euro.
 Aplicando una amortización lineal a cuatro años por los tres meses y medio de uso, su coste es de 87,50\,\euro.
 Respecto al software, todas las herramientas (Unity Personal, Visual Studio Community, Git y GitHub) son gratuitas para este caso de uso, por lo que no generan gastos.
 Finalmente, se calculan unos costes indirectos (electricidad, internet) del 5\,\% sobre los costes directos.
-El presupuesto total, resumido en la Tabla~\ref{tab:presupuesto}, asciende a 4.412,42\,\euro.
+El presupuesto total, resumido en la Tabla~\ref{tab:presupuesto}, asciende a 4.793,82\,\euro.
 
 \begin{table}[htp]
   \centering
@@ -89,11 +92,12 @@ El presupuesto total, resumido en la Tabla~\ref{tab:presupuesto}, asciende a 4.4
   \begin{tabular}{l|r}
   \rowcolor{udcpink!25}
   \textbf{Concepto} & \textbf{Coste} \\\hline
-  Recursos humanos (360\,h $\times$ 11,43\,\euro/h) & 4.114,80\,\euro \\
+  Recursos humanos desarrollo (360\,h $\times$ 11,43\,\euro/h) & 4.114,80\,\euro \\
+  Recursos humanos tutorías (30\,h $\times$ 19,07\,\euro/h) & 572,10\,\euro \\
   Amortización del equipo de desarrollo & 87,50\,\euro \\
   Licencias de software & 0,00\,\euro \\
   Costes indirectos (5\,\%) & 210,12\,\euro \\\hline
-  \textbf{Total} & \textbf{4.412,42\,\euro} \\
+  \textbf{Total} & \textbf{4.984,52\,\euro} \\
   \end{tabular}
   \caption{Presupuesto estimado del proyecto.}
   \label{tab:presupuesto}
@@ -140,20 +144,21 @@ En conjunto, estas desviaciones prolongaron el proyecto una semana, hasta las qu
     Evasión local (no planificada) & & & & & & & & & & & & & \cellcolor{udcgray!60} & \cellcolor{udcgray!60} & \\ \hline
     Validación y pruebas (CI) & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
     Redacción de la memoria & & & & & & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
-    \textbf{Hitos} & & & $\blacklozenge$ & & & & $\blacklozenge$ & & & & & $\blacklozenge$ & & $\blacklozenge$ & $\blacklozenge$ \\ \hline
+    \textbf{Hitos} & & & \textbf{H1} & & & & \textbf{H2} & & & & & \textbf{H3} & & \textbf{H4} & \textbf{H5} \\ \hline
     \end{tabular}%
   }
   \caption[Diagrama de Gantt de la ejecución real del proyecto.]
   {Diagrama de Gantt de la ejecución real del proyecto.
   Cada columna representa una semana.
-  En gris se resaltan las desviaciones respecto al plan inicial (la fase de robustez geométrica y el incremento no planificado de evasión local); en rosado, las fases que se ajustaron a lo previsto; y en azul, las tareas transversales. Los rombos ($\blacklozenge$) señalan los hitos.}
+  En gris se resaltan las desviaciones respecto al plan inicial (la fase de robustez geométrica y el incremento no planificado de evasión local); en rosado, las fases que se ajustaron a lo previsto; y en azul, las tareas transversales.
+  Las etiquetas (H1-H5) señalan los hitos del proyecto.}
   \label{fig:gantt-real}
 \end{figure}
 
 En esta ocasión los hitos son: \textbf{H1} (semana~3), cierre del estudio del estado de la cuestión; \textbf{H2} (semana~7), finalización de la estructura de datos volumétrica; \textbf{H3} (semana~12), cálculo de rutas robusto una vez resuelto el \textit{clipping}, que consolida el producto mínimo viable; \textbf{H4} (semana~14), integración y optimización completadas; y \textbf{H5} (semana~15), entrega de la memoria.
 
 Este sobreesfuerzo se traslada también al presupuesto.
-La dedicación real ascendió a unas \textbf{400} horas, frente a las 360 previstas, lo que, manteniendo el resto de partidas, eleva el coste total a 4.892,48\,\euro, tal y como recoge la Tabla~\ref{tab:presupuesto-real}.
+La dedicación real ascendió a unas \textbf{400} horas, frente a las 360 previstas, lo que, manteniendo el resto de partidas, eleva el coste total a 5.273,87\,\euro, tal y como recoge la Tabla~\ref{tab:presupuesto-real}.
 
 \begin{table}[htp]
   \centering
@@ -161,11 +166,12 @@ La dedicación real ascendió a unas \textbf{400} horas, frente a las 360 previs
   \begin{tabular}{l|r}
   \rowcolor{udcpink!25}
   \textbf{Concepto} & \textbf{Coste} \\\hline
-  Recursos humanos (400\,h $\times$ 11,43\,\euro/h) & 4.572,00\,\euro \\
+  Recursos humanos desarrollo (400\,h $\times$ 11,43\,\euro/h) & 4.572,00\,\euro \\
+  Recursos humanos tutorías (30\,h $\times$ 19,07\,\euro/h) & 572,10\,\euro \\
   Amortización del equipo de desarrollo & 87,50\,\euro \\
   Licencias de software & 0,00\,\euro \\
   Costes indirectos (5\,\%) & 232,98\,\euro \\\hline
-  \textbf{Total} & \textbf{4.892,48\,\euro} \\
+  \textbf{Total} & \textbf{5.464,58\,\euro} \\
   \end{tabular}
   \caption{Presupuesto final del proyecto tras el seguimiento.}
   \label{tab:presupuesto-real}

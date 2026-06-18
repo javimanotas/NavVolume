@@ -141,11 +141,11 @@ Esta abstracción permitirá aplicar, posteriormente, un algoritmo de búsqueda 
 \subsubsection{Representación del espacio navegable}
 \label{sec:representacionespacionavegable}
 
-Al estudiar el ámbito de la navegación volumétrica, se puede observar que existen tres alternativas predominantes.
+Al estudiar el ámbito de la navegación volumétrica, se puede observar que existen tres alternativas predominantes~\cite{Brewer2015NavMesh}.
 Estas se clasifican en:
 
 \begin{itemize}
-    \item \textbf{\textit{Waypoints}:} Esta solución requiere el posicionamiento manual de una serie de nodos que reciben dicho nombre.
+    \item \textbf{Puntos de ruta (\textit{Waypoints}):} Esta solución requiere el posicionamiento manual de una serie de nodos que reciben dicho nombre.
     Estos puntos constituirán los vértices del grafo y deben ubicarse por completo dentro del espacio libre de colisiones.
     Las aristas se corresponderán a aquellas conexiones de vértices para las cuales existe una línea de visión directa, es decir, sin obstáculos intermedios entre ellos.
     
@@ -153,7 +153,7 @@ Estas se clasifican en:
     Sin embargo, dado que la implementación de un sistema con estas características es trivial, es común encontrar estudios que recurren a soluciones \gls{adhoc} cuando no se requieren sistemas de navegación complejos~\cite{Millington}.
     \item \textbf{Campos de flujo (\textit{Flow fields}):} Esta aproximación consiste en calcular un campo vectorial global sobre una cuadrícula o volumen espacial, donde cada celda almacena un vector de dirección que apunta hacia el destino. 
     Si bien resultan extremadamente eficientes para movilizar enjambres o multitudes masivas hacia un objetivo común, su coste computacional y uso de memoria en entornos tridimensionales se vuelve prohibitivo cuando existen múltiples agentes persiguiendo destinos independientes, descartándolos para soluciones de propósito general~\cite{emerson2019crowd}.
-    \item \textbf{\textit{\Glspl{octree}}:} Constituyen la técnica más extendida en la industria.
+    \item \textbf{Árboles octales (\textit{\Glspl{octree}}):} Constituyen la técnica más extendida en la industria.
     En ella, el espacio se subdivide en octantes, creando una estructura de datos jerárquica que representa el espacio libre navegable~\cite{octree}.
     En prácticamente la totalidad de los casos, estas representaciones se optimizan haciendo uso de una modificación estructural: los \acrfull{svo}.
     Estos dividen solo aquellos octantes que contienen geometría, logrando así un ahorro de memoria considerable.
@@ -239,9 +239,9 @@ Para ello, el sistema emplea técnicas de programación lineal para calcular de 
 El principal problema de este sistema de evasión local es que los agentes se pueden quedar atascados ante obstáculos dinámicos muy grandes.
 Resolver este problema, denominado \gls{deadlock}, conlleva hacer uso de sistemas de planificación que trabajen a más alto nivel y que operen independientemente del sistema de navegación, lo cual escapa del alcance de este proyecto.
 
-\subsection{Integridad estructural mediante algoritmos Hash}
+\subsection{Integridad estructural mediante algoritmos hash}
 
-Para evitar reconstruir la representación del espacio navegable cada vez que se carga el juego, los sistemas de navegación suelen proveer un proceso denominado como \gls{bake}.
+Para evitar reconstruir la representación del espacio navegable cada vez que se carga el juego, los sistemas de navegación suelen proveer un proceso denominado como \gls{bake}~\cite{RecastNavigation, UnityNavMesh, UnrealNavSystem}.
 Este consiste en construir las estructuras de datos de manera anticipada desde el editor y guardarlas en disco para que, posteriormente, puedan ser cargadas en tiempo de ejecución.
 
 Para asegurar la integridad de la escena, es decir, garantizar que no se han producido cambios en su geometría desde la última vez que se realizó el \gls{bake}, se suele computar el \textit{hash} de los objetos correspondientes.
