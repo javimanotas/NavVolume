@@ -29,18 +29,18 @@ Esto implica unas \textbf{360} horas de trabajo, distribuidas a lo largo del seg
 Siguiendo la metodología iterativa, el trabajo se organizó en las siguientes fases:
 
 \begin{enumerate}
-    \item \textbf{Estudio previo y análisis del estado de la cuestión:} revisión bibliográfica de las técnicas de navegación, análisis de soluciones comerciales y formación en las tecnologías de alto rendimiento del motor.
-    \item \textbf{Diseño de la arquitectura:} definición de la estructura modular y selección de algoritmos y estructuras de datos.
-    \item \textbf{Implementación de la estructura de datos volumétrica:} construcción del espacio navegable mediante un \acrshort{svo}, incluyendo su rasterización y serialización en disco.
-    \item \textbf{Implementación de la búsqueda y postprocesado de rutas:} adaptación del algoritmo de búsqueda heurística tridimensional y desarrollo de la etapa de suavizado de trayectorias.
-    \item \textbf{Integración en Unity:} desarrollo de los componentes, las herramientas de editor y los indicadores visuales \texttt{Gizmos} que dan acceso al sistema al usuario final.
-    \item \textbf{Evaluación de rendimiento y optimización:} diseño de escenas de prueba representativas y medición de los tiempos de construcción y búsqueda, así como del consumo de memoria, orientando las sucesivas optimizaciones.
-    \item \textbf{Redacción de la memoria:} documentación del diseño, la implementación, los resultados y las conclusiones del proyecto.
+    \item \textbf{T1. Estudio previo y análisis del estado de la cuestión:} revisión bibliográfica de las técnicas de navegación, análisis de soluciones comerciales y formación en las tecnologías de alto rendimiento del motor.
+    \item \textbf{T2. Diseño de la arquitectura:} definición de la estructura modular y selección de algoritmos y estructuras de datos.
+    \item \textbf{T3. Implementación de la estructura de datos volumétrica:} construcción del espacio navegable mediante un \acrshort{svo}, incluyendo su rasterización y serialización en disco.
+    \item \textbf{T4. Implementación de la búsqueda y postprocesado de rutas:} adaptación del algoritmo de búsqueda heurística tridimensional y desarrollo de la etapa de suavizado de trayectorias.
+    \item \textbf{T5. Integración en Unity:} desarrollo de los componentes, las herramientas de editor y los indicadores visuales \texttt{Gizmos} que dan acceso al sistema al usuario final.
+    \item \textbf{T6. Evaluación de rendimiento y optimización:} diseño de escenas de prueba representativas y medición de los tiempos de construcción y búsqueda, así como del consumo de memoria, orientando las sucesivas optimizaciones.
+    \item \textbf{T7. Redacción de la memoria:} documentación del diseño, la implementación, los resultados y las conclusiones del proyecto.
 \end{enumerate}
 
 La distribución temporal de estas fases se recoge en el diagrama de Gantt de la Figura~\ref{fig:gantt}.
 Es importante señalar el solapamiento entre varias de ellas, consecuencia de que el diseño puede comenzar antes de haber solventado por completo los errores de las etapas previas.
-Tanto las tareas de validación y pruebas como la propia redacción de la memoria se prolongan a lo largo de prácticamente todo el proyecto.
+Tanto las tareas de validación y pruebas como la propia redacción de la memoria (T7) se prolongan a lo largo de prácticamente todo el proyecto.
 
 \begin{figure}[htp]
   \centering
@@ -50,15 +50,15 @@ Tanto las tareas de validación y pruebas como la propia redacción de la memori
     \begin{tabular}{|l|*{14}{>{\centering\arraybackslash}p{0.5cm}|}}
     \hline
     \rowcolor{udcpink!25}
-    \textbf{Fase} & \multicolumn{2}{c|}{\textbf{Marzo}} & \multicolumn{4}{c|}{\textbf{Abril}} & \multicolumn{4}{c|}{\textbf{Mayo}} & \multicolumn{4}{c|}{\textbf{Junio}} \\ \hline
+    \textbf{Tarea / Fase} & \multicolumn{2}{c|}{\textbf{Marzo}} & \multicolumn{4}{c|}{\textbf{Abril}} & \multicolumn{4}{c|}{\textbf{Mayo}} & \multicolumn{4}{c|}{\textbf{Junio}} \\ \hline
     \textbf{Semana} & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 14 \\ \hline
-    Estado del arte y estudio previo & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & & \\ \hline
-    Diseño de la arquitectura & & & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & \\ \hline
-    Estructura de datos volumétrica & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & \\ \hline
-    Búsqueda y postprocesado de rutas & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & \\ \hline
-    Integración en Unity & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \\ \hline
-    Evaluación y optimización & & & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \\ \hline
-    Validación y pruebas (CI) & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
+    T1. Estado del arte y estudio previo & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & & \\ \hline
+    T2. Diseño de la arquitectura & & & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & \\ \hline
+    T3. Estructura de datos volumétrica & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & \\ \hline
+    T4. Búsqueda y postprocesado de rutas & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & \\ \hline
+    T5. Integración en Unity & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \\ \hline
+    T6. Evaluación y optimización & & & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \\ \hline
+    T7. Validación y pruebas (CI) & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
     Redacción de la memoria & & & & & & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
     \textbf{Hitos} & & & \textbf{H1} & & & & \textbf{H2} & & & \textbf{H3} & & & \textbf{H4} & \textbf{H5} \\ \hline
     \end{tabular}%
@@ -78,7 +78,7 @@ Los hitos marcados se corresponden con: \textbf{H1} (semana~3), cierre del estud
 El presupuesto del proyecto tiene en cuenta costes de personal, equipamiento, software y gastos indirectos, siendo el coste personal la parte principal.
 Partiendo del hecho de que el salario medio en España para un programador \textit{junior} es de 21.955\,\euro~\cite{Indeed_SueldosProgramadorJunior}, se estima que el total correspondiente a las 360 horas es de 4.114,80\,\euro.
 A esto hay que sumarle el coste estimado por parte de los tutores en las reuniones y revisiones.
-Teniendo en cuenta el sueldo promedio de un profesor universitario en España de 36.616\,\euro~\cite{Indeed_SueldosProfesorUniversitario} y una estimación de 10 horas por parte de cada tutor, se calcula un total de 572,10\,\euro.
+Teniendo en cuenta el sueldo promedio de un profesor universitario en España de 36.616\,\euro~\cite{Indeed_SueldosProfesorUniversitario} y una estimación de 15 horas por parte de cada tutor, se calcula un total de 572,10\,\euro.
 
 El equipamiento requiere un ordenador de gama media valorado en unos 1.200\,\euro.
 Aplicando una amortización lineal a cuatro años por los tres meses y medio de uso, su coste es de 87,50\,\euro.
@@ -109,19 +109,19 @@ El presupuesto total, resumido en la Tabla~\ref{tab:presupuesto}, asciende a 4.7
 Aunque la planificación inicial se cumplió en gran medida, surgieron algunas desviaciones que alargaron el desarrollo debido a la naturaleza del proyecto.
 Sin embargo, la metodología iterativa fue clave para solucionar estos imprevistos sin comprometer la estabilidad del sistema.
 
-La desviación más significativa se localizó en la fase de búsqueda de rutas.
+La desviación más significativa se localizó en la \textbf{Tarea 4} (Implementación de la búsqueda y postprocesado de rutas).
 Si bien la primera versión del algoritmo se completó a tiempo, garantizar su robustez requirió más esfuerzo del estimado.
 En concreto, las trayectorias generadas atravesaban en determinadas situaciones la geometría del entorno, un fenómeno conocido como \textit{clipping}.
 La corrección de este comportamiento exigió varias iteraciones sucesivas y, sobre todo, el desarrollo de una batería de pruebas considerablemente más extensa de la prevista, incluyendo \textit{tests} en modo de ejecución (\textit{PlayMode}), con el fin de reproducir y diagnosticar de forma fiable los errores.
 
-Este esfuerzo adicional desplazó ligeramente el calendario de las fases posteriores.
+Este esfuerzo adicional desplazó ligeramente el calendario de las tareas posteriores (T5 y T6).
 Sin embargo, al validar cada incremento por separado, fue posible reorganizar las tareas y recuperar el ritmo sin descartar objetivos.
-De hecho, la holgura obtenida permitió añadir una funcionalidad de evasión local entre agentes y obstáculos dinámicos que no estaba prevista inicialmente.
+De hecho, la holgura obtenida permitió añadir una funcionalidad de evasión local entre agentes y obstáculos dinámicos que no estaba prevista inicialmente (T8).
 
 La Figura~\ref{fig:gantt-real} recoge el diagrama de Gantt actualizado con la ejecución real del proyecto.
 Destacan dos diferencias con respecto a la planificación inicial.
-La primera es la aparición de una fase de robustez geométrica, dedicada a resolver el \textit{clipping}, que desplazó las etapas posteriores.
-Adicionalmente se incorporó el incremento no planificado de evasión local.
+La primera es la extensión de la T4 mediante una fase de robustez geométrica, dedicada a resolver el \textit{clipping}, que desplazó las etapas posteriores.
+Adicionalmente se incorporó el incremento no planificado de evasión local (T8).
 En conjunto, estas desviaciones prolongaron el proyecto una semana, hasta las quince, y retrasaron el hito del producto mínimo viable de la semana~10 a la~12.
 
 \begin{figure}[htp]
@@ -132,17 +132,17 @@ En conjunto, estas desviaciones prolongaron el proyecto una semana, hasta las qu
     \begin{tabular}{|l|*{15}{>{\centering\arraybackslash}p{0.5cm}|}}
     \hline
     \rowcolor{udcpink!25}
-    \textbf{Fase} & \multicolumn{2}{c|}{\textbf{Marzo}} & \multicolumn{4}{c|}{\textbf{Abril}} & \multicolumn{4}{c|}{\textbf{Mayo}} & \multicolumn{4}{c|}{\textbf{Junio}} & \multicolumn{1}{c|}{\textbf{Jul.}} \\ \hline
+    \textbf{Tarea / Fase} & \multicolumn{2}{c|}{\textbf{Marzo}} & \multicolumn{4}{c|}{\textbf{Abril}} & \multicolumn{4}{c|}{\textbf{Mayo}} & \multicolumn{4}{c|}{\textbf{Junio}} & \multicolumn{1}{c|}{\textbf{Jul.}} \\ \hline
     \textbf{Semana} & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 14 & 15 \\ \hline
-    Estado del arte y estudio previo & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & & & \\ \hline
-    Diseño de la arquitectura & & & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & & \\ \hline
-    Estructura de datos volumétrica & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & \\ \hline
-    Búsqueda y postprocesado de rutas & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & \\ \hline
-    Robustez geométrica (\textit{clipping}) & & & & & & & & & \cellcolor{udcgray!60} & \cellcolor{udcgray!60} & \cellcolor{udcgray!60} & & & & \\ \hline
-    Integración en Unity & & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & \\ \hline
-    Evaluación y optimización & & & & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & & \\ \hline
-    Evasión local (no planificada) & & & & & & & & & & & & & \cellcolor{udcgray!60} & \cellcolor{udcgray!60} & \\ \hline
-    Validación y pruebas (CI) & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
+    T1. Estado del arte y estudio previo & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & & & \\ \hline
+    T2. Diseño de la arquitectura & & & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & & \\ \hline
+    T3. Estructura de datos volumétrica & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & \\ \hline
+    T4. Búsqueda y postprocesado de rutas & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & \\ \hline
+    Extensión T4. Robustez geométrica (\textit{clipping}) & & & & & & & & & \cellcolor{udcgray!60} & \cellcolor{udcgray!60} & \cellcolor{udcgray!60} & & & & \\ \hline
+    T5. Integración en Unity & & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & \\ \hline
+    T6. Evaluación y optimización & & & & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & & \\ \hline
+    T7. Validación y pruebas (CI) & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
+    T8 (extra). Evasión local & & & & & & & & & & & & & \cellcolor{udcgray!60} & \cellcolor{udcgray!60} & \\ \hline
     Redacción de la memoria & & & & & & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
     \textbf{Hitos} & & & \textbf{H1} & & & & \textbf{H2} & & & & & \textbf{H3} & & \textbf{H4} & \textbf{H5} \\ \hline
     \end{tabular}%
@@ -150,7 +150,7 @@ En conjunto, estas desviaciones prolongaron el proyecto una semana, hasta las qu
   \caption[Diagrama de Gantt de la ejecución real del proyecto.]
   {Diagrama de Gantt de la ejecución real del proyecto.
   Cada columna representa una semana.
-  En gris se resaltan las desviaciones respecto al plan inicial (la fase de robustez geométrica y el incremento no planificado de evasión local); en rosado, las fases que se ajustaron a lo previsto; y en azul, las tareas transversales.
+  En gris se resaltan las desviaciones respecto al plan inicial (la extensión de la Tarea 4 y la Tarea 8 no planificada); en rosado, las fases que se ajustaron a lo previsto; y en azul, las tareas transversales.
   Las etiquetas (H1-H5) señalan los hitos del proyecto.}
   \label{fig:gantt-real}
 \end{figure}

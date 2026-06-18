@@ -158,6 +158,14 @@ Para traducir las coordenadas tridimensionales de un \gls{voxel} a su posición 
 Para mapear las coordenadas 3D $(x, y, z)$ en un índice lineal que mantenga cercanos los nodos contiguos, se utilizan los códigos de Morton (basados en las curvas de orden Z de la Sección~\ref{sec:representacionespacionavegable}).
 Este código se calcula intercalando los bits de las tres coordenadas mediante desplazamientos y máscaras (Figura~\ref{fig:morton-interleave}).
 
+A modo de ejemplo numérico, supongamos las coordenadas $x = 5$, $y = 2$ y $z = 6$. Sus representaciones en binario (utilizando tres bits para simplificar) son $x = 101_2$, $y = 010_2$ y $z = 110_2$. Para calcular el código de Morton, se intercalan los bits de cada coordenada tomando un bit de cada una desde el más significativo al menos significativo (en el orden $z_i y_i x_i$):
+\begin{itemize}
+    \item Bits en la posición 2: $z_2=1, y_2=0, x_2=1 \rightarrow 101$
+    \item Bits en la posición 1: $z_1=1, y_1=1, x_1=0 \rightarrow 110$
+    \item Bits en la posición 0: $z_0=0, y_0=0, x_0=1 \rightarrow 001$
+\end{itemize}
+Al concatenar estos grupos, el código resultante en binario es $101110001_2$, que equivale al valor decimal $369$.
+
 \begin{figure}[H]
 \begin{lstlisting}[language={[Sharp]C}]
 // Intercala dos ceros entre cada bit del valor de entrada.
@@ -408,7 +416,7 @@ Esto se debe a una característica del diseño de niveles: en un entorno tridime
 Los obstáculos (como paredes, edificios o el terreno) ocupan una fracción pequeña del volumen total, por lo que la mayor parte de las hojas están vacías.
 Esta propiedad es la que justifica el uso de una representación dispersa.
 
-Para aprovecharla, la rasterización de las hojas se divide en dos pasadas consecutivas (ilustradas en las Figuras~\ref{fig:empty-leaf} y~\ref{fig:empty-leaf-pseudo}):
+Para aprovecharla, la rasterización de las hojas se divide en dos pasadas consecutivas (ilustradas en las Figuras~\ref{fig:empty-leaf-pseudo} y~\ref{fig:empty-leaf}):
 
 \begin{enumerate}
     \item \textbf{Pasada gruesa de descarte:} Se realiza una \textbf{única} consulta \texttt{OverlapBox} que abarca la totalidad de la hoja.
@@ -439,7 +447,7 @@ hojas[*] = Vacia
 para cada j en supervivientes:
     hojas[j] = DesdeBits(mascara[j])
 \end{lstlisting}
-\caption{Rasterización de hojas en dos pasadas: descarte grueso y muestreo fino.}
+\caption{Pseudocódigo de rasterización de hojas en dos pasadas: descarte grueso y muestreo fino.}
 \label{fig:empty-leaf-pseudo}
 \end{figure}
 
