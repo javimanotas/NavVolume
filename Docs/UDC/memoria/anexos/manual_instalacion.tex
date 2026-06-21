@@ -1,4 +1,34 @@
 \chapter{Manual de instalación}
 \label{anexo:instalacion}
 
-% TODO
+Este apéndice describe el proceso de instalación de la herramienta en un proyecto de Unity.
+El paquete se distribuye a través del repositorio oficial del proyecto, de modo que la instalación se reduce a descargar la última versión publicada e importarla en el proyecto.
+Para el manejo de la herramienta una vez instalada, véase el Manual de usuario del Apéndice~\ref{anexo:usuario}.
+
+El proceso consta de los siguientes pasos:
+
+\begin{enumerate}
+    \item \textbf{Acceder a las versiones publicadas.}
+    En la página del repositorio se accede al apartado de \textit{releases}, disponible en \url{https://github.com/javimanotas/NavVolume/releases/}.
+    Allí se listan todas las versiones del paquete, ordenadas de la más reciente a la más antigua.
+
+    \item \textbf{Descargar el paquete.}
+    Dentro de la versión deseada, normalmente la más reciente, se descarga el archivo \texttt{NavVolume.zip} adjunto en la sección de recursos (\textit{assets}) de esa versión.
+
+    \item \textbf{Importar el contenido en el proyecto.}
+    Una vez descargado, se descomprime el archivo y se arrastra su contenido a la ventana de proyecto (\textit{Project}) de Unity.
+    El editor mostrará una ventana con la lista de archivos que se van a añadir.
+    Para completar la instalación, basta con pulsar el botón \textit{Import}, tal y como se muestra en la Figura~\ref{fig:importarpaquete}.
+\end{enumerate}
+
+\begin{figure}[htp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{imaxes/importarpaquete.png}
+  \caption[Importación del paquete en el proyecto.]
+  {Importación del paquete en el proyecto.
+  Imagen obtenida por medio de una captura de pantalla.}
+  \label{fig:importarpaquete}
+\end{figure}
+
+Tras pulsar el botón, Unity copiará los archivos dentro del proyecto y compilará el código de la herramienta.
+Cuando el proceso termine, el paquete quedará listo para usarse y sus componentes estarán disponibles desde el editor.

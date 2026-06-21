@@ -993,16 +993,12 @@ La Figura~\ref{fig:clipping} ilustra este problema y su solución.
       
       % La línea de trayectoria se dibuja cruzando por encima del obstáculo (y = -1.15 es mayor que -1.2)
       % Se extiende hasta X=2.0 (más allá del agente) para que la punta de la flecha sea visible.
-      \draw[flecha, draw=udcpink, very thick] (0,-0.2) -- (2.0,-1.15);
+      \draw[flecha, draw=udcpink, very thick] (0.7,-0.3) -- (3.9,-1.5);
       
       % El agente se posiciona en el punto exacto de la línea donde su radio (0.34)
       % hace contacto perfecto con la esquina de la caja (1.6, -1.2).
-      \fill[ficblue!25, opacity=0.75] (1.46,-0.89) circle (0.34);
-      \draw[agente] (1.46,-0.89) circle (0.34);
-      
-      % Etiqueta apuntando al punto exacto de la colisión (la esquina del obstáculo)
-      \node[font=\scriptsize, text=udcpink!80!black, anchor=south] at (0.8,-0.1) {colisión};
-      \draw[densely dotted, thin, draw=udcpink!80!black] (0.8,-0.15) -- (1.58,-1.18);
+      \fill[ficblue!25, opacity=0.75] (2.91,-1.128) circle (0.3);
+      \draw[agente] (2.91,-1.128) circle (0.3);
       
       \node[font=\footnotesize, anchor=north, text width=3.9cm, align=center] at (1.8,-3.05)
         {Sin tratar el radio: la trayectoria recorta la esquina};

@@ -11,7 +11,7 @@ El objetivo general se ha alcanzado de forma satisfactoria.
 El resultado no es un mero algoritmo de búsqueda de rutas, sino un sistema completo que cubre desde la transformación de la geometría de una escena en una representación navegable hasta el movimiento final de un agente que esquiva tanto los obstáculos estáticos como al resto de agentes.
 Revisando uno a uno los objetivos específicos definidos en la Sección~\ref{sec:objetivos}, puede afirmarse que todos ellos se han satisfecho:
 
-\begin{description}
+\begin{itemize}
     \item \textbf{Diseño arquitectónico.} El sistema se organiza en módulos con responsabilidades delimitadas y separados físicamente mediante \textit{assemblies}, con dependencias unidireccionales que aíslan el código de edición y de pruebas del producto final.
     \item \textbf{Representación eficiente del espacio.} El volumen navegable se representa mediante un \acrshort{svo} que solo subdivide las regiones con geometría.
     El uso de máscaras de bits en las hojas, códigos de Morton y punteros compactos de 32 bits logra una estructura muy reducida y contigua en memoria, optimizada para las consultas en tiempo real.
@@ -23,7 +23,7 @@ Revisando uno a uno los objetivos específicos definidos en la Sección~\ref{sec
     \item \textbf{Accesibilidad y usabilidad.} Los modos de construcción, la depuración visual y el panel de estadísticas permiten configurar y dimensionar el volumen sin necesidad de leer el código, acercando la herramienta tanto a perfiles técnicos como a diseñadores de niveles y artistas.
     \item \textbf{Análisis de rendimiento.} El sistema se ha perfilado sobre un conjunto de escenarios de complejidad creciente, midiendo el coste de construcción, el consumo de memoria, el tiempo de cálculo de rutas y la escalabilidad de la evasión local, lo que ha permitido orientar y respaldar con datos las optimizaciones aplicadas (Sección~\ref{sec:mediciones}).
     \item \textbf{Distribución modular.} El sistema se ha empaquetado siguiendo los estándares oficiales de Unity, de modo que pueda integrarse en otros proyectos y, eventualmente, publicarse en la Unity Asset Store.
-\end{description}
+\end{itemize}
 
 Conviene destacar que no solo se cumplieron los objetivos previstos, sino que la holgura recuperada gracias a la metodología iterativa permitió incorporar una funcionalidad de evasión local entre agentes que no figuraba en la planificación inicial (Sección~\ref{sec:seguimiento}).
 

@@ -32,9 +32,9 @@ Esto se debe a que los agentes considerarán y evaluarán todo tipo de variables
 
 Además de las dos grandes líneas anteriores, el proyecto deja abiertas otras posibles mejoras:
 
-\begin{description}
+\begin{itemize}
     \item \textbf{Geometría dinámica y reconstrucción incremental:} reconstruir únicamente las regiones del \acrshort{svo} afectadas por un cambio en la geometría estática, como una puerta que se abre o una estructura que se destruye, superando la limitación actual de un volumen totalmente precalculado y orientado a entornos estáticos.
     \item \textbf{Búsqueda jerárquica:} para aliviar el coste del cálculo de rutas en escenas densas, explorar esquemas de búsqueda jerárquica o de cualquier ángulo (\textit{any-angle})~\cite{harabor2013optimal}, así como la precomputación de la conectividad entre regiones, con el fin de reducir el número de nodos explorados.
     \item \textbf{Enlaces entre volúmenes:} en escenarios de gran tamaño, resulta ineficiente mantener un único volumen gigante cargado en memoria.
     Una mejora sería permitir a los agentes desplazarse de forma fluida entre diferentes volúmenes independientes lo que implicaría desarrollar un sistema de enlaces que conecten las fronteras de estos.
-\end{description}
+\end{itemize}
