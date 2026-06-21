@@ -4,6 +4,7 @@
 En este capítulo se describe el proceso de construcción del sistema de navegación volumétrica, siguiendo la metodología iterativa e incremental expuesta en la Sección~\ref{sec:metodologiadesarrollo}.
 Cada iteración se corresponde con una de las tareas de la planificación (Sección~\ref{sec:planificacioninicial}) y se organiza siguiendo las cuatro fases del ciclo de vida de cada incremento: el \textbf{análisis} del problema abordado, el \textbf{diseño} de la solución propuesta, su \textbf{implementación} y la \textbf{validación} del resultado obtenido.
 El análisis de cada iteración se apoya, además, en los casos de uso del sistema, cuya descripción detallada y diagrama se recogen en el Anexo~\ref{anexo:casos-uso}.
+Estos casos de uso capturan los requisitos funcionales, mientras que los requisitos no funcionales que guían el desarrollo, como el rendimiento, la eficiencia en memoria, la usabilidad o la mantenibilidad, se recogen en el Anexo~\ref{anexo:rnf}.
 
 El desarrollo comienza con una iteración preparatoria que define la arquitectura modular y el entorno de trabajo (Iteración~0).
 Sobre esa base se construyen la estructura de datos volumétrica (Iteración~1) y el cálculo de rutas (Iteración~2), que juntos conforman el producto mínimo viable.
@@ -20,6 +21,7 @@ No produce todavía funcionalidad de navegación, sino que establece la estructu
 La primera iteración no incluye funcionalidad de navegación.
 Su propósito es establecer una base técnica sólida sobre la que edificar el resto del sistema.
 Del análisis inicial surgen dos necesidades. La primera es una arquitectura modular que favorezca el desacoplamiento y mantenga el código de edición y de pruebas fuera del producto final. La segunda es un entorno de trabajo que valide de forma automática cada contribución desde el primer momento.
+Ambas responden al requisito no funcional \textbf{RNF-08} (modularidad y mantenibilidad), recogido en el Anexo~\ref{anexo:rnf}.
 
 \subsection{Diseño}
 
@@ -111,51 +113,23 @@ Del análisis se derivan tres requisitos.
 El primero es la eficiencia en memoria: la representación debe abarcar grandes volúmenes tridimensionales sin un coste prohibitivo y mantener los datos contiguos para favorecer el acceso a la caché.
 El segundo es el rendimiento de construcción, ya que rasterizar la escena es una de las fases con mayor coste computacional del sistema.
 El tercero es la persistencia fiable: el volumen debe poder guardarse y recuperarse sin pérdidas, y detectarse cuando la escena cambia tras el precálculo.
+Estos tres requisitos no funcionales se recogen, respectivamente, como \textbf{RNF-01}, \textbf{RNF-02} y \textbf{RNF-05} en el Anexo~\ref{anexo:rnf}.
 Como se justificó en la Sección~\ref{sec:representacionespacionavegable}, se utiliza el \acrshort{svo}, una variante del \gls{octree} que únicamente subdivide las regiones con geometría.
 
 \subsection{Diseño}
 
-\textbf{Organización jerárquica.}
+\subsubsection{Organización jerárquica.}
 El \acrshort{svo} se estructura en capas (\textit{layers}).
 Cada capa es un \textbf{vector plano} de nodos, ordenado según su código de Morton.
 Las capas superiores agrupan grandes volúmenes de espacio, mientras que las inferiores aumentan progresivamente el nivel de detalle.
 La capa base está formada por las \textbf{hojas}.
-A diferencia de los nodos internos, las hojas no tienen ocho hijos, sino que contienen una rejilla densa de $4\times4\times4$ \glspl{voxel} (Figura~\ref{fig:hoja-mascara}).
+A diferencia de los nodos internos, las hojas no tienen ocho hijos, sino que contienen una rejilla densa de $4\times4\times4$ \glspl{voxel}.
 
 Siguiendo los principios de diseño orientado a datos (\acrshort{dod}) de la Sección~\ref{sec:dots}, esta decisión reduce mucho la cantidad de nodos y mantiene los datos contiguos en memoria.
 Para encontrar un nodo en una capa, se aplica una \textbf{búsqueda binaria} rápida, aprovechando que los códigos de Morton mantienen los elementos ordenados espacialmente.
 
-\begin{figure}[htp]
-  \centering
-  \begin{tikzpicture}[font=\small]
-    % Una capa 4x4 de la hoja; voxeles ocupados en rosa
-    \foreach \c/\r in {1/0, 3/0, 0/2, 2/2, 2/3}
-      \fill[ocupado] (\c*0.72,-\r*0.72) rectangle ++(0.72,-0.72);
-    \foreach \c in {0,1,2,3}
-      \foreach \r in {0,1,2,3}
-        \draw[celda] (\c*0.72,-\r*0.72) rectangle ++(0.72,-0.72);
-    \node[font=\footnotesize, anchor=south] at (1.44,0.12) {Hoja (una capa $4\times4$)};
+\subsubsection{Construcción.}
 
-    % Flecha de codificacion
-    \draw[flecha] (3.2,-1.44) -- ++(1.45,0) node[midway, above, font=\scriptsize] {1 bit/vóxel};
-
-    % Mascara de 64 bits (8x8)
-    \begin{scope}[xshift=5cm, yshift=0.35cm]
-      \foreach \c/\r in {1/0,3/0,5/1,0/2,2/2,6/3,2/3,4/4,7/5,1/6,3/6,5/7}
-        \fill[ocupado] (\c*0.34,-\r*0.34) rectangle ++(0.34,-0.34);
-      \foreach \c in {0,...,7}
-        \foreach \r in {0,...,7}
-          \draw[celda] (\c*0.34,-\r*0.34) rectangle ++(0.34,-0.34);
-      \node[font=\footnotesize, anchor=south] at (1.36,0.12) {Máscara de 64 bits (\texttt{ulong})};
-    \end{scope}
-  \end{tikzpicture}
-  \caption[Hoja del \acrshort{svo} y su máscara de ocupación de 64 bits.]
-  {Hoja del \acrshort{svo} y su máscara de ocupación de 64 bits.
-  Cada hoja apila cuatro capas de $4\times4$ vóxeles. Cada uno de esos $4\times4\times4=64$ vóxeles se corresponde con un bit de un único entero de 64 bits (\texttt{ulong}): los ocupados (en rosa) fijan su bit a~1 y los libres a~0.}
-  \label{fig:hoja-mascara}
-\end{figure}
-
-\textbf{Canalización de construcción.}
 La construcción del volumen a partir de la geometría de la escena, denominada \textbf{rasterización}, se organiza como un flujo de trabajo (\textit{pipeline}) dividido en etapas independientes, resumido en la Figura~\ref{fig:build-pipeline}.
 Cada etapa consume los datos generados por la anterior, y aquellas que requieren un gran número de consultas físicas se delegan en el \textit{Job System} para su ejecución en paralelo.
 Como esta es una de las fases con mayor coste computacional del sistema, su diseño se orienta hacia el rendimiento mediante dos optimizaciones transversales: una estrategia jerárquica \textit{de lo grueso a lo fino}, que descarta cuanto antes las regiones vacías, y el descarte temprano de las hojas sin geometría.
@@ -211,7 +185,8 @@ Como esta es una de las fases con mayor coste computacional del sistema, su dise
   \label{fig:build-pipeline}
 \end{figure}
 
-\textbf{Serialización e integridad.}
+\subsubsection{Serialización e integridad.}
+
 Reconstruir el \acrshort{svo} cada vez que se carga un escenario consumiría demasiado tiempo en ejecución, por lo que el volumen se precalcula en el editor (proceso de \gls{bake}) y se almacena en disco.
 Para ello se toman dos decisiones de diseño.
 El volumen se guarda como un \textbf{único bloque binario} (\textit{blob}), una representación plana y sin punteros que se carga de forma casi inmediata.
@@ -221,16 +196,85 @@ Y, para detectar escenas obsoletas, ese bloque se acompaña de un \textit{hash} 
 
 \subsubsection{Codificación de las hojas mediante manipulación de bits}
 
-Cada hoja registra su estado utilizando un \textbf{único entero de 64 bits} (\texttt{ulong}), donde cada bit indica si un \gls{voxel} está libre u ocupado.
+Cada hoja registra su estado utilizando un \textbf{único entero de 64 bits} (\texttt{ulong}), donde cada bit indica si un \gls{voxel} está libre u ocupado (Figura~\ref{fig:hoja-mascara}).
 Gracias a esta manipulación de bits, una hoja completa ocupa apenas 8 bytes.
 Además, permite comprobar al instante si la hoja entera está vacía o llena con una única comparación numérica, sin inspeccionar los 64 \glspl{voxel} uno a uno.
 
 Para traducir las coordenadas tridimensionales de un \gls{voxel} a su posición en los bits, se realizan desplazamientos que comprimen las tres coordenadas en un índice de 6 bits.
 
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}[font=\small]
+    % ===== Pila de 4 capas 4x4 (hoja 4x4x4) en proyeccion oblicua =====
+    % Parametros de la proyeccion: ancho de celda 0.52; profundidad (0.26,0.20).
+    % Las capas se separan 1.1 en vertical: z=0 abajo, z=3 arriba.
+
+    % Pilares que unen las cuatro capas en una sola estructura apilada.
+    \foreach \px/\pyb/\pyt in {0/0/3.3, 2.08/0/3.3, 3.12/0.8/4.1, 1.04/0.8/4.1}
+      \draw[draw=black!35, dashed, line width=0.4pt] (\px,\pyb) -- (\px,\pyt);
+
+    % Voxeles ocupados (en rosa) de cada capa.
+    \foreach \c/\r/\by in {0/0/0, 1/0/0, 3/3/0, 1/2/0,
+                           1/1/1.1, 2/1/1.1, 2/2/1.1,
+                           0/2/2.2, 3/1/2.2,
+                           1/3/3.3, 2/3/3.3, 3/3/3.3}
+      \fill[ocupado]
+        ({0.52*\c+0.26*\r},{\by+0.20*\r}) --
+        ({0.52*\c+0.52+0.26*\r},{\by+0.20*\r}) --
+        ({0.52*\c+0.78+0.26*\r},{\by+0.20+0.20*\r}) --
+        ({0.52*\c+0.26+0.26*\r},{\by+0.20+0.20*\r}) -- cycle;
+
+    % Rejilla 4x4 de cada capa.
+    \foreach \by in {0,1.1,2.2,3.3}{
+      \foreach \r in {0,1,2,3,4}
+        \draw[celda] ({0.26*\r},{\by+0.20*\r}) -- ({2.08+0.26*\r},{\by+0.20*\r});
+      \foreach \c in {0,1,2,3,4}
+        \draw[celda] ({0.52*\c},{\by}) -- ({0.52*\c+1.04},{\by+0.8});
+    }
+
+    % Etiquetas de capa.
+    \foreach \by/\zl in {0/0,1.1/1,2.2/2,3.3/3}
+      \node[anchor=east, font=\scriptsize] at ({-0.12},{\by+0.1}) {$z{=}\zl$};
+    \node[anchor=south, align=center, font=\footnotesize] at (1.7,4.55)
+      {Hoja $4{\times}4{\times}4$\\(4 capas apiladas)};
+
+    % ===== Flecha de codificacion =====
+    \draw[flecha] (3.5,2.05) -- (5.85,2.05)
+      node[midway, above, font=\scriptsize] {1 bit/vóxel};
+
+    % ===== Mascara de 64 bits: 4 filas de 16 (una fila por capa) =====
+    \begin{scope}[xshift=6.6cm, yshift=2.65cm]
+      \foreach \c/\r in {0/0,1/0,6/0,12/0, 3/1,8/1,14/1, 5/2,11/2, 2/3,9/3,15/3}
+        \fill[ocupado] (\c*0.30,-\r*0.30) rectangle ++(0.30,-0.30);
+      \foreach \c in {0,...,15}
+        \foreach \r in {0,1,2,3}
+          \draw[celda] (\c*0.30,-\r*0.30) rectangle ++(0.30,-0.30);
+      \foreach \r/\zl in {0/0,1/1,2/2,3/3}
+        \node[anchor=east, font=\scriptsize] at ({-0.1},{-0.30*\r-0.15}) {$z{=}\zl$};
+      \node[anchor=south, font=\footnotesize] at (2.4,0.12)
+        {Máscara de 64 bits (\texttt{ulong})};
+      \node[anchor=north, font=\scriptsize, text=black!60] at (2.4,-1.28)
+        {cada fila $=$ una capa (16 vóxeles)};
+      % Leyenda: en la mascara cada cuadrado es un bit, no un volumen de espacio.
+\fill[ocupado] (0.7,-2.12) rectangle ++(0.26,-0.26); % Antes: -1.62
+\node[anchor=west, font=\scriptsize] at (1.02,-2.25) {$=$ bit a 1 (vóxel ocupado)}; % Antes: -1.75
+\draw[celda] (0.7,-2.50) rectangle ++(0.26,-0.26); % Antes: -2.0
+\node[anchor=west, font=\scriptsize] at (1.02,-2.63) {$=$ bit a 0 (vóxel libre)}; % Antes: -2.13
+    \end{scope}
+  \end{tikzpicture}
+  \caption[Hoja del \acrshort{svo} y su máscara de ocupación de 64 bits.]
+  {Hoja del \acrshort{svo} y su máscara de ocupación de 64 bits.
+  Cada hoja apila cuatro capas de $4\times4$ vóxeles. Cada uno de esos $4\times4\times4=64$ vóxeles se corresponde con un bit de un único entero de 64 bits (\texttt{ulong}).
+  A la izquierda, cada cuadrado es un vóxel, en rosa si está ocupado y en blanco si está libre.
+  A la derecha, esos mismos cuadrados pasan a representar los bits de la máscara y no volúmenes de espacio, en rosa los que valen 1 y en blanco los que valen 0.
+  Cada fila reúne los 16 bits de una capa, de modo que la fila~$z$ representa la capa~$z$ de la pila.}
+  \label{fig:hoja-mascara}
+\end{figure}
+
 \subsubsection{Códigos de Morton}
 
 Para mapear las coordenadas 3D $(x, y, z)$ en un índice lineal que mantenga cercanos los nodos contiguos, se utilizan los códigos de Morton (basados en las curvas de orden Z de la Sección~\ref{sec:representacionespacionavegable}).
-Este código se calcula intercalando los bits de las tres coordenadas mediante desplazamientos y máscaras, como muestra el siguiente fragmento de código.
+Este código se calcula intercalando los bits de las tres coordenadas mediante desplazamientos y máscaras, como muestra el siguiente fragmento de código~\cite{giesen2009decoding}.
 
 A modo de ejemplo numérico, supongamos las coordenadas $x = 5$, $y = 2$ y $z = 6$. Sus representaciones en binario (utilizando tres bits para simplificar) son $x = 101_2$, $y = 010_2$ y $z = 110_2$. Para calcular el código de Morton, se intercalan los bits de cada coordenada tomando un bit de cada una desde el más significativo al menos significativo (en el orden $z_i y_i x_i$):
 \begin{itemize}
@@ -267,8 +311,8 @@ Al usar enteros de 32 bits, la resolución máxima del sistema queda limitada a 
 \label{sec:svolink}
 
 Por último, se implementó un mecanismo de referencia entre nodos más eficiente.
-En lugar de usar punteros estándar de C\#, se diseñó un \textbf{puntero compacto} de 32 bits.
-Este único entero contiene toda la información necesaria para localizar cualquier nodo o \gls{voxel}, con la disposición de bits que se muestra a continuación.
+En lugar de usar punteros estándar de C\#, se diseñó un \textbf{puntero compacto}.
+Esta técnica es bastante popular en el ámbito del \textit{raytracing}~\cite{laine2010efficient} y consiste en codificar en un único entero de 32 bits toda la información necesaria para localizar cualquier nodo o \gls{voxel}, con la disposición de bits que se muestra a continuación.
 
 \begin{lstlisting}[language={[Sharp]C}]
 const uint _IS_NODE_MASK       = 1u << 31;       // bit 31:    tipo (1 nodo, 0 voxel)
@@ -473,7 +517,7 @@ para cada j en supervivientes:
 Tras rasterizar las hojas y generar las capas superiores, la última etapa consiste en conectar cada nodo con sus seis vecinos adyacentes (en las direcciones $\pm X$, $\pm Y$ y $\pm Z$).
 Esta información es indispensable para que el algoritmo de búsqueda de rutas pueda desplazarse a través del grafo.
 
-Este enlazado se resuelve recorriendo las capas desde la raíz hacia las hojas mediante un sistema de \textbf{herencia del nodo padre}.
+Este enlazado se resuelve recorriendo las capas desde la raíz hacia las hojas mediante un sistema de \textbf{herencia del nodo padre}~\cite{brewer20193d}.
 Para cada nodo y dirección, se comprueba primero si existe un vecino del mismo tamaño utilizando su código de Morton.
 Si no se encuentra, en lugar de realizar una búsqueda exhaustiva entre nodos de distintos tamaños, el nodo simplemente hereda el enlace del vecino de su padre (un nodo de mayor dimensión).
 Esta estrategia, ilustrada en la Figura~\ref{fig:neighbor-link}, resuelve la transición entre regiones con distinto nivel de resolución, uno de los problemas más difíciles de la navegación sobre estructuras jerárquicas.
@@ -506,6 +550,89 @@ Esta estrategia, ilustrada en la Figura~\ref{fig:neighbor-link}, resuelve la tra
 \end{figure}
 
 Al concluir esta etapa, el sistema ya es capaz de transformar cualquier escena tridimensional en un \acrshort{svo} completamente conectado y listo para la navegación.
+La Figura~\ref{fig:builder-clases} resume las clases del espacio de nombres \texttt{Builder} que orquestan todo el proceso de construcción.
+
+\begin{figure}[htp]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[
+      font=\small,
+      clase/.style={draw=ficblue!75!black, fill=ficblue!7, thick, rounded corners=1pt,
+                    rectangle split, rectangle split parts=3, align=left,
+                    text width=3.7cm, inner xsep=5pt, inner ysep=3.5pt, font=\scriptsize},
+      caja/.style={draw=ficblue!75!black, fill=ficblue!7, thick, rounded corners=1pt,
+                   rectangle split, rectangle split parts=2, align=left,
+                   text width=3.7cm, inner xsep=5pt, inner ysep=3.5pt, font=\scriptsize},
+      datos/.style={draw=udcgray!75!black, fill=udcgray!12, thick, rounded corners=1pt,
+                    rectangle split, rectangle split parts=2, align=left,
+                    text width=3.7cm, inner xsep=5pt, inner ysep=3.5pt, font=\scriptsize},
+      flujo/.style={-{Stealth[length=2.8mm]}, semithick, draw=ficblue!75!black},
+      usa/.style={-{Stealth[length=2.4mm]}, dashed, thick, draw=black!60},
+      etiq/.style={font=\scriptsize, fill=white, inner sep=1.5pt}
+    ]
+
+    % --- Fila superior: entrada -> orquestador -> salida ---
+    \node[datos] (cfg) at (0,0) {
+      {\itshape struct}\\[-1pt]\textbf{BuildSettings}
+      \nodepart{two}\ttfamily Origin : Vector3\\ RootSize, VoxelSize\\ NumLayers : int\\ AgentRadius : float\\ CollisionMask
+    };
+
+    \node[clase] (builder) at (5.2,0) {
+      {\itshape class}\\[-1pt]\textbf{SVOBuilder}
+      \nodepart{two}\ttfamily \_settings : BuildSettings\\ \_profiler : BakeProfiler
+      \nodepart{three}\ttfamily Build(profiler, prog)\\ \quad{} : NavContext
+    };
+
+    \node[datos] (ctx) at (10.4,0) {
+      {\itshape struct}\\[-1pt]\textbf{NavContext}
+      \nodepart{two}\ttfamily Svo : SVO\\ BuildSettings\\ PositionToLink(p)\\ LinkToCenter(link)
+    };
+
+    % --- Fila intermedia: etapas y perfilado ---
+    \node[caja] (rast) at (1.6,-5.3) {
+      {\itshape static}\\[-1pt]\textbf{SVORasterizer}
+      \nodepart{two}\ttfamily RasterizeL1(settings)\\ RasterizeLeaves(s, corners)
+    };
+
+    \node[caja] (link) at (6.0,-5.3) {
+      {\itshape static}\\[-1pt]\textbf{SVONeighborLinker}
+      \nodepart{two}\ttfamily FillNeighborLinks(svo, s)
+    };
+
+    \node[caja] (prof) at (10.4,-5.3) {
+      {\itshape class}\\[-1pt]\textbf{BakeProfiler}
+      \nodepart{two}\ttfamily Start()\\ Lap(label)\\ MarkBuildComplete()\\ ToReport() : BakeReport
+    };
+
+    % --- Fila inferior: jobs e informe ---
+    \node[datos] (jobs) at (1.6,-10.4) {
+      {\itshape IJobParallelFor}\\[-1pt]\textbf{Jobs de rasterización}
+      \nodepart{two}\ttfamily BuildCoarseLeafCommands\\ BuildLeafCommands\\ BuildLayerCommands\\ ReduceLeafBitmasks
+    };
+
+    \node[datos] (report) at (10.4,-10.4) {
+      {\itshape class}\\[-1pt]\textbf{BakeReport}
+      \nodepart{two}\ttfamily TotalMs, BuildMs,\\ SaveMs : double\\ Phases : TimedPhase[]
+    };
+
+    % --- Relaciones ---
+    \draw[flujo] (cfg.east) -- node[etiq, midway, above] {configuración} (builder.west);
+    \draw[flujo] (builder.east) -- node[etiq, midway, above] {produce} (ctx.west);
+    \draw[usa] (builder.south) -- (rast.north);
+    \draw[usa] (builder.south) -- (link.north);
+    \draw[usa] (builder.south) -- (prof.north);
+    \draw[usa] (rast.south) -- node[etiq, midway, right] {Job System + Burst} (jobs.north);
+    \draw[flujo] (prof.south) -- node[etiq, midway, right] {ToReport()} (report.north);
+
+  \end{tikzpicture}%
+  }
+  \caption[Clases principales del espacio de nombres \texttt{Builder}.]
+  {Clases principales del espacio de nombres \texttt{Builder}.
+  El \texttt{SVOBuilder} orquesta la construcción a partir de una \texttt{BuildSettings}: delega el muestreo en \texttt{SVORasterizer} (que lanza los \textit{jobs} de Burst) y el enlazado en \texttt{SVONeighborLinker}, mientras \texttt{BakeProfiler} cronometra cada fase.
+  El resultado es un \texttt{NavContext} y, opcionalmente, un \texttt{BakeReport} con los tiempos.
+  Las flechas discontinuas denotan dependencias de uso.}
+  \label{fig:builder-clases}
+\end{figure}
 
 \subsubsection{Serialización en un único bloque binario}
 \label{sec:iter-persistencia}
@@ -574,6 +701,7 @@ Con ella se alcanza el producto mínimo viable del proyecto.
 
 El objetivo de esta iteración es el núcleo del sistema: calcular una trayectoria libre de colisiones entre dos puntos y refinarla para que el movimiento resulte natural.
 Da respuesta a los casos de uso \textbf{CU-04} (solicitar una ruta navegable entre dos puntos) y \textbf{CU-05} (obtener una trayectoria suavizada y libre de colisiones), recogidos en el Anexo~\ref{anexo:casos-uso}.
+En el plano no funcional, el diseño del buscador persigue el rendimiento exigido por \textbf{RNF-03} (cálculo de rutas eficiente), recogido en el Anexo~\ref{anexo:rnf}, cuya optimización de bajo nivel se completa más tarde en la Iteración~5.
 
 Para el cálculo de la ruta se adapta el algoritmo \gls{astar} para que opere sobre el \acrshort{svo}, tal como se planteó en el capítulo de fundamentos.
 El principal reto es que, a diferencia de una implementación clásica de \gls{astar} sobre una cuadrícula uniforme, este buscador opera sobre un grafo de \textbf{resolución heterogénea}: un único salto puede cruzar desde un nodo gigante de espacio abierto hasta un pequeño \gls{voxel} pegado a un obstáculo.
@@ -659,7 +787,7 @@ El sistema permite calcular el coste de la trayectoria de dos maneras:
     \item \textbf{Distancia euclídea:} Mide la distancia física real entre los centros de los nodos, generando la ruta más corta posible geométricamente.
     \item \textbf{Conteo de nodos:} Asigna un valor de coste igual a 1 para cualquier salto, sin importar el tamaño del nodo.
     Al penalizar todos los movimientos por igual, el algoritmo prefiere pasar por unos pocos nodos grandes antes que por muchos pequeños.
-    Esto aleja al agente de los obstáculos y lo guía hacia espacios más abiertos.
+    Esto aleja al agente de los obstáculos y lo guía hacia espacios más abiertos~\cite{Brewer2015NavMesh}.
 \end{itemize}
 
 La heurística utilizada es la distancia en línea recta hasta la meta, multiplicada por un peso configurable $W$ (búsqueda voraz).
@@ -671,7 +799,7 @@ De esta forma, se garantiza que ambos valores mantengan la misma escala al aplic
 
 Para dotar al agente de un movimiento más orgánico sin comprometer la seguridad de la trayectoria, se implementa un postprocesado dividido en dos fases complementarias, tal y como se describió en los fundamentos.
 La primera es un \textbf{atajo voraz} basado en comprobaciones de línea de visión, que elimina los nodos redundantes de la ruta.
-La segunda \textbf{suaviza} la trayectoria resultante mediante una \textit{spline} de Catmull-Rom.
+La segunda \textbf{suaviza} la trayectoria resultante mediante una \textit{spline} de Catmull-Rom~\cite{catmull1974class}.
 Ambas fases se conciben para preservar la seguridad de la ruta: cada una opera únicamente sobre puntos que ya se han verificado como libres de colisión.
 
 \subsection{Implementación}
@@ -698,7 +826,7 @@ Empezando por el primer punto, el algoritmo intenta trazar una línea recta hast
 Si existe \textbf{línea de visión directa} entre ambos (es decir, ningún obstáculo bloquea el paso), se descartan todos los nodos intermedios.
 
 Comprobar esta línea de visión es un proceso crítico tanto para la precisión como para el rendimiento del sistema.
-Para abordarlo de forma eficiente, se utiliza el algoritmo \acrshort{dda}, que recorre de forma progresiva los \glspl{voxel} que atraviesa la línea recta para verificar si alguno está ocupado por geometría.
+Para abordarlo de forma eficiente, se utiliza el algoritmo \acrshort{dda}~\cite{amanatides1987fast}, que recorre de forma progresiva los \glspl{voxel} que atraviesa la línea recta para verificar si alguno está ocupado por geometría.
 En cada paso, el recorrido avanza por el eje cuyo límite (el plano del \gls{voxel}) esté más cerca.
 Esto garantiza que no se omita ningún \gls{voxel} ni se evalúe el mismo dos veces.
 El procedimiento se resume en el siguiente pseudocódigo.
@@ -740,6 +868,89 @@ static Vector3 EvaluateCatmullRom(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3
     );
 \end{lstlisting}
 
+La Figura~\ref{fig:pathfinding-clases} resume las clases principales del espacio de nombres \texttt{Pathfinding} y el flujo de datos entre ellas, desde la petición de ruta hasta la trayectoria suavizada.
+
+\begin{figure}[htp]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[
+      font=\small,
+      clase/.style={draw=ficblue!75!black, fill=ficblue!7, thick, rounded corners=1pt,
+                    rectangle split, rectangle split parts=3, align=left,
+                    text width=3.6cm, inner xsep=5pt, inner ysep=3.5pt, font=\scriptsize},
+      caja/.style={draw=ficblue!75!black, fill=ficblue!7, thick, rounded corners=1pt,
+                   rectangle split, rectangle split parts=2, align=left,
+                   text width=3.6cm, inner xsep=5pt, inner ysep=3.5pt, font=\scriptsize},
+      datos/.style={draw=udcgray!75!black, fill=udcgray!12, thick, rounded corners=1pt,
+                    rectangle split, rectangle split parts=2, align=left,
+                    text width=3.6cm, inner xsep=5pt, inner ysep=3.5pt, font=\scriptsize},
+      flujo/.style={-{Stealth[length=2.8mm]}, semithick, draw=ficblue!75!black},
+      comp/.style={draw=ficblue!75!black, thick,
+                   -{Diamond[length=2.8mm, width=1.9mm, fill=ficblue!75!black]}},
+      usa/.style={-{Stealth[length=2.4mm]}, dashed, thick, draw=black!60},
+      etiq/.style={font=\scriptsize, fill=white, inner sep=1.5pt}
+    ]
+
+    % --- Flujo principal: peticion -> buscador -> suavizado -> resultado ---
+    \node[datos] (req) at (0,0) {
+      {\itshape struct}\\[-1pt]\textbf{PathRequest}
+      \nodepart{two}\ttfamily Start, Goal : Vector3\\ HeuristicWeight : float\\ MaxNodesBudget : int\\ CostMode
+    };
+
+    % Separados uniformemente de 8 en 8 unidades
+    \node[clase] (pf) at (8.0,0) {
+      {\itshape class}\\[-1pt]\textbf{SVOPathfinder}
+      \nodepart{two}\ttfamily \_openList : MinHeap\\ \_nodes : Dictionary\\ \_expandBuffer : List
+      \nodepart{three}\ttfamily FindPath(ctx, req, ct)\\ \quad{} : PathResult
+    };
+
+    \node[caja] (sm) at (16.0,0) {
+      {\itshape static}\\[-1pt]\textbf{PathSmoother}
+      \nodepart{two}\ttfamily GreedyShortcut(p, ctx)\\ CatmullRomSpline(pts)
+    };
+
+    \node[datos] (res) at (24.0,0) {
+      {\itshape struct}\\[-1pt]\textbf{PathResult}
+      \nodepart{two}\ttfamily Status\\ Waypoints : List\\ RawWaypoints : List\\ Stats : PathStats\\ Succeeded : bool
+    };
+
+    % --- Auxiliares del buscador y del suavizado ---
+    % Reubicados para mantener distancia simétrica y alinear las flechas
+    \node[caja] (heap) at (6.5,-4.7) {
+      {\itshape class}\\[-1pt]\textbf{MinHeap}
+      \nodepart{two}\ttfamily Push(item, prio)\\ Pop() : T\\ IsEmpty : bool\\ Clear()
+    };
+
+    \node[caja] (heur) at (11.25,-4.7) {
+      {\itshape static}\\[-1pt]\textbf{SVOHeuristic}
+      \nodepart{two}\ttfamily UnitCost()\\ EuclideanCost(a, b)\\ ScaledDistance(c, g, s)
+    };
+
+    % Mantenido perfectamente alineado bajo PathSmoother (16.0)
+    \node[caja] (rc) at (16.0,-4.7) {
+      {\itshape static}\\[-1pt]\textbf{SVORaycast}
+      \nodepart{two}\ttfamily HasLineOfSight(ctx,\\ \quad{} a, b) : bool
+    };
+
+    % --- Relaciones ---
+    \draw[flujo] (req.east) -- node[etiq, midway, above] {petición} (pf.west);
+    \draw[flujo] (pf.east) -- node[etiq, midway, above] {ruta en bruto} (sm.west);
+    \draw[flujo] (sm.east) -- node[etiq, midway, above] {ruta suavizada} (res.west);
+
+    \draw[comp] (heap.north) -- (pf.south -| heap.north);
+    \draw[usa] (heur.north) -- node[etiq, pos=0.65] {coste} (pf.south);
+    \draw[usa] (rc.north) -- node[etiq, midway, right] {LOS} (sm.south);
+
+  \end{tikzpicture}%
+  }
+  \caption[Clases principales del espacio de nombres \texttt{Pathfinding}.]
+  {Clases principales del espacio de nombres \texttt{Pathfinding}.
+  Una \texttt{PathRequest} alimenta al \texttt{SVOPathfinder}, que ejecuta la búsqueda \gls{astar} sobre una cola de prioridad (\texttt{MinHeap}) y con las funciones de coste de \texttt{SVOHeuristic}, y entrega una ruta en bruto.
+  El \texttt{PathSmoother} la refina (atajo y suavizado) apoyándose en \texttt{SVORaycast} para las comprobaciones de línea de visión, hasta obtener la \texttt{PathResult} final.
+  El rombo denota composición y las flechas discontinuas, dependencias de uso.}
+  \label{fig:pathfinding-clases}
+\end{figure}
+
 \subsection{Validación}
 
 El buscador se validó con pruebas unitarias en modo de edición (\textit{EditMode}) que ejercitan escenarios controlados: rutas en volúmenes vacíos, coincidencia entre el punto de inicio y el de fin, y trazados que deben rodear obstáculos sencillos.
@@ -764,6 +975,7 @@ Las primeras versiones del buscador generaban, en ocasiones, trayectorias que ro
 Este problema, conocido como \textit{clipping}, ocurría sobre todo cerca de las aristas y esquinas de los obstáculos.
 La causa de fondo era que el sistema trataba al agente como un simple punto sin volumen, por lo que ignoraba el espacio que este necesita para desplazarse.
 Resolver esta carencia es lo que exige el caso de uso \textbf{CU-06} (generar rutas con holgura suficiente para el tamaño del agente), recogido en el Anexo~\ref{anexo:casos-uso}.
+Atender este problema de forma fiable en escenarios variados es, además, el requisito no funcional \textbf{RNF-06} (robustez y seguridad geométrica de las rutas), recogido en el Anexo~\ref{anexo:rnf}.
 
 \subsection{Diseño}
 
@@ -778,14 +990,24 @@ La Figura~\ref{fig:clipping} ilustra este problema y su solución.
     \begin{scope}
       \fill[obstaculo, rounded corners=1pt] (1.6,-1.2) rectangle (3.0,-2.6);
       \node[font=\footnotesize, text=white] at (2.3,-1.9) {obstáculo};
-      \draw[flecha, draw=udcpink, very thick] (0,-0.2) -- (3.6,-2.05);
-      \fill[ficblue!25, opacity=0.75] (1.85,-1.05) circle (0.34);
-      \draw[agente] (1.85,-1.05) circle (0.34);
-      \node[font=\scriptsize, text=udcpink!80!black, anchor=south] at (1.1,-0.32) {colisión};
-      \draw[densely dotted, thin, draw=udcpink!80!black] (1.1,-0.42) -- (1.72,-1.0);
+      
+      % La línea de trayectoria se dibuja cruzando por encima del obstáculo (y = -1.15 es mayor que -1.2)
+      % Se extiende hasta X=2.0 (más allá del agente) para que la punta de la flecha sea visible.
+      \draw[flecha, draw=udcpink, very thick] (0,-0.2) -- (2.0,-1.15);
+      
+      % El agente se posiciona en el punto exacto de la línea donde su radio (0.34)
+      % hace contacto perfecto con la esquina de la caja (1.6, -1.2).
+      \fill[ficblue!25, opacity=0.75] (1.46,-0.89) circle (0.34);
+      \draw[agente] (1.46,-0.89) circle (0.34);
+      
+      % Etiqueta apuntando al punto exacto de la colisión (la esquina del obstáculo)
+      \node[font=\scriptsize, text=udcpink!80!black, anchor=south] at (0.8,-0.1) {colisión};
+      \draw[densely dotted, thin, draw=udcpink!80!black] (0.8,-0.15) -- (1.58,-1.18);
+      
       \node[font=\footnotesize, anchor=north, text width=3.9cm, align=center] at (1.8,-3.05)
         {Sin tratar el radio: la trayectoria recorta la esquina};
     \end{scope}
+    
     % ===== Derecha: obstaculo inflado (holgura) =====
     \begin{scope}[xshift=5.4cm]
       \draw[dashed, draw=udcpink, thick, rounded corners=4pt] (1.3,-0.9) rectangle (3.3,-2.9);
@@ -839,6 +1061,7 @@ Expone el sistema al usuario final mediante componentes de editor, herramientas 
 Una vez consolidado el núcleo del sistema, esta iteración se centra en mejorar su usabilidad y en consolidar su interfaz pública.
 El objetivo es proporcionar herramientas accesibles tanto para perfiles técnicos como para diseñadores de niveles y artistas, que permitan configurar, depurar y dimensionar el volumen sin necesidad de leer el código, así como una \acrshort{api} clara para programar el comportamiento de los agentes.
 Esta iteración da respuesta a los casos de uso \textbf{CU-07} (configurar el volumen desde el editor), \textbf{CU-08} (depurar el volumen visualmente y consultar sus estadísticas), \textbf{CU-09} (realizar consultas espaciales sobre el volumen) y \textbf{CU-10} (solicitar rutas de forma asíncrona), recogidos en el Anexo~\ref{anexo:casos-uso}.
+En el plano no funcional, atiende la usabilidad para perfiles no técnicos (\textbf{RNF-07}), la capacidad de respuesta del cálculo asíncrono sin bloquear el hilo principal (\textbf{RNF-04}) y el empaquetado del sistema según los estándares de Unity (\textbf{RNF-09}), todos ellos recogidos en el Anexo~\ref{anexo:rnf}.
 
 \subsection{Diseño}
 
@@ -847,6 +1070,45 @@ Esta iteración da respuesta a los casos de uso \textbf{CU-07} (configurar el vo
 El elemento central es el componente \texttt{NavVolumeSpace}, que gestiona el volumen de navegación.
 Para adaptarse a diferentes flujos de trabajo, ofrece tres modos de construcción: \textbf{precalculado} (\textit{Baked}), que carga los datos guardados previamente en disco, \textbf{construido al inicio} (\textit{BuildOnAwake}) y \textbf{manual}, que se construye al invocar la función correspondiente desde código.
 Junto a este, se incluyen componentes adicionales para representar a las entidades del escenario, como los agentes y los obstáculos dinámicos.
+El comportamiento de cada modo durante el ciclo de vida del componente se resume en el diagrama de estados de la Figura~\ref{fig:build-modes-estados}.
+
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}[
+      font=\small,
+      estado/.style={rounded corners=6pt, draw=ficblue!75!black, fill=ficblue!8, thick,
+                     align=center, inner sep=4pt, minimum width=2.9cm, minimum height=1.0cm,
+                     font=\footnotesize},
+      inicial/.style={circle, fill=black, minimum size=3.5mm, inner sep=0pt},
+      trans/.style={-{Stealth[length=2.6mm]}, thick, draw=black!70},
+      et/.style={font=\scriptsize, fill=white, inner sep=1.5pt, align=center}
+    ]
+
+    \node[inicial] (start) at (0,3.3) {};
+    \node[estado] (load) at (-4.9,1.4) {Cargando datos\\precalculados};
+    \node[estado] (idle) at (4.9,1.4) {Sin construir};
+    \node[estado] (build) at (0,-0.3) {Construyendo\\volumen};
+    \node[estado] (ready) at (0,-3.4) {Listo\\{\scriptsize(\texttt{IsReady})}};
+
+    % --- Awake: ramificación según el modo de construcción ---
+    \draw[trans] (start) -- node[et, pos=0.55] {[Baked]} (load);
+    \draw[trans] (start) -- node[et, pos=0.5, right] {[BuildOnAwake]} (build);
+    \draw[trans] (start) -- node[et, pos=0.55] {[Manual]} (idle);
+
+    % --- Transiciones entre estados ---
+    \draw[trans] (load) to[out=-90, in=180] node[et, pos=0.45] {[datos válidos]} (ready.west);
+    \draw[trans] (idle) -- node[et, pos=0.5] {\texttt{Build()}} (build);
+    \draw[trans] (build) -- node[et, midway, right] {\textit{Rebuilt}} (ready);
+    \draw[trans] (ready.east) to[out=25, in=-25] node[et, pos=0.5, right] {\texttt{Build()} (reconstrucción)} (build.east);
+
+  \end{tikzpicture}
+  \caption[Estados de \texttt{NavVolumeSpace} según el modo de construcción.]
+  {Diagrama de estados de \texttt{NavVolumeSpace} según el modo de construcción elegido.
+  Al despertar (\texttt{Awake}), el modo \textit{Baked} carga los datos precalculados, \textit{BuildOnAwake} construye el volumen de inmediato y \textit{Manual} lo deja sin construir hasta que se invoca \texttt{Build()} desde código.
+  Si en el modo \textit{Baked} faltan los datos o están vacíos, el volumen permanece sin construir.
+  Una vez \textit{Listo}, una nueva llamada a \texttt{Build()} reconstruye el volumen y emite el evento \textit{Rebuilt}.}
+  \label{fig:build-modes-estados}
+\end{figure}
 
 \subsubsection{API de navegación y consultas espaciales}
 
@@ -902,7 +1164,7 @@ La Figura~\ref{fig:seq-path} detalla la secuencia de una petición asíncrona, d
 
     % Barras de activacion
     \filldraw[act] (\xN-0.09,-1.0)  rectangle (\xN+0.09,-9.1);
-    \filldraw[act] (\xP-0.09,-2.8)  rectangle (\xP+0.09,-3.3);
+    \filldraw[act] (\xP-0.09,-3.15) rectangle (\xP+0.09,-3.6);
     \filldraw[act] (\xS-0.09,-3.9)  rectangle (\xS+0.09,-5.3);
     \filldraw[act] (\xM-0.09,-5.9)  rectangle (\xM+0.09,-6.4);
     \filldraw[act] (\xM-0.09,-7.0)  rectangle (\xM+0.09,-7.5);
@@ -912,8 +1174,8 @@ La Figura~\ref{fig:seq-path} detalla la secuencia de una petición asíncrona, d
     \draw[msg] (\xA,-1.0) -- (\xN,-1.0) node[lbl, midway, above] {FindPathAsync(request, token)};
     \draw[ret] (\xN,-1.7) -- (\xA,-1.7) node[lbl, midway, above] {Task\textless PathResult\textgreater};
 
-    \draw[msg] (\xN,-2.8) -- (\xP,-2.8) node[lbl, midway, above] {TryTake()};
-    \draw[ret] (\xP,-3.3) -- (\xN,-3.3) node[lbl, midway, above] {buscador (o nuevo)};
+    \draw[msg] (\xN,-3.15) -- (\xP,-3.15) node[lbl, midway, above] {TryTake()};
+    \draw[ret] (\xP,-3.6) -- (\xN,-3.6) node[lbl, midway, above] {buscador (o nuevo)};
 
     \draw[msg] (\xN,-3.9) -- (\xS,-3.9) node[lbl, midway, above] {FindPath(ctx, request)};
     % Bucle interno de A*
@@ -1019,7 +1281,8 @@ Una vez integrado el sistema, se perfila su comportamiento y se introducen mejor
 
 \subsection{Análisis}
 
-Esta iteración no añade nuevos casos de uso, sino que atiende un requisito \textbf{no funcional} transversal: que el sistema rinda adecuadamente incluso en escenarios exigentes, con numerosas peticiones de ruta simultáneas y volúmenes densos.
+Esta iteración no añade nuevos casos de uso, sino que atiende los requisitos \textbf{no funcionales} de rendimiento que han guiado todo el desarrollo: que el sistema rinda adecuadamente incluso en escenarios exigentes, con numerosas peticiones de ruta simultáneas y volúmenes densos.
+Se trata, en concreto, de \textbf{RNF-03} (cálculo de rutas eficiente) y \textbf{RNF-02} (construcción del volumen eficiente), recogidos en el Anexo~\ref{anexo:rnf}.
 El análisis parte del perfilado del sistema ya integrado para localizar los puntos críticos donde una optimización tiene mayor impacto.
 
 \subsection{Diseño}
@@ -1054,7 +1317,7 @@ La batería de pruebas existente, ejecutada en el sistema de \acrshort{ci}, gara
 \label{sec:iter-evasion}
 
 Esta última iteración corresponde a la tarea \textbf{T8} del seguimiento (Sección~\ref{sec:seguimiento}), un incremento no planificado inicialmente: la evasión local entre agentes.
-Aprovecha la holgura obtenida en la planificación para añadir una funcionalidad extra que enriquece el comportamiento del sistema.
+Aprovecha la holgura obtenida en la planificación para añadir una funcionalidad extra que complementa el comportamiento del sistema.
 
 \subsection{Análisis}
 
@@ -1066,8 +1329,8 @@ Resolver esa carencia es el objetivo de esta fase, que da respuesta al caso de u
 \subsubsection{El algoritmo ORCA}
 
 Para solucionar este problema se implementó el algoritmo \acrshort{orca}~\cite{van2011reciprocal}.
-Tal y como se explicó en los fundamentos, este método analiza el espacio de velocidades para calcular, en cada instante, una velocidad segura que sea lo más parecida posible a la trayectoria deseada.
-La implementación se basó en adaptar las rutinas tridimensionales de la biblioteca original RVO2-3D~\cite{rvo2_3d}.
+Tal y como se explicó en la Sección~\ref{sec:orca} los fundamentos, este método analiza el espacio de velocidades para calcular, en cada instante, una velocidad segura que sea lo más parecida posible a la trayectoria deseada.
+La implementación se basó en adaptar las rutinas tridimensionales de la biblioteca original RVO2-3D~\cite{snape_rvo2_library}.
 
 El algoritmo busca la velocidad óptima respetando diversas restricciones, representadas como semiplanos.
 Si el problema resulta infactible por un exceso de restricciones simultáneas, aplica una relajación matemática para minimizar el impacto de la colisión, tal y como ilustra la Figura~\ref{fig:orca}.
@@ -1127,6 +1390,85 @@ Por ello, se implementó utilizando el \textit{Job System} y el compilador Burst
   \item \textbf{Ejecución asíncrona:} Los \textit{jobs} se programan al final de un fotograma y se recogen al inicio del siguiente. Esto permite que la simulación se calcule en paralelo al renderizado del juego, reduciendo al mínimo su impacto en la tasa de fotogramas.
 \end{itemize}
 
+La Figura~\ref{fig:avoidance-clases} resume las clases del espacio de nombres \texttt{Avoidance} y cómo cooperan durante un paso de simulación.
+
+\begin{figure}[htp]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[
+      font=\small,
+      clase/.style={draw=ficblue!75!black, fill=ficblue!7, thick, rounded corners=1pt,
+                    rectangle split, rectangle split parts=3, align=left,
+                    text width=3.9cm, inner xsep=5pt, inner ysep=3.5pt, font=\scriptsize},
+      caja/.style={draw=ficblue!75!black, fill=ficblue!7, thick, rounded corners=1pt,
+                   rectangle split, rectangle split parts=2, align=left,
+                   text width=3.9cm, inner xsep=5pt, inner ysep=3.5pt, font=\scriptsize},
+      datos/.style={draw=udcgray!75!black, fill=udcgray!12, thick, rounded corners=1pt,
+                    rectangle split, rectangle split parts=2, align=left,
+                    text width=3.9cm, inner xsep=5pt, inner ysep=3.5pt, font=\scriptsize},
+      flujo/.style={-{Stealth[length=2.8mm]}, semithick, draw=ficblue!75!black},
+      usa/.style={-{Stealth[length=2.4mm]}, dashed, thick, draw=black!60},
+      etiq/.style={font=\scriptsize, fill=white, inner sep=1.5pt}
+    ]
+
+    % --- Orquestador y estado de entrada ---
+    \node[datos] (state) at (0,0) {
+      {\itshape struct}\\[-1pt]\textbf{AvoidanceAgentState}
+      \nodepart{two}\ttfamily Position, Velocity,\\ PrefVelocity : float3\\ Radius, MaxSpeed : float\\ NeighborRange : float\\ MaxNeighbors, SpaceIndex
+    };
+
+    \node[clase] (sim) at (5.6,0) {
+      {\itshape MonoBehaviour}\\[-1pt]\textbf{AvoidanceSimulation}
+      \nodepart{two}\ttfamily \_agents : NativeList\\ \_spatialHash : MultiHashMap\\ Instance : static
+      \nodepart{three}\ttfamily RegisterAgent(owner, s)\\ SubmitAgentState(h, s)\\ GetNewVelocity(h)
+    };
+
+    % --- Jobs paralelos ---
+    \node[caja] (hashjob) at (2.9,-5.6) {
+      {\itshape IJobParallelFor}\\[-1pt]\textbf{SpatialHashJob}
+      \nodepart{two}\ttfamily Agents, InvCellSize\\ Writer\\ Execute(index)
+    };
+
+    \node[caja] (avoidjob) at (8.5,-5.6) {
+      {\itshape IJobParallelFor, Burst}\\[-1pt]\textbf{AvoidanceJob}
+      \nodepart{two}\ttfamily Agents, Obstacles, Hash\\ VoxelGrids, VoxelMasks\\ NewVelocities\\ Execute(index)
+    };
+
+    % --- Resolución ORCA ---
+    \node[caja] (math) at (3.7,-11.0) {
+      {\itshape static}\\[-1pt]\textbf{OrcaMath}
+      \nodepart{two}\ttfamily AgentPlane(\dots)\\ StaticPlane(\dots)\\ \quad{} : OrcaPlane
+    };
+
+    \node[datos] (plane) at (8.5,-11.0) {
+      {\itshape struct}\\[-1pt]\textbf{OrcaPlane}
+      \nodepart{two}\ttfamily Point : float3\\ Normal : float3
+    };
+
+    \node[caja] (solver) at (13.3,-11.0) {
+      {\itshape static}\\[-1pt]\textbf{OrcaSolver}
+      \nodepart{two}\ttfamily Solve(planes, n,\\ \quad{} staticN, maxSpeed,\\ \quad{} prefVel, scratch)\\ \quad{} : float3
+    };
+
+    % --- Relaciones ---
+    \draw[flujo] (state.east) -- node[etiq, midway, above] {SubmitAgentState} (sim.west);
+    \draw[usa] (sim.south) -- node[etiq, pos=0.6] {programa} (hashjob.north);
+    \draw[usa] (sim.south) -- (avoidjob.north);
+    \draw[flujo] (hashjob.east) -- node[etiq, midway, above] {hash} (avoidjob.west);
+    \draw[usa] (avoidjob.south) -- (math.north);
+    \draw[usa] (avoidjob.south) -- node[etiq, pos=0.6, right] {Solve} (solver.north);
+    \draw[flujo] (math.east) -- node[etiq, midway, above] {OrcaPlane} (plane.west);
+    \draw[flujo] (plane.east) -- node[etiq, midway, above] {planos} (solver.west);
+
+  \end{tikzpicture}%
+  }
+  \caption[Clases principales del espacio de nombres \texttt{Avoidance}.]
+  {Clases principales del espacio de nombres \texttt{Avoidance}.
+  En cada fotograma, \texttt{AvoidanceSimulation} recoge el \texttt{AvoidanceAgentState} de cada agente y programa dos \textit{jobs}: \texttt{SpatialHashJob}, que construye el \textit{hash} espacial, y \texttt{AvoidanceJob}, que para cada agente construye las restricciones (\texttt{OrcaPlane}) con \texttt{OrcaMath} y obtiene la velocidad segura con \texttt{OrcaSolver}.
+  Las flechas discontinuas denotan dependencias de uso.}
+  \label{fig:avoidance-clases}
+\end{figure}
+
 \subsection{Validación}
 
 La evasión local se validó en escenas con múltiples agentes que comparten destino o cruzan trayectorias opuestas, situaciones que sin evasión derivarían en colisiones.
@@ -1149,32 +1491,37 @@ El sistema final conforma un \textit{pipeline} con dos etapas bien diferenciadas
   \centering
   \resizebox{\textwidth}{!}{%
   \begin{tikzpicture}[font=\small, node distance=7mm and 9mm,
+      io/.style={align=center, font=\footnotesize\itshape, text=black!70},
       contA/.style={rounded corners=5pt, draw=ficblue!70, very thick, fill=none, inner sep=8pt},
       contB/.style={rounded corners=5pt, draw=udcpink!70, very thick, fill=none, inner sep=8pt}]
     % --- Fase de preprocesado (editor): banda superior ---
-    \node[paso] (escena) {Escena};
+    % "Escena" es la entrada del pipeline, no una etapa.
+    \node[io] (escena) {Escena};
     \node[paso, right=of escena] (raster) {Rasterización};
-    \node[paso, right=of raster] (svo) {\acrshort{svo}};
-    \node[almacen, right=of svo] (disco) {Volumen\\en disco};
+    \node[paso, right=of raster] (capas) {Construcción de\\capas superiores};
+    \node[paso, right=of capas] (enlace) {Enlazado\\de nodos};
+    \node[almacen, right=of enlace] (disco) {Volumen\\en disco};
     % --- Fase de ejecucion (tiempo real): banda inferior ---
-    \node[paso, below=16mm of escena] (carga) {Carga del\\volumen};
+    \node[paso, below=16mm of raster] (carga) {Carga del\\volumen};
     \node[paso, right=of carga] (astar) {Búsqueda A*};
     \node[paso, right=of astar] (postp) {Post-\\procesado};
-    \node[paso, right=of postp] (evasion) {Evasión\\local};
-    \node[paso, right=of evasion] (movim) {Movimiento\\del agente};
+    \node[paso, right=of postp] (evasion) {ORCA};
+    % "Movimiento del agente" es la salida del pipeline, no una etapa.
+    \node[io, right=of evasion] (movim) {Movimiento\\del agente};
     % --- Conexiones dentro de cada banda ---
     \draw[flecha] (escena) -- (raster);
-    \draw[flecha] (raster) -- (svo);
-    \draw[flecha] (svo) -- (disco);
+    \draw[flecha] (raster) -- (capas);
+    \draw[flecha] (capas) -- (enlace);
+    \draw[flecha] (enlace) -- (disco);
     \draw[flecha] (carga) -- (astar);
     \draw[flecha] (astar) -- (postp);
     \draw[flecha] (postp) -- (evasion);
     \draw[flecha] (evasion) -- (movim);
     % --- Traspaso entre fases: el volumen serializado se vuelve a cargar ---
     \draw[flecha, rounded corners=3pt] (disco.south) -- ++(0,-5mm) -| (carga.north);
-    % --- Contenedores de fase (solo borde, en capa normal) ---
-    \node[contA, fit=(escena)(raster)(svo)(disco)] (cajaA) {};
-    \node[contB, fit=(carga)(astar)(postp)(evasion)(movim)] (cajaB) {};
+    % --- Contenedores de fase (solo las etapas, no la entrada/salida) ---
+    \node[contA, fit=(raster)(capas)(enlace)(disco)] (cajaA) {};
+    \node[contB, fit=(carga)(astar)(postp)(evasion)] (cajaB) {};
     \node[font=\footnotesize\itshape, text=ficblue, anchor=south west]
       at ([yshift=1.5mm]cajaA.north west) {Preprocesado (editor)};
     \node[font=\footnotesize\itshape, text=udcpink!85!black, anchor=north west]
@@ -1255,4 +1602,208 @@ Como se detalla en la Figura~\ref{fig:arquitectura-final}, esta arquitectura mod
   \label{fig:arquitectura-final}
 \end{figure}
 
-TODO añadir métricas temporales.
+\subsection{Rendimiento del sistema}
+\label{sec:mediciones}
+
+% TODO
+
+% Este apartado da respuesta al objetivo de análisis de rendimiento del proyecto y cuantifica de forma objetiva el grado de cumplimiento de los requisitos no funcionales de eficiencia (\textbf{RNF-01}, \textbf{RNF-02} y \textbf{RNF-03}, Anexo~\ref{anexo:rnf}).
+% Para cada área crítica del sistema se mide una métrica representativa y, cuando procede, se contrasta el resultado antes y después de aplicar las optimizaciones descritas a lo largo del capítulo.
+% De este modo, las mejoras que hasta ahora se han justificado de forma cualitativa quedan respaldadas con datos concretos.
+
+% \subsubsection{Entorno y metodología de medición}
+
+% % TODO (TEXTO): Rellenar con el entorno real de pruebas.
+% % - CPU (modelo, número de núcleos/hilos), memoria RAM, GPU y sistema operativo.
+% % - Versión de Unity y del compilador Burst, modo de compilación (IL2CPP/Mono, Release).
+% Todas las mediciones se obtuvieron en el equipo y la versión del motor que se detallan a continuación.
+% Cada métrica se promedia sobre un número fijo de repeticiones tras descartar las primeras ejecuciones de calentamiento, de modo que los resultados no se vean afectados por la compilación inicial de Burst ni por la carga en frío de la caché.
+% Los tiempos de construcción se recogen directamente del \texttt{BakeReport} que produce el \texttt{BakeProfiler} (Figura~\ref{fig:builder-clases}), mientras que las reservas de memoria y los tiempos en tiempo de ejecución se miden con el \textit{Profiler} de Unity.
+
+% Las pruebas se ejecutan sobre un conjunto de escenarios de complejidad creciente, pensados para cubrir desde el caso trivial hasta entornos densos y representativos de un videojuego real.
+% La Tabla~\ref{tab:bench-escenarios} resume sus magnitudes principales.
+
+% \begin{table}[htp]
+%   \centering
+%   % TODO (TABLA): Rellenar con los escenarios de prueba reales y sus magnitudes.
+%   % Sustituir los \dots por los valores medidos (dimensiones del volumen, número
+%   % de nodos y de hojas ocupadas). Anadir o quitar filas segun los escenarios usados.
+%   \begin{tabular}{@{}l r r r@{}}
+%     \rowcolor{udcpink!25}
+%     \textbf{Escenario} & \textbf{Dimensiones} & \textbf{Nodos} & \textbf{Hojas ocupadas} \\
+%     \hline
+%     Vacío (referencia)  & \dots & \dots & \dots \\
+%     Pasillo             & \dots & \dots & \dots \\
+%     Ciudad              & \dots & \dots & \dots \\
+%     Bosque denso        & \dots & \dots & \dots \\
+%     \hline
+%   \end{tabular}
+%   \caption{Escenarios de prueba empleados en las mediciones de rendimiento.}
+%   \label{tab:bench-escenarios}
+% \end{table}
+
+% \subsubsection{Coste de la construcción del volumen}
+
+% La primera métrica es el tiempo de construcción (\gls{bake}), que cuantifica el requisito \textbf{RNF-02}.
+% Conviene descomponerlo por fases para identificar dónde se concentra el coste, ya que la rasterización domina sobre el enlazado y la serialización.
+
+% \begin{figure}[htp]
+%   \centering
+%   % TODO (GRÁFICA 1): Gráfica de barras apiladas.
+%   % Eje X: cada escenario de la Tabla~\ref{tab:bench-escenarios}.
+%   % Eje Y: tiempo de bake en milisegundos.
+%   % Cada barra se divide por fase (rasterización, capas superiores, enlazado de
+%   % vecinos, serializado), tomando los campos de BakeReport.Phases.
+%   % Objetivo: mostrar que la rasterización es la fase dominante.
+%   % \includegraphics[width=0.82\textwidth]{Images/bench-bake-phases.png}
+%   \fbox{\parbox[c][3.6cm][c]{0.82\textwidth}{\centering\itshape Marcador de posición: tiempo de \gls{bake} por escenario, desglosado por fase de la canalización.}}
+%   \caption[Tiempo de construcción del volumen desglosado por fase.]
+%   {Tiempo de construcción del volumen desglosado por fase, para cada escenario de prueba.}
+%   \label{fig:bench-bake-phases}
+% \end{figure}
+
+% A continuación se evalúa la optimización de \textbf{descarte de hojas vacías} (Sección~\ref{sec:descarte-hojas}), la mejora más relevante de esta fase.
+% La comparativa contrasta el número de consultas físicas (\texttt{OverlapBox}) y el tiempo total de \gls{bake} con la pasada en dos fases frente a un muestreo exhaustivo \gls{voxel} a \gls{voxel}.
+
+% \begin{figure}[htp]
+%   \centering
+%   % TODO (GRÁFICA 2): Gráfica de barras agrupadas (dos series por escenario).
+%   % Serie A: "muestreo exhaustivo" (64 consultas por hoja).
+%   % Serie B: "con descarte de hojas vacías" (pasada gruesa + fina).
+%   % Mostrar DOS paneles o un eje secundario:
+%   %   (a) número total de consultas OverlapBox,
+%   %   (b) tiempo de bake en ms.
+%   % Resultado esperado: reducción cercana al factor 64 en el número de consultas
+%   % en la mayor parte del volumen (ver Sección~\ref{sec:descarte-hojas} y Figura~\ref{fig:empty-leaf}).
+%   % \includegraphics[width=0.82\textwidth]{Images/bench-empty-leaf.png}
+%   \fbox{\parbox[c][3.6cm][c]{0.82\textwidth}{\centering\itshape Marcador de posición: consultas físicas y tiempo de \gls{bake} con y sin descarte de hojas vacías.}}
+%   \caption[Impacto del descarte de hojas vacías en la construcción.]
+%   {Impacto del descarte de hojas vacías sobre el número de consultas físicas y el tiempo de construcción.}
+%   \label{fig:bench-empty-leaf}
+% \end{figure}
+
+% % TODO (OPCIONAL): Si se mide, anadir una comparativa del tiempo de bake en
+% % escenarios densos antes y despues de evitar reordenar las capas cuando no
+% % faltan nodos hermanos (la otra optimización de bake de la Iteración 5).
+% % Bastaria una tabla de dos columnas (antes / despues) por escenario denso.
+
+% \subsubsection{Consumo de memoria}
+
+% La segunda métrica es la huella de memoria del volumen, que cuantifica el requisito \textbf{RNF-01}.
+% El interés está en comparar el tamaño del \acrshort{svo} disperso con el de una rejilla densa equivalente que almacenase todos los \glspl{voxel} a la máxima resolución, lo que evidencia el ahorro que justifica la representación dispersa.
+
+% \begin{figure}[htp]
+%   \centering
+%   % TODO (GRÁFICA 3): Gráfica de barras (preferiblemente con eje Y logarítmico).
+%   % Eje X: cada escenario. Dos series por escenario:
+%   %   - "rejilla densa equivalente" (todos los vóxeles a máxima resolución),
+%   %   - "SVO disperso" (memoria real de la estructura).
+%   % Anotar encima de cada par el porcentaje de memoria ahorrada.
+%   % La fuente del dato del SVO es el cálculo de memoria estimada del panel de
+%   % estadísticas (Figura~\ref{fig:stats-panel}).
+%   % \includegraphics[width=0.82\textwidth]{Images/bench-memory.png}
+%   \fbox{\parbox[c][3.6cm][c]{0.82\textwidth}{\centering\itshape Marcador de posición: memoria del \acrshort{svo} disperso frente a la rejilla densa equivalente, por escenario.}}
+%   \caption[Consumo de memoria del \acrshort{svo} frente a una rejilla densa.]
+%   {Consumo de memoria del \acrshort{svo} disperso frente a una rejilla densa equivalente, con el porcentaje de ahorro por escenario.}
+%   \label{fig:bench-memory}
+% \end{figure}
+
+% \subsubsection{Búsqueda y postprocesado de rutas}
+
+% En tiempo de ejecución, la métrica principal es el tiempo de cálculo de una ruta, que cuantifica el requisito \textbf{RNF-03}.
+% La búsqueda sobre un grafo de resolución heterogénea (Sección~\ref{sec:iter-pathfinding}) debería explorar muy pocos nodos en el espacio abierto y ramificarse solo cerca de los obstáculos.
+
+% \begin{figure}[htp]
+%   \centering
+%   % TODO (GRÁFICA 4): Gráfica de dispersión o de líneas.
+%   % Eje X: distancia euclídea entre origen y destino (o longitud de la ruta).
+%   % Eje Y: tiempo de cálculo de la ruta en milisegundos (o microsegundos).
+%   % Opcional: una segunda serie/panel con el NÚMERO DE NODOS EXPANDIDOS por A*,
+%   % para evidenciar el beneficio de la resolución heterogénea frente a una
+%   % rejilla uniforme (ver Figura~\ref{fig:astar-multinivel}).
+%   % Tomar varias muestras por escenario y trazar la tendencia.
+%   % \includegraphics[width=0.82\textwidth]{Images/bench-pathfinding-time.png}
+%   \fbox{\parbox[c][3.6cm][c]{0.82\textwidth}{\centering\itshape Marcador de posición: tiempo de cálculo de ruta y nodos expandidos frente a la longitud de la trayectoria.}}
+%   \caption[Tiempo de cálculo de ruta frente a la longitud de la trayectoria.]
+%   {Tiempo de cálculo de ruta y número de nodos expandidos en función de la longitud de la trayectoria.}
+%   \label{fig:bench-pathfinding-time}
+% \end{figure}
+
+% El postprocesado se evalúa comparando la trayectoria en bruto que devuelve A* con la trayectoria final tras el atajo por línea de visión y el suavizado.
+% La Tabla~\ref{tab:bench-suavizado} recoge las métricas de calidad de la ruta.
+
+% \begin{table}[htp]
+%   \centering
+%   % TODO (TABLA): Rellenar con las métricas reales del postprocesado.
+%   % Comparar ruta en bruto frente a ruta suavizada en cada escenario:
+%   %   - longitud total de la ruta,
+%   %   - número de puntos de paso (waypoints),
+%   %   - (opcional) número de giros bruscos eliminados.
+%   \begin{tabular}{@{}l r r r r@{}}
+%     \rowcolor{udcpink!25}
+%     & \multicolumn{2}{c}{\textbf{Longitud}} & \multicolumn{2}{c}{\textbf{Puntos de paso}} \\
+%     \rowcolor{udcpink!25}
+%     \textbf{Escenario} & \textbf{Bruta} & \textbf{Suavizada} & \textbf{Bruta} & \textbf{Suavizada} \\
+%     \hline
+%     Pasillo      & \dots & \dots & \dots & \dots \\
+%     Ciudad       & \dots & \dots & \dots & \dots \\
+%     Bosque denso & \dots & \dots & \dots & \dots \\
+%     \hline
+%   \end{tabular}
+%   \caption{Efecto del postprocesado sobre la longitud y el número de puntos de paso de la ruta.}
+%   \label{tab:bench-suavizado}
+% \end{table}
+
+% Por último, se cuantifica el efecto de las optimizaciones de bajo nivel de la Iteración~5 (reutilización de \textit{buffers}, acceso por referencia de solo lectura y comparación sin \textit{boxing}).
+% La métrica más ilustrativa es la memoria reservada en el \gls{heap} por petición de ruta, que estas mejoras buscan reducir a prácticamente cero para no provocar pausas del recolector de basura.
+
+% \begin{figure}[htp]
+%   \centering
+%   % TODO (GRÁFICA 5): Gráfica de barras (dos barras).
+%   % Eje Y: memoria reservada (bytes/KB) por petición de ruta, medida con el
+%   % Profiler de Unity (GC Alloc).
+%   % Barra A: "antes" de las optimizaciones de la Iteración 5.
+%   % Barra B: "después" (con reutilización de buffers, ref readonly y sin boxing).
+%   % Resultado esperado: caída drástica de las reservas, idealmente cercana a 0.
+%   % Opcional: anadir el tiempo medio por petición como segunda métrica.
+%   % \includegraphics[width=0.7\textwidth]{Images/bench-pathfinding-alloc.png}
+%   \fbox{\parbox[c][3.6cm][c]{0.7\textwidth}{\centering\itshape Marcador de posición: memoria reservada por petición de ruta, antes y después de las optimizaciones de bajo nivel.}}
+%   \caption[Reservas de memoria por petición de ruta antes y después de optimizar.]
+%   {Memoria reservada en el \gls{heap} por petición de ruta, antes y después de las optimizaciones de bajo nivel.}
+%   \label{fig:bench-pathfinding-alloc}
+% \end{figure}
+
+% \subsubsection{Escalabilidad de la evasión local}
+
+% La evasión local se ejecuta para cada agente en cada fotograma, por lo que su métrica clave es cómo escala el coste con el número de agentes simultáneos.
+% Interesa contrastar la versión paralelizada con el \textit{Job System} y Burst frente a una ejecución secuencial de referencia, para evidenciar el beneficio de la paralelización.
+
+% \begin{figure}[htp]
+%   \centering
+%   % TODO (GRÁFICA 6): Gráfica de líneas.
+%   % Eje X: número de agentes simultáneos (p. ej. 10, 50, 100, 250, 500, 1000).
+%   % Eje Y: tiempo de simulación de la evasión por fotograma en milisegundos
+%   %        (o, alternativamente, la tasa de FPS).
+%   % Dos series:
+%   %   - "secuencial" (un solo hilo, referencia),
+%   %   - "Job System + Burst" (paralelizado).
+%   % Resultado esperado: la serie paralelizada escala mucho mejor.
+%   % Opcional: marcar la línea de presupuesto de 16,6 ms (60 FPS).
+%   % \includegraphics[width=0.82\textwidth]{Images/bench-avoidance-scaling.png}
+%   \fbox{\parbox[c][3.6cm][c]{0.82\textwidth}{\centering\itshape Marcador de posición: coste por fotograma de la evasión local frente al número de agentes, secuencial vs paralelizado.}}
+%   \caption[Escalabilidad de la evasión local con el número de agentes.]
+%   {Coste por fotograma de la evasión local en función del número de agentes, comparando la ejecución secuencial con la paralelizada mediante el \textit{Job System} y Burst.}
+%   \label{fig:bench-avoidance-scaling}
+% \end{figure}
+
+% Además, conviene confirmar que el uso de \texttt{stackalloc} y \texttt{Span\textless T\textgreater} en el solucionador de ORCA cumple su objetivo de no reservar memoria en el \gls{heap}.
+% Esto se verifica observando en el \textit{Profiler} que la simulación de evasión no genera reservas (\textit{GC Alloc} igual a cero) durante la ejecución, con independencia del número de agentes.
+
+% \subsubsection{Síntesis de resultados}
+
+% % TODO (TEXTO): Redactar las conclusiones una vez se disponga de los datos reales.
+% % Resumir, requisito a requisito, en qué medida se cumplen los objetivos de
+% % rendimiento (RNF-01 memoria, RNF-02 construcción, RNF-03 cálculo de rutas)
+% % y destacar la optimización con mayor impacto observado.
+% En conjunto, las mediciones anteriores permiten valorar de forma cuantitativa el cumplimiento de los requisitos no funcionales de rendimiento y memoria, así como aislar la contribución individual de cada optimización al comportamiento global del sistema.
+

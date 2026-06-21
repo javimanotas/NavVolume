@@ -60,23 +60,6 @@
   nodo/.style={circle, draw=black!70, thick, minimum size=5mm, inner sep=0pt, font=\scriptsize},
 }
 
-% Comando auxiliar para marcar figuras o diagramas pendientes de incluir.
-% El primer argumento describe el contenido que debe ilustrar la figura,
-% el segundo es la leyenda y el tercero la etiqueta para las referencias.
-\newcommand{\pendientefig}[3]{%
-  \begin{figure}[htp]
-    \centering
-    \fbox{%
-      \parbox[c][3.6cm][c]{0.85\textwidth}{%
-        \centering\itshape [Figura pendiente de incluir]\\[6pt]%
-        \normalfont\small #1%
-      }%
-    }%
-    \caption{#2}%
-    \label{#3}%
-  \end{figure}%
-}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Corpo                                                                        %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -88,11 +71,19 @@
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
  \include{portada/portada}
- \dedicatoria{A mis abuelos que les hubiese encantado verme graduado}
+ \dedicatoria{A mis abuelos, a quienes les hubiese encantado verme graduado.}
  \paxinaenbranco
  \begin{agradecementos}
- \blindtext                % substitúe este comando polo teu texto de agradecementos
+ Quisiera agradecer en primer lugar a mi padre, por tener la paciencia de enseñarme en su momento a programar y el mundillo de la informática y por estar ahí siempre que necesitase una mano. Sin él nunca hubiera llegado aquí.
+
+ También especial agradecimiento a mi madre, por apoyarme siempre y por obligarme a esforzarme y dar mi mejor versión.
+ Gracias a mi hermano, que a pesar de que se pueda hacer un poco pesado cuando se pone a hacer el tonto o cuando se va a dormir a las diez, se agradece que siempre esté ahí.
+
+ Quisiera agradecer también a mis tutores Alejandro y Enrique, sobre todo por la gran paciencia que han tenido a la hora de enviarme correcciones de la memoria.
+ 
+ Por último, gracias a todos esos amigos que me acompañaron durante la carrera haciendo estos 4 años de los mejores de mi vida.
  \end{agradecementos}
+ 
  \include{portada/resumo}
 
  \pagenumbering{roman}
@@ -116,6 +107,8 @@
  \include{contido/estadodelacuestion}
  \include{contido/metodologiayplanificacion}
  \include{contido/desarrollo}
+ \include{contido/conclusiones}
+ \include{contido/trabajosfuturos}
 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  % Apéndices, glosarios e bibliografía  %
@@ -124,6 +117,7 @@
  \appendix
  \appendixpage
  \include{anexos/casos_uso}
+ \include{anexos/requisitos_no_funcionales}
  \include{anexos/manual_instalacion}
  \include{anexos/manual_usuario}
 

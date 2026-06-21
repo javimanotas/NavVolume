@@ -1,0 +1,58 @@
+\chapter{Conclusiones}
+\label{chap:conclusiones}
+
+El objetivo general de este Trabajo de Fin de Grado consistía en el diseño, la implementación y la validación en el motor Unity de un sistema de navegación volumétrica eficiente y optimizado.
+A lo largo de los capítulos anteriores, se ha descrito cómo ese objetivo se ha materializado en un paquete de herramientas modular y listo para integrarse en proyectos reales.
+Este capítulo recapitula lo conseguido, revisando el grado de cumplimiento de los objetivos planteados, reconociendo sus limitaciones y reflexionando sobre el aprendizaje personal derivado del proyecto.
+
+\section{Revisión de los objetivos}
+
+El objetivo general se ha alcanzado de forma satisfactoria.
+El resultado no es un mero algoritmo de búsqueda de rutas, sino un sistema completo que cubre desde la transformación de la geometría de una escena en una representación navegable hasta el movimiento final de un agente que esquiva tanto los obstáculos estáticos como al resto de agentes.
+Revisando uno a uno los objetivos específicos definidos en la Sección~\ref{sec:objetivos}, puede afirmarse que todos ellos se han satisfecho:
+
+\begin{description}
+    \item \textbf{Diseño arquitectónico.} El sistema se organiza en módulos con responsabilidades delimitadas y separados físicamente mediante \textit{assemblies}, con dependencias unidireccionales que aíslan el código de edición y de pruebas del producto final.
+    \item \textbf{Representación eficiente del espacio.} El volumen navegable se representa mediante un \acrshort{svo} que solo subdivide las regiones con geometría.
+    El uso de máscaras de bits en las hojas, códigos de Morton y punteros compactos de 32 bits logra una estructura muy reducida y contigua en memoria, optimizada para las consultas en tiempo real.
+    \item \textbf{Sistema de serialización.} El volumen se precalcula en el editor y se almacena en disco como un único bloque binario sin punteros, que se carga de forma casi inmediata.
+    Un \textit{hash} determinista de la geometría, calculado con el algoritmo \gls{fnv1a}, permite detectar de manera fiable cuándo una escena ha quedado obsoleta tras el precálculo.
+    \item \textbf{Búsqueda de rutas.} Se ha adaptado el algoritmo \gls{astar} para operar sobre el grafo de resolución heterogénea del \acrshort{svo}, cruzando de un solo salto los grandes nodos de espacio libre y ramificándose en celdas cada vez más pequeñas únicamente al aproximarse a los obstáculos.
+    \item \textbf{Postprocesado de trayectorias.} La ruta en bruto se refina en dos fases complementarias, un atajo voraz basado en comprobaciones de línea de visión mediante el algoritmo \acrshort{dda} y un suavizado con \textit{splines} de Catmull-Rom, ambas diseñadas para preservar la seguridad de la trayectoria.
+    \item \textbf{Integración en Unity.} Se han creado componentes de Unity, complementados por la visualización mediante Gizmos y un panel de estadísticas en el inspector.
+    \item \textbf{Accesibilidad y usabilidad.} Los modos de construcción, la depuración visual y el panel de estadísticas permiten configurar y dimensionar el volumen sin necesidad de leer el código, acercando la herramienta tanto a perfiles técnicos como a diseñadores de niveles y artistas.
+    \item \textbf{Análisis de rendimiento.} El sistema se ha perfilado sobre un conjunto de escenarios de complejidad creciente, midiendo el coste de construcción, el consumo de memoria, el tiempo de cálculo de rutas y la escalabilidad de la evasión local, lo que ha permitido orientar y respaldar con datos las optimizaciones aplicadas (Sección~\ref{sec:mediciones}).
+    \item \textbf{Distribución modular.} El sistema se ha empaquetado siguiendo los estándares oficiales de Unity, de modo que pueda integrarse en otros proyectos y, eventualmente, publicarse en la Unity Asset Store.
+\end{description}
+
+Conviene destacar que no solo se cumplieron los objetivos previstos, sino que la holgura recuperada gracias a la metodología iterativa permitió incorporar una funcionalidad de evasión local entre agentes que no figuraba en la planificación inicial (Sección~\ref{sec:seguimiento}).
+
+\subsection{Limitaciones}
+
+Como todo sistema, el resultado presenta limitaciones que conviene reconocer.
+La más relevante afecta a la búsqueda de rutas y tiene su origen en la propia naturaleza del espacio tridimensional.
+Mientras que en dos dimensiones un obstáculo solo puede rodearse por dos lados, en tres dimensiones existe un número prácticamente infinito de formas de bordearlo.
+Esta variedad de alternativas hace inviable explorar el grafo por completo, por lo que el buscador debe apoyarse en el peso de la heurística o en un límite de nodos explorados para acotar la búsqueda.
+Como consecuencia, el sistema no garantiza el camino óptimo, aunque en la práctica las rutas obtenidas resultan naturales y convincentes.
+
+Una segunda limitación tiene que ver con el coste de construcción del volumen.
+Aunque su eficiencia es mejorable, en ningún momento compromete el rendimiento del juego, ya que el precálculo se realiza una sola vez en el editor.
+Sin embargo, ese tiempo no es lo bastante reducido como para reconstruir el volumen en tiempo de ejecución, de modo que las escenas con geometría dinámica quedan fuera del alcance actual y deben resolverse en el editor o durante una pantalla de carga.
+
+La última limitación es que el volumen admite un máximo de diez capas de subdivisión, una cota impuesta por los códigos de Morton.
+Cada código entrelaza las tres coordenadas de una celda en un único entero de 32 bits, de modo que a cada eje le corresponden unos diez bits y la resolución máxima queda fijada en $1024$ ($2^{10}$) celdas por eje.
+En la práctica, esta restricción apenas se nota.
+Por un lado, cada capa adicional multiplica por ocho el número de nodos, así que ampliar el límite dispararía el consumo de memoria mucho antes de resultar útil.
+Por otro, una resolución de 1024 celdas por eje basta de sobra para navegar, ya que una habitación de diez metros de lado se discretiza con una precisión cercana al centímetro.
+
+\section{Conclusiones personales}
+
+A nivel personal, este proyecto ha supuesto una oportunidad para profundizar en áreas de la informática que rara vez se abordan con esta intensidad a lo largo del grado.
+La más destacada ha sido el diseño orientado a datos (\acrshort{dod}), junto con técnicas de bajo nivel poco frecuentes en el día a día, como la manipulación de datos a nivel de bits.
+Pensar en cómo se disponen los datos y en cómo los recorre la memoria, y no solo en objetos y comportamientos, supuso un cambio de mentalidad respecto a la programación orientada a objetos más tradicional.
+
+Otro aprendizaje importante ha sido el de planificar antes de programar, en un proyecto con una magnitud como este.
+Dedicar tiempo al diseño de la arquitectura y a la planificación temporal, en lugar de empezar a escribir código de inmediato, permitió afrontar cada fase con una idea clara de lo que se quería construir.
+
+Por último, se ha aprendido a redactar una memoria académica.
+Sintetizar un trabajo técnico tan extenso en un documento ordenado, con sus citas y referencias, y exponerlo de forma comprensible ha sido un ejercicio tan exigente como la propia implementación.

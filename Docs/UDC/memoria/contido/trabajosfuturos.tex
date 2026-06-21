@@ -1,0 +1,40 @@
+\chapter{Trabajos futuros}
+\label{chap:trabajos-futuros}
+
+El sistema desarrollado cumple los objetivos planteados, sin embargo está abierto a distintas líneas de investigación.
+Este capítulo recoge las más relevantes, desde optimizaciones de bajo nivel hasta nuevas capacidades que ampliarían el alcance del proyecto.
+
+\section{Construcción del volumen en la GPU}
+
+La construcción del \acrshort{svo} se ejecuta actualmente en la \acrshort{cpu}, paralelizada mediante el Job System y el compilador Burst.
+Dado que la rasterización es un proceso completamente paralelizable, se plantea trasladar la voxelización y la construcción de la jerarquía a la \acrshort{gpu} mediante \textit{compute shaders}~\cite{UnityComputeShaders}.
+
+Esta vía se descartó en el desarrollo por varios motivos.
+En primer lugar, la programación de la \acrshort{gpu} no está del todo integrada con la capa de abstracción que ofrece la \acrshort{api} de Unity, de manera que un cambio en estas interfaces podría dejar el sistema obsoleto o comprometer la portabilidad entre distintas plataformas.
+En segundo lugar, se trata de una alternativa de riesgo elevado y coste de desarrollo considerable.
+Esto se debe a que el código que se ejecuta en la tarjeta gráfica es muy difícil de depurar y además obligaría a mantener un espejo de la representación del volumen en la memoria de la tarjeta gráfica y a sincronizarlo con el de la \acrshort{cpu}, lo que puede dar lugar a errores de consistencia entre ambas representaciones.
+Finalmente, a pesar de existir algoritmos muy rápidos con este fin~\cite{schwarz2010fast}, la construcción habitualmente se realiza fuera del tiempo de edición y, tal como se comentó en la Sección~\ref{sec:mediciones}, esta suele durar menos de cinco segundos usando el máximo de precisión, por lo que en ningún momento supone el cuello de botella del sistema.
+
+En conclusión, se trata de una optimización interesante pero de prioridad baja.
+Esta solo cobraría sentido si el tiempo de construcción llegase a ser crítico en escenas de gran tamaño o si las herramientas de cálculo en la \acrshort{gpu} del motor alcanzasen una mayor estabilidad.
+
+\section{Búsqueda y evasión mediante aprendizaje por refuerzo}
+
+El cálculo de rutas se apoya en una heurística diseñada a mano, ya sea la distancia euclídea o el conteo de nodos, sobre una búsqueda \gls{astar} determinista, mientras que la evasión recae en el algoritmo \acrshort{orca}.
+Ambos son enfoques reactivos y deterministas.
+Una línea de investigación que se propone consiste en incorporar técnicas de aprendizaje automático, en concreto de \textbf{aprendizaje por refuerzo}, para mejorar la búsqueda de caminos y la evasión entre agentes.
+
+Esta idea parte de investigaciones previas de aplicar este conjunto de técnicas al control de enjambres heterogéneos de aeronaves pilotadas remotamente, coloquialmente conocidos como drones~\cite{puente_castro_2023}.
+Implementarlas en el sistema, podría no solo mejorar la eficiencia del mismo al evitar ejecutar las partes con mayor carga algorítmica, sino que tambíen proporcionaría resultados más naturales y creíbles.
+Esto se debe a que los agentes considerarán y evaluarán todo tipo de variables, incluyendo las que no se hayan tenido en cuenta durante el desarrollo de este proyecto.
+
+\section{Otras líneas de extensión}
+
+Además de las dos grandes líneas anteriores, el proyecto deja abiertas otras posibles mejoras:
+
+\begin{description}
+    \item \textbf{Geometría dinámica y reconstrucción incremental:} reconstruir únicamente las regiones del \acrshort{svo} afectadas por un cambio en la geometría estática, como una puerta que se abre o una estructura que se destruye, superando la limitación actual de un volumen totalmente precalculado y orientado a entornos estáticos.
+    \item \textbf{Búsqueda jerárquica:} para aliviar el coste del cálculo de rutas en escenas densas, explorar esquemas de búsqueda jerárquica o de cualquier ángulo (\textit{any-angle})~\cite{harabor2013optimal}, así como la precomputación de la conectividad entre regiones, con el fin de reducir el número de nodos explorados.
+    \item \textbf{Enlaces entre volúmenes:} en escenarios de gran tamaño, resulta ineficiente mantener un único volumen gigante cargado en memoria.
+    Una mejora sería permitir a los agentes desplazarse de forma fluida entre diferentes volúmenes independientes lo que implicaría desarrollar un sistema de enlaces que conecten las fronteras de estos.
+\end{description}

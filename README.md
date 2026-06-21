@@ -10,6 +10,8 @@
 Unity's built-in NavMesh is surface-based and constrains agents to walkable ground.
 NavVolume instead navigates the open space inside a cubic volume, so agents can move freely along all three axes.
 
+![Tool demo](Images/title.png)
+
 It bakes the scene geometry into a **Sparse Voxel Octree (SVO)**, searches it with a weighted **A\*** planner, and steers agents around each other and around dynamic obstacles with **ORCA** local avoidance.
 The heavy work runs on background threads and Unity's Burst-compiled Job System.
 
@@ -37,8 +39,7 @@ The package depends on the following Unity packages, all resolved automatically 
 
 ## Documentation
 
-- [Installation](Docs/installation.md): Details on setting up Git LFS and opening the project.
-- [User Guide](Docs/user-guide.md): Quick start instructions and core types overview.
+- [User Manual](Docs/user-manual.md): Quick start instructions and core types overview.
 - [System Basics](Docs/system-basics.md): How the pathfinding and avoidance system works behind the scenes.
 
 ## Contributing

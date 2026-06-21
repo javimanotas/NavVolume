@@ -3,7 +3,7 @@
 
 Este anexo recoge los casos de uso que guían el análisis de cada iteración del Capítulo~\ref{chap:desarrollo}.
 Cada caso de uso describe una interacción concreta entre un actor y el sistema, e indica la iteración en la que se aborda.
-De este modo, los requisitos funcionales del sistema quedan trazados de forma explícita con su implementación.
+De este modo, los requisitos funcionales del sistema quedan definidos de forma explícita con su implementación.
 
 \section{Actores}
 
@@ -11,7 +11,7 @@ Se identifican tres actores que interactúan con el sistema de navegación volum
 
 \begin{itemize}
   \item \textbf{Diseñador de niveles:} configura y precalcula los volúmenes de navegación desde el editor de Unity, sin necesidad de programar. Trabaja en tiempo de diseño.
-  \item \textbf{Desarrollador integrador:} escribe el código de juego que consume la \acrshort{api} del sistema para solicitar rutas y realizar consultas espaciales. Trabaja en tiempo de ejecución.
+  \item \textbf{Desarrollador programador:} escribe el código de juego que consume la \acrshort{api} del sistema para solicitar rutas y realizar consultas espaciales. Trabaja en tiempo de ejecución.
   \item \textbf{Agente:} actor secundario que representa a la entidad voladora que, en tiempo de ejecución, sigue las rutas calculadas y evita tanto la geometría como a otros agentes.
 \end{itemize}
 
@@ -64,7 +64,7 @@ La Figura~\ref{fig:casos-uso} resume los casos de uso del sistema y su relación
     \coordinate (disenador) at (-2.8,-3.7);
 
     \pic at (11.2,-1.4) {persona};
-    \node[actorlbl] at (11.2,-3.4) {Desarrollador\\integrador};
+    \node[actorlbl] at (11.2,-3.4) {Desarrollador\\programador};
     \coordinate (desarrollador) at (11.2,-2.0);
 
     \pic at (11.2,-6.2) {persona};
@@ -78,7 +78,7 @@ La Figura~\ref{fig:casos-uso} resume los casos de uso del sistema y su relación
     \draw[assoc] (disenador) -- (cu07);
     \draw[assoc] (disenador) -- (cu08);
 
-    % --- Asociaciones del desarrollador integrador ---
+    % --- Asociaciones del desarrollador programador ---
     \draw[assoc] (desarrollador) -- (cu04);
     \draw[assoc] (desarrollador) -- (cu05);
     \draw[assoc] (desarrollador) -- (cu09);
@@ -94,7 +94,7 @@ La Figura~\ref{fig:casos-uso} resume los casos de uso del sistema y su relación
   }
   \caption[Diagrama de casos de uso del sistema de navegación volumétrica.]
   {Diagrama de casos de uso del sistema de navegación volumétrica.
-  El diseñador de niveles interactúa con el sistema en tiempo de diseño, mientras que el desarrollador integrador y el agente lo hacen en tiempo de ejecución.}
+  El diseñador de niveles interactúa con el sistema en tiempo de diseño, mientras que el desarrollador programador y el agente lo hacen en tiempo de ejecución.}
   \label{fig:casos-uso}
 \end{figure}
 
@@ -105,7 +105,7 @@ A continuación se detalla cada caso de uso, indicando sus actores, su descripci
 \medskip
 \noindent\begin{tabular}{@{}>{\bfseries}p{2.8cm}p{9.9cm}@{}}
 \rowcolor{udcpink!25}
-\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-01 — Construir el volumen de navegación}}\\
+\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-01 \quad Construir el volumen de navegación}}\\
 Actores & Diseñador de niveles. \\
 Descripción & A partir de la geometría de una escena, el sistema genera el \acrshort{svo} que representa su espacio libre navegable. \\
 Precondición & La escena contiene la geometría (\textit{colliders}) sobre la que se quiere navegar. \\
@@ -116,7 +116,7 @@ Iteración & 1 (tarea T3). \\
 \medskip
 \noindent\begin{tabular}{@{}>{\bfseries}p{2.8cm}p{9.9cm}@{}}
 \rowcolor{udcpink!25}
-\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-02 — Precalcular y persistir el volumen (\textit{bake})}}\\
+\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-02 \quad Precalcular y persistir el volumen (\textit{bake})}}\\
 Actores & Diseñador de niveles. \\
 Descripción & El diseñador ejecuta el precálculo del volumen desde el editor y lo almacena en disco para evitar reconstruirlo en cada ejecución. \\
 Precondición & La geometría de la escena está definida. \\
@@ -127,8 +127,8 @@ Iteración & 1 (tarea T3). \\
 \medskip
 \noindent\begin{tabular}{@{}>{\bfseries}p{2.8cm}p{9.9cm}@{}}
 \rowcolor{udcpink!25}
-\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-03 — Detectar un volumen precalculado obsoleto}}\\
-Actores & Sistema (al cargar la escena), en beneficio del diseñador de niveles. \\
+\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-03 \quad Detectar un volumen precalculado obsoleto}}\\
+Actores & Diseñadir de niveles. \\
 Descripción & Al cargar el nivel, el sistema compara el \textit{hash} de la geometría actual con el almacenado y avisa si el volumen precalculado ha quedado obsoleto. \\
 Precondición & Existe un volumen precalculado asociado a la escena. \\
 Postcondición & El sistema confirma que el volumen sigue siendo válido o señala que debe reconstruirse. \\
@@ -138,8 +138,8 @@ Iteración & 1 (tarea T3). \\
 \medskip
 \noindent\begin{tabular}{@{}>{\bfseries}p{2.8cm}p{9.9cm}@{}}
 \rowcolor{udcpink!25}
-\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-04 — Solicitar una ruta navegable entre dos puntos}}\\
-Actores & Desarrollador integrador, Agente. \\
+\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-04 \quad Solicitar una ruta navegable entre dos puntos}}\\
+Actores & Desarrollador programador, Agente. \\
 Descripción & Dado un punto de origen y uno de destino, el sistema calcula una trayectoria libre de colisiones a través del espacio navegable. \\
 Precondición & Existe un volumen de navegación cargado. \\
 Postcondición & Se devuelve una ruta válida o un fallo controlado si no existe ninguna. \\
@@ -149,8 +149,8 @@ Iteración & 2 (tarea T4). \\
 \medskip
 \noindent\begin{tabular}{@{}>{\bfseries}p{2.8cm}p{9.9cm}@{}}
 \rowcolor{udcpink!25}
-\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-05 — Obtener una trayectoria suavizada y libre de colisiones}}\\
-Actores & Desarrollador integrador, Agente. \\
+\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-05 \quad Obtener una trayectoria suavizada y libre de colisiones}}\\
+Actores & Desarrollador programador, Agente. \\
 Descripción & La ruta calculada se postprocesa (atajo por línea de visión y suavizado por \textit{spline}) para lograr un movimiento natural sin perder seguridad. \\
 Precondición & Se ha calculado una ruta en bruto (CU-04). \\
 Postcondición & Se devuelve una trayectoria suavizada que permanece en espacio libre. \\
@@ -160,8 +160,8 @@ Iteración & 2 (tarea T4). \\
 \medskip
 \noindent\begin{tabular}{@{}>{\bfseries}p{2.8cm}p{9.9cm}@{}}
 \rowcolor{udcpink!25}
-\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-06 — Generar rutas con holgura para el tamaño del agente}}\\
-Actores & Desarrollador integrador, Agente. \\
+\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-06 \quad Generar rutas con holgura para el tamaño del agente}}\\
+Actores & Desarrollador programador, Agente. \\
 Descripción & El sistema considera el radio del agente al construir el volumen, de modo que las rutas conserven la holgura necesaria para no rozar la geometría. \\
 Precondición & Se conoce el radio del agente en el momento de construir el volumen. \\
 Postcondición & Toda ruta marcada como libre garantiza, por construcción, el margen necesario para el tamaño del agente. \\
@@ -171,7 +171,7 @@ Iteración & 3 (extensión de la tarea T4). \\
 \medskip
 \noindent\begin{tabular}{@{}>{\bfseries}p{2.8cm}p{9.9cm}@{}}
 \rowcolor{udcpink!25}
-\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-07 — Configurar el volumen desde el editor de Unity}}\\
+\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-07 \quad Configurar el volumen desde el editor de Unity}}\\
 Actores & Diseñador de niveles. \\
 Descripción & Desde el inspector de Unity, el usuario configura el volumen (modo de construcción y parámetros) sin escribir código. \\
 Precondición & El componente \texttt{NavVolumeSpace} está añadido a la escena. \\
@@ -182,7 +182,7 @@ Iteración & 4 (tarea T5). \\
 \medskip
 \noindent\begin{tabular}{@{}>{\bfseries}p{2.8cm}p{9.9cm}@{}}
 \rowcolor{udcpink!25}
-\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-08 — Depurar el volumen y consultar sus estadísticas}}\\
+\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-08 \quad Depurar el volumen y consultar sus estadísticas}}\\
 Actores & Diseñador de niveles. \\
 Descripción & El usuario inspecciona visualmente el volumen mediante Gizmos y consulta estadísticas como la memoria estimada o el porcentaje de vóxeles ahorrados. \\
 Precondición & Existe un volumen construido. \\
@@ -193,8 +193,8 @@ Iteración & 4 (tarea T5). \\
 \medskip
 \noindent\begin{tabular}{@{}>{\bfseries}p{2.8cm}p{9.9cm}@{}}
 \rowcolor{udcpink!25}
-\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-09 — Realizar consultas espaciales sobre el volumen}}\\
-Actores & Desarrollador integrador. \\
+\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-09 \quad Realizar consultas espaciales sobre el volumen}}\\
+Actores & Desarrollador programador. \\
 Descripción & El sistema responde a consultas como comprobar si un punto es navegable, ajustarlo al \gls{voxel} libre más cercano o generar una posición aleatoria válida. \\
 Precondición & Existe un volumen de navegación cargado. \\
 Postcondición & Se devuelve el resultado de la consulta espacial solicitada. \\
@@ -204,8 +204,8 @@ Iteración & 4 (tarea T5). \\
 \medskip
 \noindent\begin{tabular}{@{}>{\bfseries}p{2.8cm}p{9.9cm}@{}}
 \rowcolor{udcpink!25}
-\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-10 — Solicitar rutas de forma asíncrona}}\\
-Actores & Desarrollador integrador. \\
+\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-10 \quad Solicitar rutas de forma asíncrona}}\\
+Actores & Desarrollador programador. \\
 Descripción & El sistema calcula rutas en un hilo secundario para no bloquear el juego, y permite cancelar la petición en curso. \\
 Precondición & Existe un volumen de navegación cargado. \\
 Postcondición & Se entrega la ruta sin bloquear el hilo principal, o bien se cancela la operación. \\
@@ -215,8 +215,8 @@ Iteración & 4 (tarea T5). \\
 \medskip
 \noindent\begin{tabular}{@{}>{\bfseries}p{2.8cm}p{9.9cm}@{}}
 \rowcolor{udcpink!25}
-\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-11 — Evitar colisiones entre agentes en movimiento}}\\
-Actores & Agente, Desarrollador integrador. \\
+\multicolumn{2}{@{}p{12.9cm}@{}}{\textbf{CU-11 \quad Evitar colisiones entre agentes en movimiento}}\\
+Actores & Agente, Desarrollador programador. \\
 Descripción & En tiempo de ejecución, cada agente ajusta su velocidad para evitar a los demás agentes y a la geometría cercana mientras sigue su ruta. \\
 Precondición & Varios agentes se desplazan simultáneamente por el escenario. \\
 Postcondición & Los agentes se mueven sin colisionar entre sí ni con la geometría estática. \\
