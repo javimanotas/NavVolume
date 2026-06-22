@@ -414,23 +414,33 @@ Este descarte temprano es la primera gran optimización de la fase de construcci
       \fill[obstaculo, rounded corners=2pt] (1.0,-1.0) rectangle (2.7,-2.7);
       \foreach \c in {0,1,2,3}\foreach \r in {0,1,2,3}
         \draw[celda, line width=0.7pt] (\c*0.8,-\r*0.8) rectangle ++(0.8,-0.8);
-      \foreach \c/\r in {1/1,2/1,1/2,2/2}
+      
+      % CORREGIDO: Resaltar todas excepto fila 0 y columna 0
+      \foreach \c in {1,2,3}\foreach \r in {1,2,3}
         \draw[draw=udcpink, very thick] (\c*0.8,-\r*0.8) rectangle ++(0.8,-0.8);
+      
       \node[font=\footnotesize, anchor=north, text width=3.4cm, align=center] at (1.6,-3.5)
         {Nivel grueso: se detectan las celdas con geometría};
     \end{scope}
+    
     % Flecha
     \draw[flecha] (3.5,-1.6) -- ++(1.3,0) node[midway, above, font=\scriptsize] {subdivisión};
+    
     % Derecha: nivel fino
     \begin{scope}[xshift=5.3cm]
       \fill[obstaculo, rounded corners=2pt] (1.0,-1.0) rectangle (2.7,-2.7);
       \foreach \c in {0,1,2,3}\foreach \r in {0,1,2,3}
         \draw[celda, line width=0.7pt] (\c*0.8,-\r*0.8) rectangle ++(0.8,-0.8);
-      \foreach \c/\r in {1/1,2/1,1/2,2/2}
+      
+      % CORREGIDO: Subdividir todas excepto fila 0 y columna 0
+      \foreach \c in {1,2,3}\foreach \r in {1,2,3}
         \foreach \sc in {0,1}\foreach \sr in {0,1}
           \draw[celda] (\c*0.8+\sc*0.4,-\r*0.8-\sr*0.4) rectangle ++(0.4,-0.4);
-      \foreach \c/\r in {1/1,2/1,1/2,2/2}
+      
+      % CORREGIDO: Resaltar las celdas subdivididas
+      \foreach \c in {1,2,3}\foreach \r in {1,2,3}
         \draw[draw=udcpink, very thick] (\c*0.8,-\r*0.8) rectangle ++(0.8,-0.8);
+      
       \node[font=\footnotesize, anchor=north, text width=3.6cm, align=center] at (1.6,-3.5)
         {Nivel fino: solo esas celdas se subdividen};
     \end{scope}
@@ -1326,7 +1336,6 @@ Resolver esa carencia es el objetivo de esta fase, que da respuesta al caso de u
 
 Para solucionar este problema se implementó el algoritmo \acrshort{orca}~\cite{van2011reciprocal}.
 Tal y como se explicó en la Sección~\ref{sec:orca} los fundamentos, este método analiza el espacio de velocidades para calcular, en cada instante, una velocidad segura que sea lo más parecida posible a la trayectoria deseada.
-La implementación se basó en adaptar las rutinas tridimensionales de la biblioteca original RVO2-3D~\cite{snape_rvo2_library}.
 
 El algoritmo busca la velocidad óptima respetando diversas restricciones, representadas como semiplanos.
 Si el problema resulta infactible por un exceso de restricciones simultáneas, aplica una relajación matemática para minimizar el impacto de la colisión, tal y como ilustra la Figura~\ref{fig:orca}.
@@ -1601,205 +1610,263 @@ Como se detalla en la Figura~\ref{fig:arquitectura-final}, esta arquitectura mod
 \subsection{Rendimiento del sistema}
 \label{sec:mediciones}
 
-% TODO
+Este apartado da respuesta al objetivo de análisis de rendimiento del proyecto y cuantifica de forma objetiva el grado de cumplimiento de los requisitos no funcionales de eficiencia (\textbf{RNF-01}, \textbf{RNF-02} y \textbf{RNF-03}, Anexo~\ref{anexo:rnf}).
+Todas las mediciones se obtuvieron en el mismo equipo, cuyas características se resumen en la Tabla~\ref{tab:entorno-medicion}.
+Cada valor es la media de treinta ejecuciones consecutivas, descartando la primera para no incluir el coste de calentamiento del compilador.
+Los tiempos de construcción proceden del \texttt{BakeProfiler} descrito en la Iteración~1 (Figura~\ref{fig:builder-clases}) y de los inspectores personalizados.
 
-% Este apartado da respuesta al objetivo de análisis de rendimiento del proyecto y cuantifica de forma objetiva el grado de cumplimiento de los requisitos no funcionales de eficiencia (\textbf{RNF-01}, \textbf{RNF-02} y \textbf{RNF-03}, Anexo~\ref{anexo:rnf}).
-% Para cada área crítica del sistema se mide una métrica representativa y, cuando procede, se contrasta el resultado antes y después de aplicar las optimizaciones descritas a lo largo del capítulo.
-% De este modo, las mejoras que hasta ahora se han justificado de forma cualitativa quedan respaldadas con datos concretos.
+Como escenario de prueba se eligió el interior de un edificio de varias plantas.
+El motivo de esta decisión es que las escenas con geometría compacta son el caso más desfavorable para el sistema, ya que generan un volumen con muchas hojas ocupadas y obligan a la rasterización a realizar el muestreo fino sobre una fracción grande del espacio.
+Los resultados obtenidos representan, por tanto, una cota superior frente a escenarios más abiertos.
 
-% \subsubsection{Entorno y metodología de medición}
+\begin{table}[htp]
+  \centering
+  \rowcolors{2}{white}{udcgray!25}
+  \begin{tabular}{l|l}
+  \rowcolor{udcpink!25}
+  \textbf{Componente} & \textbf{Especificación} \\\hline
+  Procesador & Intel Core i7-12700H (14 núcleos, 20 hilos) \\
+  Memoria & 32\,GB DDR5 \\
+  Tarjeta gráfica & NVIDIA GeForce RTX 3070 Ti Laptop \\
+  Motor & Unity 6000.3.11f1 \\
+  Compilador & Burst 1.8.29 \\
+  \end{tabular}
+  \caption{Entorno de medición utilizado en las pruebas de rendimiento.}
+  \label{tab:entorno-medicion}
+\end{table}
 
-% % TODO (TEXTO): Rellenar con el entorno real de pruebas.
-% % - CPU (modelo, número de núcleos/hilos), memoria RAM, GPU y sistema operativo.
-% % - Versión de Unity y del compilador Burst, modo de compilación (IL2CPP/Mono, Release).
-% Todas las mediciones se obtuvieron en el equipo y la versión del motor que se detallan a continuación.
-% Cada métrica se promedia sobre un número fijo de repeticiones tras descartar las primeras ejecuciones de calentamiento, de modo que los resultados no se vean afectados por la compilación inicial de Burst ni por la carga en frío de la caché.
-% Los tiempos de construcción se recogen directamente del \texttt{BakeReport} que produce el \texttt{BakeProfiler} (Figura~\ref{fig:builder-clases}), mientras que las reservas de memoria y los tiempos en tiempo de ejecución se miden con el \textit{Profiler} de Unity.
+\subsubsection{Coste de la construcción del volumen}
 
-% Las pruebas se ejecutan sobre un conjunto de escenarios de complejidad creciente, pensados para cubrir desde el caso trivial hasta entornos densos y representativos de un videojuego real.
-% La Tabla~\ref{tab:bench-escenarios} resume sus magnitudes principales.
+Como la construcción se ejecuta una sola vez en el editor y fuera del tiempo real (Sección~\ref{sec:discusion-global}), su coste no afecta a la experiencia de juego.
+Aun así, un \gls{bake} ágil mejora el flujo de trabajo del diseñador, que reconstruye el volumen cada vez que modifica el escenario.
+Este es el objetivo del requisito \textbf{RNF-02} (Anexo~\ref{anexo:rnf}).
 
-% \begin{table}[htp]
-%   \centering
-%   % TODO (TABLA): Rellenar con los escenarios de prueba reales y sus magnitudes.
-%   % Sustituir los \dots por los valores medidos (dimensiones del volumen, número
-%   % de nodos y de hojas ocupadas). Anadir o quitar filas segun los escenarios usados.
-%   \begin{tabular}{@{}l r r r@{}}
-%     \rowcolor{udcpink!25}
-%     \textbf{Escenario} & \textbf{Dimensiones} & \textbf{Nodos} & \textbf{Hojas ocupadas} \\
-%     \hline
-%     Vacío (referencia)  & \dots & \dots & \dots \\
-%     Pasillo             & \dots & \dots & \dots \\
-%     Ciudad              & \dots & \dots & \dots \\
-%     Bosque denso        & \dots & \dots & \dots \\
-%     \hline
-%   \end{tabular}
-%   \caption{Escenarios de prueba empleados en las mediciones de rendimiento.}
-%   \label{tab:bench-escenarios}
-% \end{table}
+La Figura~\ref{fig:bake-times} desglosa el tiempo de cada fase de la canalización de construcción (Figura~\ref{fig:build-pipeline}) para volúmenes de 8, 9 y 10 capas, y la Tabla~\ref{tab:bake-times} recoge los valores exactos.
+La rasterización de las hojas (\textit{Rasterize Leaves}) es la fase más costosa en todos los casos, seguida del guardado del archivo en disco (\textit{SaveAsset}). Entre ambas concentran alrededor del 70\,\% del tiempo total.
+El peso de la rasterización confirma el análisis de la Iteración~1: el muestreo del espacio mediante consultas físicas es el cuello de botella de la construcción, y justifica las optimizaciones de descarte temprano y la paralelización con el \textit{Job System} y Burst.
+El coste del guardado, por su parte, crece con el tamaño del volumen serializado y es el que más se acentúa al aumentar la resolución.
+El tiempo total crece de forma pronunciada con el número de capas, al pasar de 0,35 segundos con 8 capas a 7,1 segundos con 10.
+Cada capa adicional multiplica el coste entre cuatro y cinco veces, ya que añade un nivel de resolución que aumenta el número de hojas candidatas.
 
-% \subsubsection{Coste de la construcción del volumen}
+Las fases de enlazado se beneficiaron de la optimización introducida en la Iteración~5 (Sección~\ref{sec:iter-api-opt}).
+Al evitar reordenar las capas cuando no faltan nodos hermanos, las fases de construcción de capas superiores y de enlazado se aceleraron, lo que reduce el tiempo total del \gls{bake} en los escenarios más densos.
 
-% La primera métrica es el tiempo de construcción (\gls{bake}), que cuantifica el requisito \textbf{RNF-02}.
-% Conviene descomponerlo por fases para identificar dónde se concentra el coste, ya que la rasterización domina sobre el enlazado y la serialización.
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        ybar stacked,
+        width=0.92\textwidth, height=8cm,
+        bar width=26pt,
+        ymin=0,
+        ylabel={Tiempo (ms)},
+        xlabel={Número de capas del volumen},
+        symbolic x coords={8,9,10},
+        xtick=data,
+        enlarge x limits=0.4,
+        ymajorgrids, grid style={udcgray!25},
+        legend style={at={(0.5,-0.20)}, anchor=north, legend columns=3,
+                      draw=udcgray!50, font=\scriptsize, /tikz/every even column/.append style={column sep=6pt}},
+        legend cell align=left,
+        tick label style={font=\footnotesize},
+        label style={font=\footnotesize},
+      ]
+      \addplot[fill=ficblue!85, draw=ficblue!85!black] coordinates {(8,5) (9,17) (10,54)};
+      \addplot[fill=ficblue!50, draw=ficblue!60!black] coordinates {(8,9) (9,44) (10,181)};
+      \addplot[fill=ficblue!20, draw=ficblue!40!black] coordinates {(8,2) (9,8) (10,38)};
+      \addplot[fill=udcpink!85, draw=udcpink!85!black] coordinates {(8,145) (9,793) (10,2902)};
+      \addplot[fill=udcpink!45, draw=udcpink!55!black] coordinates {(8,6) (9,38) (10,160)};
+      \addplot[fill=udcgray!75, draw=udcgray!85!black] coordinates {(8,5) (9,33) (10,121)};
+      \addplot[fill=udcgray!50, draw=udcgray!65!black] coordinates {(8,56) (9,309) (10,1004)};
+      \addplot[fill=udcgray!28, draw=udcgray!45!black] coordinates {(8,14) (9,85) (10,297)};
+      \addplot[fill=black!55, draw=black!70] coordinates {(8,110) (9,419) (10,2305)};
+      \legend{RasterizeL1, Calculate L0 codes, Allocate L0, Rasterize Leaves,
+              BuildUpperLayers, LinkParentAndChildren, FillNeighborLinks, PopulateData, SaveAsset}
+    \end{axis}
+  \end{tikzpicture}
+  \caption[Desglose del tiempo de construcción del volumen por fase.]
+  {Desglose del tiempo de construcción del volumen (\gls{bake}) por fase y número de capas.
+  La altura de cada barra es el tiempo total y cada segmento, una fase de la canalización de la Figura~\ref{fig:build-pipeline}.
+  La rasterización de las hojas (\textit{Rasterize Leaves}) y el guardado del archivo (\textit{SaveAsset}) concentran la mayor parte del coste, que crece de forma acusada con la resolución.}
+  \label{fig:bake-times}
+\end{figure}
 
-% \begin{figure}[htp]
-%   \centering
-%   % TODO (GRÁFICA 1): Gráfica de barras apiladas.
-%   % Eje X: cada escenario de la Tabla~\ref{tab:bench-escenarios}.
-%   % Eje Y: tiempo de bake en milisegundos.
-%   % Cada barra se divide por fase (rasterización, capas superiores, enlazado de
-%   % vecinos, serializado), tomando los campos de BakeReport.Phases.
-%   % Objetivo: mostrar que la rasterización es la fase dominante.
-%   % \includegraphics[width=0.82\textwidth]{Images/bench-bake-phases.png}
-%   \fbox{\parbox[c][3.6cm][c]{0.82\textwidth}{\centering\itshape Marcador de posición: tiempo de \gls{bake} por escenario, desglosado por fase de la canalización.}}
-%   \caption[Tiempo de construcción del volumen desglosado por fase.]
-%   {Tiempo de construcción del volumen desglosado por fase, para cada escenario de prueba.}
-%   \label{fig:bench-bake-phases}
-% \end{figure}
+\begin{table}[htp]
+  \centering
+  \rowcolors{2}{white}{udcgray!25}
+  \begin{tabular}{l|r|r|r}
+  \rowcolor{udcpink!25}
+  \textbf{Fase} & \textbf{8 capas} & \textbf{9 capas} & \textbf{10 capas} \\\hline
+  RasterizeL1 & 5 & 17 & 54 \\
+  Calculate L0 codes & 9 & 44 & 181 \\
+  Allocate L0 & 2 & 8 & 38 \\
+  Rasterize Leaves & 145 & 793 & 2\,902 \\
+  BuildUpperLayers & 6 & 38 & 160 \\
+  LinkParentAndChildren & 5 & 33 & 121 \\
+  FillNeighborLinks & 56 & 309 & 1\,004 \\
+  PopulateData & 14 & 85 & 297 \\
+  SaveAsset & 110 & 419 & 2\,305 \\\hline
+  \textbf{Total} & \textbf{352} & \textbf{1\,746} & \textbf{7\,062} \\
+  \end{tabular}
+  \caption{Tiempos de construcción del volumen (ms) por fase y número de capas.}
+  \label{tab:bake-times}
+\end{table}
 
-% A continuación se evalúa la optimización de \textbf{descarte de hojas vacías} (Sección~\ref{sec:descarte-hojas}), la mejora más relevante de esta fase.
-% La comparativa contrasta el número de consultas físicas (\texttt{OverlapBox}) y el tiempo total de \gls{bake} con la pasada en dos fases frente a un muestreo exhaustivo \gls{voxel} a \gls{voxel}.
+\subsubsection{Consumo de memoria}
 
-% \begin{figure}[htp]
-%   \centering
-%   % TODO (GRÁFICA 2): Gráfica de barras agrupadas (dos series por escenario).
-%   % Serie A: "muestreo exhaustivo" (64 consultas por hoja).
-%   % Serie B: "con descarte de hojas vacías" (pasada gruesa + fina).
-%   % Mostrar DOS paneles o un eje secundario:
-%   %   (a) número total de consultas OverlapBox,
-%   %   (b) tiempo de bake en ms.
-%   % Resultado esperado: reducción cercana al factor 64 en el número de consultas
-%   % en la mayor parte del volumen (ver Sección~\ref{sec:descarte-hojas} y Figura~\ref{fig:empty-leaf}).
-%   % \includegraphics[width=0.82\textwidth]{Images/bench-empty-leaf.png}
-%   \fbox{\parbox[c][3.6cm][c]{0.82\textwidth}{\centering\itshape Marcador de posición: consultas físicas y tiempo de \gls{bake} con y sin descarte de hojas vacías.}}
-%   \caption[Impacto del descarte de hojas vacías en la construcción.]
-%   {Impacto del descarte de hojas vacías sobre el número de consultas físicas y el tiempo de construcción.}
-%   \label{fig:bench-empty-leaf}
-% \end{figure}
+El segundo requisito de eficiencia es el consumo de memoria del volumen (\textbf{RNF-01}, Anexo~\ref{anexo:rnf}).
+La Figura~\ref{fig:memoria} muestra la memoria estimada para los mismos tres volúmenes, calculada con el método descrito en la Iteración~4 (Sección~\ref{sec:memoria-estimada}).
+La Tabla~\ref{tab:memoria} acompaña estas cifras con el número de vóxeles representados y con el ahorro frente a una rejilla densa equivalente.
 
-% % TODO (OPCIONAL): Si se mide, anadir una comparativa del tiempo de bake en
-% % escenarios densos antes y despues de evitar reordenar las capas cuando no
-% % faltan nodos hermanos (la otra optimización de bake de la Iteración 5).
-% % Bastaria una tabla de dos columnas (antes / despues) por escenario denso.
+El volumen de 9 capas ocupa 17\,MB y el de 10 capas, 88\,MB.
+Estas cifras son moderadas para un sistema que representa el espacio libre de una escena completa, y son consecuencia de la representación compacta descrita en la Iteración~1, en la que cada hoja ocupa 8 bytes y cada nodo, 36.
 
-% \subsubsection{Consumo de memoria}
+El dato más relevante es el ahorro frente a una rejilla densa.
+Un árbol completo de la misma profundidad necesitaría $8^{(L-1)}$ hojas, casi todas vacías, lo que equivale a una rejilla uniforme de la misma resolución.
+La representación dispersa solo almacena las regiones con geometría, de modo que evita más del 96\,\% de los vóxeles en todos los casos y supera el 98\,\% en los volúmenes de 9 y 10 capas.
+Además, este ahorro aumenta con la resolución, porque al añadir detalle la proporción de espacio vacío sobre el total también crece.
+Esta propiedad es la que justifica el uso del \acrshort{svo} frente a una rejilla uniforme.
 
-% La segunda métrica es la huella de memoria del volumen, que cuantifica el requisito \textbf{RNF-01}.
-% El interés está en comparar el tamaño del \acrshort{svo} disperso con el de una rejilla densa equivalente que almacenase todos los \glspl{voxel} a la máxima resolución, lo que evidencia el ahorro que justifica la representación dispersa.
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        ybar,
+        width=0.8\textwidth, height=6.5cm,
+        bar width=34pt,
+        ymin=0, ymax=100,
+        ylabel={Memoria estimada (MB)},
+        xlabel={Número de capas del volumen},
+        symbolic x coords={8,9,10},
+        xtick=data,
+        enlarge x limits=0.4,
+        nodes near coords,
+        point meta=explicit symbolic,
+        every node near coord/.append style={font=\footnotesize},
+        ymajorgrids, grid style={udcgray!25},
+        tick label style={font=\footnotesize},
+        label style={font=\footnotesize},
+      ]
+      \addplot[fill=ficblue!70, draw=ficblue!85!black] coordinates {(8,3.7)[3,7] (9,17)[17] (10,88)[88]};
+    \end{axis}
+  \end{tikzpicture}
+  \caption[Memoria estimada del volumen según el número de capas.]
+  {Memoria estimada del volumen según el número de capas.
+  El crecimiento sigue al número de vóxeles representados, que la representación dispersa mantiene muy por debajo del de una rejilla densa (Tabla~\ref{tab:memoria}).}
+  \label{fig:memoria}
+\end{figure}
 
-% \begin{figure}[htp]
-%   \centering
-%   % TODO (GRÁFICA 3): Gráfica de barras (preferiblemente con eje Y logarítmico).
-%   % Eje X: cada escenario. Dos series por escenario:
-%   %   - "rejilla densa equivalente" (todos los vóxeles a máxima resolución),
-%   %   - "SVO disperso" (memoria real de la estructura).
-%   % Anotar encima de cada par el porcentaje de memoria ahorrada.
-%   % La fuente del dato del SVO es el cálculo de memoria estimada del panel de
-%   % estadísticas (Figura~\ref{fig:stats-panel}).
-%   % \includegraphics[width=0.82\textwidth]{Images/bench-memory.png}
-%   \fbox{\parbox[c][3.6cm][c]{0.82\textwidth}{\centering\itshape Marcador de posición: memoria del \acrshort{svo} disperso frente a la rejilla densa equivalente, por escenario.}}
-%   \caption[Consumo de memoria del \acrshort{svo} frente a una rejilla densa.]
-%   {Consumo de memoria del \acrshort{svo} disperso frente a una rejilla densa equivalente, con el porcentaje de ahorro por escenario.}
-%   \label{fig:bench-memory}
-% \end{figure}
+\begin{table}[htp]
+  \centering
+  \rowcolors{2}{white}{udcgray!25}
+  \begin{tabular}{c|r|r|r}
+  \rowcolor{udcpink!25}
+  \textbf{Capas} & \textbf{Vóxeles} & \textbf{Memoria} & \textbf{Ahorro} \\\hline
+  8 & 4\,635\,136 & 3,7\,MB & 96,55\,\% \\
+  9 & 20\,589\,568 & 17\,MB & 98,08\,\% \\
+  10 & 110\,623\,232 & 88\,MB & 98,71\,\% \\
+  \end{tabular}
+  \caption{Consumo de memoria del volumen y ahorro frente a un árbol denso equivalente.}
+  \label{tab:memoria}
+\end{table}
 
-% \subsubsection{Búsqueda y postprocesado de rutas}
+\subsubsection{Búsqueda y postprocesado de rutas}
 
-% En tiempo de ejecución, la métrica principal es el tiempo de cálculo de una ruta, que cuantifica el requisito \textbf{RNF-03}.
-% La búsqueda sobre un grafo de resolución heterogénea (Sección~\ref{sec:iter-pathfinding}) debería explorar muy pocos nodos en el espacio abierto y ramificarse solo cerca de los obstáculos.
+El cálculo de rutas debe resolver muchas peticiones sin degradar la tasa de fotogramas (\textbf{RNF-03}, Anexo~\ref{anexo:rnf}).
+Para medirlo se trazó de forma repetida la misma ruta larga, que cruza el edificio en diagonal, sobre el volumen de 8 capas.
+La Figura~\ref{fig:pathfinding-times} compara el tiempo de búsqueda de los dos modos de coste descritos en la Iteración~2 (distancia euclídea y conteo de nodos) para cuatro valores del peso de la heurística $W$.
 
-% \begin{figure}[htp]
-%   \centering
-%   % TODO (GRÁFICA 4): Gráfica de dispersión o de líneas.
-%   % Eje X: distancia euclídea entre origen y destino (o longitud de la ruta).
-%   % Eje Y: tiempo de cálculo de la ruta en milisegundos (o microsegundos).
-%   % Opcional: una segunda serie/panel con el NÚMERO DE NODOS EXPANDIDOS por A*,
-%   % para evidenciar el beneficio de la resolución heterogénea frente a una
-%   % rejilla uniforme (ver Figura~\ref{fig:astar-multinivel}).
-%   % Tomar varias muestras por escenario y trazar la tendencia.
-%   % \includegraphics[width=0.82\textwidth]{Images/bench-pathfinding-time.png}
-%   \fbox{\parbox[c][3.6cm][c]{0.82\textwidth}{\centering\itshape Marcador de posición: tiempo de cálculo de ruta y nodos expandidos frente a la longitud de la trayectoria.}}
-%   \caption[Tiempo de cálculo de ruta frente a la longitud de la trayectoria.]
-%   {Tiempo de cálculo de ruta y número de nodos expandidos en función de la longitud de la trayectoria.}
-%   \label{fig:bench-pathfinding-time}
-% \end{figure}
+Las dos curvas confirman el comportamiento esperado de la búsqueda voraz.
+Al aumentar $W$, la búsqueda explora menos nodos y termina antes, a costa de obtener rutas algo más largas.
+La diferencia entre ambos modos es mayor en la búsqueda admisible ($W = 1$), donde el conteo de nodos resuelve la ruta en aproximadamente la mitad de tiempo que la distancia euclídea.
+A medida que crece $W$, los dos modos convergen y sus tiempos pasan a ser similares.
+Con $W = 1$, la distancia euclídea tarda 65\,$\mu$s y el conteo de nodos, 33\,$\mu$s, mientras que con $W = 2{,}5$ ambos quedan en torno a 13\,$\mu$s.
 
-% El postprocesado se evalúa comparando la trayectoria en bruto que devuelve A* con la trayectoria final tras el atajo por línea de visión y el suavizado.
-% La Tabla~\ref{tab:bench-suavizado} recoge las métricas de calidad de la ruta.
+El postprocesado de la ruta opera sobre los pocos puntos que quedan tras la búsqueda, por lo que su coste es reducido y apenas varía con $W$.
 
-% \begin{table}[htp]
-%   \centering
-%   % TODO (TABLA): Rellenar con las métricas reales del postprocesado.
-%   % Comparar ruta en bruto frente a ruta suavizada en cada escenario:
-%   %   - longitud total de la ruta,
-%   %   - número de puntos de paso (waypoints),
-%   %   - (opcional) número de giros bruscos eliminados.
-%   \begin{tabular}{@{}l r r r r@{}}
-%     \rowcolor{udcpink!25}
-%     & \multicolumn{2}{c}{\textbf{Longitud}} & \multicolumn{2}{c}{\textbf{Puntos de paso}} \\
-%     \rowcolor{udcpink!25}
-%     \textbf{Escenario} & \textbf{Bruta} & \textbf{Suavizada} & \textbf{Bruta} & \textbf{Suavizada} \\
-%     \hline
-%     Pasillo      & \dots & \dots & \dots & \dots \\
-%     Ciudad       & \dots & \dots & \dots & \dots \\
-%     Bosque denso & \dots & \dots & \dots & \dots \\
-%     \hline
-%   \end{tabular}
-%   \caption{Efecto del postprocesado sobre la longitud y el número de puntos de paso de la ruta.}
-%   \label{tab:bench-suavizado}
-% \end{table}
+Incluso el caso más lento, de 65\,$\mu$s, se mantiene muy por debajo del presupuesto de un fotograma a 60\,FPS (16,6\,ms).
+Además, como se describió en la Iteración~4~\ref{sec:iter-integracion}, las peticiones se resuelven en hilos secundarios sin bloquear el hilo principal (\textbf{RNF-04}).
+La reutilización de \textit{buffers} de la Iteración~5~\ref{sec:iter-api-opt} contribuye a este objetivo, ya que antes de aplicarla cada petición reservaba memoria en el \gls{heap} y presionaba al recolector de basura, mientras que tras reutilizar las colecciones internas la búsqueda en régimen estable no genera reservas apreciables.
 
-% Por último, se cuantifica el efecto de las optimizaciones de bajo nivel de la Iteración~5 (reutilización de \textit{buffers}, acceso por referencia de solo lectura y comparación sin \textit{boxing}).
-% La métrica más ilustrativa es la memoria reservada en el \gls{heap} por petición de ruta, que estas mejoras buscan reducir a prácticamente cero para no provocar pausas del recolector de basura.
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        width=0.85\textwidth, height=6.5cm,
+        xlabel={Peso de la heurística $W$},
+        ylabel={Tiempo de búsqueda ($\mu$s)},
+        xtick={1,1.5,2,2.5},
+        xticklabel style={/pgf/number format/.cd, use comma, fixed},
+        ymin=0,
+        enlarge x limits=0.12,
+        ymajorgrids, grid style={udcgray!25},
+        legend style={at={(0.97,0.97)}, anchor=north east, draw=udcgray!50, font=\scriptsize},
+        legend cell align=left,
+        tick label style={font=\footnotesize},
+        label style={font=\footnotesize},
+        every axis plot/.append style={thick, mark=*, mark size=2pt},
+      ]
+      \addplot[color=udcpink, mark options={fill=udcpink}] coordinates {(1,65) (1.5,22) (2,17) (2.5,13)};
+      \addplot[color=ficblue, mark options={fill=ficblue}] coordinates {(1,33) (1.5,25) (2,16) (2.5,14)};
+      \legend{Distancia euclídea, Conteo de nodos}
+    \end{axis}
+  \end{tikzpicture}
+  \caption[Tiempo de búsqueda según el modo de coste y el peso de la heurística.]
+  {Tiempo de búsqueda según el modo de coste y el peso de la heurística $W$, sobre el volumen de 8 capas.
+  Un peso mayor hace la búsqueda más voraz, que explora menos nodos y termina antes.
+  La diferencia entre ambos modos se reduce a medida que aumenta el peso.}
+  \label{fig:pathfinding-times}
+\end{figure}
 
-% \begin{figure}[htp]
-%   \centering
-%   % TODO (GRÁFICA 5): Gráfica de barras (dos barras).
-%   % Eje Y: memoria reservada (bytes/KB) por petición de ruta, medida con el
-%   % Profiler de Unity (GC Alloc).
-%   % Barra A: "antes" de las optimizaciones de la Iteración 5.
-%   % Barra B: "después" (con reutilización de buffers, ref readonly y sin boxing).
-%   % Resultado esperado: caída drástica de las reservas, idealmente cercana a 0.
-%   % Opcional: anadir el tiempo medio por petición como segunda métrica.
-%   % \includegraphics[width=0.7\textwidth]{Images/bench-pathfinding-alloc.png}
-%   \fbox{\parbox[c][3.6cm][c]{0.7\textwidth}{\centering\itshape Marcador de posición: memoria reservada por petición de ruta, antes y después de las optimizaciones de bajo nivel.}}
-%   \caption[Reservas de memoria por petición de ruta antes y después de optimizar.]
-%   {Memoria reservada en el \gls{heap} por petición de ruta, antes y después de las optimizaciones de bajo nivel.}
-%   \label{fig:bench-pathfinding-alloc}
-% \end{figure}
+\subsubsection{Escalabilidad de la evasión local}
 
-% \subsubsection{Escalabilidad de la evasión local}
+La última área evaluada es la evasión local entre agentes (Iteración~6~\ref{sec:iter-evasion}).
+Como este cálculo se ejecuta para cada agente en cada fotograma, su coste influye de forma directa en la tasa de fotogramas (\textbf{RNF-03}).
+La Figura~\ref{fig:evasion-fps} compara los fotogramas por segundo de la misma escena con la evasión local desactivada y activada, para grupos de 5, 10, 15 y 20 agentes que se desplazan a la vez.
 
-% La evasión local se ejecuta para cada agente en cada fotograma, por lo que su métrica clave es cómo escala el coste con el número de agentes simultáneos.
-% Interesa contrastar la versión paralelizada con el \textit{Job System} y Burst frente a una ejecución secuencial de referencia, para evidenciar el beneficio de la paralelización.
+Sin evasión, los agentes solo siguen su ruta y la tasa de fotogramas apenas desciende al aumentar su número.
+Al activar la evasión aparece un coste adicional que crece con el número de agentes, pero que se mantiene contenido.
+Con 20 agentes, la tasa baja de 396 a 370\,FPS.
+En tiempo por fotograma, la evasión de esos 20 agentes añade unos 0,18\,ms, es decir, menos de 10 microsegundos por agente.
 
-% \begin{figure}[htp]
-%   \centering
-%   % TODO (GRÁFICA 6): Gráfica de líneas.
-%   % Eje X: número de agentes simultáneos (p. ej. 10, 50, 100, 250, 500, 1000).
-%   % Eje Y: tiempo de simulación de la evasión por fotograma en milisegundos
-%   %        (o, alternativamente, la tasa de FPS).
-%   % Dos series:
-%   %   - "secuencial" (un solo hilo, referencia),
-%   %   - "Job System + Burst" (paralelizado).
-%   % Resultado esperado: la serie paralelizada escala mucho mejor.
-%   % Opcional: marcar la línea de presupuesto de 16,6 ms (60 FPS).
-%   % \includegraphics[width=0.82\textwidth]{Images/bench-avoidance-scaling.png}
-%   \fbox{\parbox[c][3.6cm][c]{0.82\textwidth}{\centering\itshape Marcador de posición: coste por fotograma de la evasión local frente al número de agentes, secuencial vs paralelizado.}}
-%   \caption[Escalabilidad de la evasión local con el número de agentes.]
-%   {Coste por fotograma de la evasión local en función del número de agentes, comparando la ejecución secuencial con la paralelizada mediante el \textit{Job System} y Burst.}
-%   \label{fig:bench-avoidance-scaling}
-% \end{figure}
+Este coste reducido es consecuencia de las decisiones de la Iteración~6.
+El \textit{hash} espacial evita comparar cada agente con todos los demás, el cálculo se ejecuta en paralelo con el \textit{Job System} y Burst, y el uso de \texttt{stackalloc} y \texttt{Span\textless T\textgreater} elimina las reservas en el \gls{heap}.
+Gracias a la ejecución asíncrona de los \textit{jobs} (\textbf{RNF-04}), la simulación se solapa con el renderizado y su impacto real es todavía menor que el que sugieren las cifras absolutas.
+En todos los casos medidos, la tasa permanece muy por encima del umbral del tiempo real.
 
-% Además, conviene confirmar que el uso de \texttt{stackalloc} y \texttt{Span\textless T\textgreater} en el solucionador de ORCA cumple su objetivo de no reservar memoria en el \gls{heap}.
-% Esto se verifica observando en el \textit{Profiler} que la simulación de evasión no genera reservas (\textit{GC Alloc} igual a cero) durante la ejecución, con independencia del número de agentes.
+\begin{figure}[htp]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        ybar,
+        width=0.85\textwidth, height=6.5cm,
+        bar width=13pt,
+        ymin=0,
+        ylabel={Fotogramas por segundo (FPS)},
+        xlabel={Número de agentes},
+        symbolic x coords={5,10,15,20},
+        xtick=data,
+        enlarge x limits=0.22,
+        nodes near coords,
+        every node near coord/.append style={font=\tiny,
+          /pgf/number format/.cd, fixed, precision=0},
+        ymajorgrids, grid style={udcgray!25},
+        legend style={at={(0.5,-0.20)}, anchor=north, legend columns=2,
+                      draw=udcgray!50, font=\scriptsize},
+        legend cell align=left,
+        tick label style={font=\footnotesize},
+        label style={font=\footnotesize},
+      ]
+      \addplot[fill=udcgray!45, draw=udcgray!70!black] coordinates {(5,410) (10,407) (15,400) (20,396)};
+      \addplot[fill=udcpink!70, draw=udcpink!80!black] coordinates {(5,401) (10,397) (15,387) (20,370)};
+      \legend{Sin evasión local, Con evasión local}
+    \end{axis}
+  \end{tikzpicture}
+  \caption[Tasa de fotogramas con y sin evasión local según el número de agentes.]
+  {Tasa de fotogramas con y sin evasión local según el número de agentes.
+  El coste de la evasión crece de forma suave con el número de agentes y la tasa se mantiene muy por encima del umbral del tiempo real en todos los casos.}
+  \label{fig:evasion-fps}
+\end{figure}
 
-% \subsubsection{Síntesis de resultados}
-
-% % TODO (TEXTO): Redactar las conclusiones una vez se disponga de los datos reales.
-% % Resumir, requisito a requisito, en qué medida se cumplen los objetivos de
-% % rendimiento (RNF-01 memoria, RNF-02 construcción, RNF-03 cálculo de rutas)
-% % y destacar la optimización con mayor impacto observado.
-% En conjunto, las mediciones anteriores permiten valorar de forma cuantitativa el cumplimiento de los requisitos no funcionales de rendimiento y memoria, así como aislar la contribución individual de cada optimización al comportamiento global del sistema.
-
+En conjunto, las mediciones confirman que el sistema cumple los requisitos de eficiencia que guiaron el desarrollo.
+El volumen se representa de forma compacta (\textbf{RNF-01}), su construcción se completa en un tiempo razonable incluso en el escenario más desfavorable (\textbf{RNF-02}) y tanto el cálculo de rutas como la evasión local se resuelven sin comprometer la tasa de fotogramas (\textbf{RNF-03}).
