@@ -64,12 +64,62 @@ No obstante, en muchos sistemas que demandan procesamiento masivo de datos, las 
 Para combatir esta limitación, Unity ha desarrollado el ecosistema \acrfull{dots}~\cite{unity_dots}.
 Este paradigma, basado en el \acrfull{dod}, busca maximizar el rendimiento estructurando los datos en memoria de forma que la \acrfull{cpu} pueda procesar la información de manera óptima aprovechando la arquitectura del hardware (ilustrado en la Figura~\ref{fig:oop_vs_dod}).
 
+% Colores de las líneas (se reutilizan ficblue y udcpink del estilo del documento)
+\definecolor{lineBlue}{RGB}{0,114,189}
+\definecolor{lineOrange}{RGB}{217,83,25}
+\definecolor{lineGreen}{RGB}{34,139,34}
+\definecolor{linePurple}{RGB}{126,47,142}
+
 \begin{figure}[htp]
   \centering
-  \includegraphics[width=0.75\textwidth]{imaxes/dodvsoop.png}
-  \caption[Comparativa de \acrshort{poo} y \acrshort{dod}.]
-  {Comparativa de \acrshort{poo} y \acrshort{dod}.
-  Imagen extraída de~\cite{albano_dod}.}
+  \begin{tikzpicture}
+    \begin{axis}[
+        width=0.9\textwidth,
+        height=0.52\textwidth,
+        xmode=log,
+        log basis x=10,
+        xminorticks=false,
+        xtick={1000,10000,100000,1000000,10000000},
+        xticklabels={$10^{3}$,$10^{4}$,$10^{5}$,$10^{6}$,$10^{7}$},
+        xlabel={Tamaño},
+        ylabel={Tiempo de ejecución (ms)},
+        ymin=0, ymax=25,
+        ytick={0,5,10,15,20,25},
+        grid=major,
+        major grid style={draw=gray!30},
+        tick align=outside,
+        every axis plot/.append style={line width=1pt, mark size=2.5pt},
+        legend columns=2,
+        legend cell align={left},
+        legend style={
+          at={(0.5,-0.20)}, anchor=north,
+          font=\footnotesize, draw=gray!50,
+          /tikz/every even column/.append style={column sep=14pt},
+        },
+        font=\small,
+      ]
+
+      % DOD: línea continua y marcador relleno // POO (OOP): línea discontinua y marcador hueco
+      \addplot[lineGreen,   solid,  mark=*]                              coordinates {(1000,6.50) (10000,3.00) (100000,3.00) (1000000,3.20) (10000000,3.00)};
+      \addlegendentry{Intel Core i5-6267U DOD}
+      \addplot[lineGreen, dashed, mark=o,        mark options={solid}] coordinates {(1000,3.50) (10000,5.00) (100000,16.50) (1000000,16.00) (10000000,13.00)};
+      \addlegendentry{Intel Core i5-6267U OOP}
+
+      \addplot[udcpink,  solid,  mark=square*]                        coordinates {(1000,4.50) (10000,4.00) (100000,2.50) (1000000,2.50) (10000000,2.50)};
+      \addlegendentry{Intel Core i7 7700HQ DOD}
+      \addplot[udcpink,    dashed, mark=square,   mark options={solid}] coordinates {(1000,12.00) (10000,14.50) (100000,12.00) (1000000,5.00) (10000000,5.50)};
+      \addlegendentry{Intel Core i7 7700HQ OOP}
+
+      \addplot[lineBlue, solid,  mark=triangle*]                      coordinates {(1000,2.50) (10000,2.00) (100000,2.00) (1000000,2.00) (10000000,2.00)};
+      \addlegendentry{Intel Core i7 8700K DOD}
+      \addplot[lineBlue,    dashed, mark=triangle, mark options={solid}] coordinates {(1000,20.00) (10000,3.00) (100000,23.50) (1000000,15.50) (10000000,15.50)};
+      \addlegendentry{Intel Core i7 8700K OOP}
+
+    \end{axis}
+  \end{tikzpicture}
+  \caption[Rendimiento de \acrshort{poo} frente a \acrshort{dod}.]
+  {Tiempo de ejecución de las implementaciones basadas en \acrshort{dod} y en \acrshort{poo} para distintos tamaños del conjunto de datos, medido en tres procesadores Intel~\cite{albano_dod}.
+  Las líneas continuas corresponden al \acrshort{dod} y las discontinuas a la \acrshort{poo}.}
   \label{fig:oop_vs_dod}
 \end{figure}
 

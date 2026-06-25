@@ -37,7 +37,7 @@ La estructura resultante se divide en tres bloques, ilustrados en la Figura~\ref
     \item \textbf{Tests:} Agrupa las pruebas automatizadas, divididas en modo de edición (\textit{EditMode}) y de ejecución (\textit{PlayMode}).
 \end{itemize}
 
-Internamente, el módulo \textit{Runtime} se organiza en los siguientes espacios de nombres: \texttt{Core} (estructuras de datos fundamentales), \texttt{Builder} (construcción del volumen), \texttt{Pathfinding} (búsqueda y postprocesado) y \texttt{Unity} (componentes de conexión con el motor).
+El módulo \textit{Runtime} se organiza en los siguientes espacios de nombres: \texttt{Core} (estructuras de datos fundamentales), \texttt{Builder} (construcción del volumen), \texttt{Pathfinding} (búsqueda y postprocesado) y \texttt{Unity} (componentes de conexión con el motor).
 A medida que el sistema creció, esta estructura se amplió con nuevos módulos como \texttt{Avoidance} (evasión local), añadido en la última iteración.
 La arquitectura definitiva se detalla en la discusión final (Figura~\ref{fig:arquitectura-final}).
 
@@ -907,37 +907,38 @@ La Figura~\ref{fig:pathfinding-clases} resume las clases principales del espacio
       \nodepart{two}\ttfamily Start, Goal : Vector3\\ HeuristicWeight : float\\ MaxNodesBudget : int\\ CostMode
     };
 
-    % Separados uniformemente de 8 en 8 unidades
-    \node[clase] (pf) at (8.0,0) {
+    % Separados uniformemente de 6.5 en 6.5 unidades (antes 8) para estrechar la fila
+    \node[clase] (pf) at (5.5,0) {
       {\itshape class}\\[-1pt]\textbf{SVOPathfinder}
       \nodepart{two}\ttfamily \_openList : MinHeap\\ \_nodes : Dictionary\\ \_expandBuffer : List
       \nodepart{three}\ttfamily FindPath(ctx, req, ct)\\ \quad{} : PathResult
     };
 
-    \node[caja] (sm) at (16.0,0) {
+    \node[caja] (sm) at (11.5,0) {
       {\itshape static}\\[-1pt]\textbf{PathSmoother}
       \nodepart{two}\ttfamily GreedyShortcut(p, ctx)\\ CatmullRomSpline(pts)
     };
 
-    \node[datos] (res) at (24.0,0) {
+    \node[datos] (res) at (17.8,0) {
       {\itshape struct}\\[-1pt]\textbf{PathResult}
       \nodepart{two}\ttfamily Status\\ Waypoints : List\\ RawWaypoints : List\\ Stats : PathStats\\ Succeeded : bool
     };
 
     % --- Auxiliares del buscador y del suavizado ---
-    % Reubicados para mantener distancia simétrica y alinear las flechas
-    \node[caja] (heap) at (6.5,-4.7) {
+    % La fila inferior se desplaza 1.5 a la izquierda con la nueva separacion.
+    % Se mantiene la distancia simetrica (4.75) y la alineacion de las flechas
+    \node[caja] (heap) at (5.0,-4.7) {
       {\itshape class}\\[-1pt]\textbf{MinHeap}
       \nodepart{two}\ttfamily Push(item, prio)\\ Pop() : T\\ IsEmpty : bool\\ Clear()
     };
 
-    \node[caja] (heur) at (11.25,-4.7) {
+    \node[caja] (heur) at (9.75,-4.7) {
       {\itshape static}\\[-1pt]\textbf{SVOHeuristic}
       \nodepart{two}\ttfamily UnitCost()\\ EuclideanCost(a, b)\\ ScaledDistance(c, g, s)
     };
 
-    % Mantenido perfectamente alineado bajo PathSmoother (16.0)
-    \node[caja] (rc) at (16.0,-4.7) {
+    % Queda algo a la derecha de PathSmoother, la flecha LOS baja casi recta
+    \node[caja] (rc) at (14.5,-4.7) {
       {\itshape static}\\[-1pt]\textbf{SVORaycast}
       \nodepart{two}\ttfamily HasLineOfSight(ctx,\\ \quad{} a, b) : bool
     };
