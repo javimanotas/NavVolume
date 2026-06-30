@@ -778,18 +778,27 @@
       \centering
       \begin{tikzpicture}
         \begin{axis}[
-            ybar stacked, width=\textwidth, height=4.6cm, bar width=18pt,
+            ybar stacked, width=\textwidth, height=4.0cm, bar width=18pt,
             ymin=0, ylabel={Tiempo (ms)}, xlabel={Capas del volumen},
             symbolic x coords={8,9,10}, xtick=data, enlarge x limits=0.4,
             ymajorgrids, grid style={udcgray!25},
             tick label style={font=\tiny}, label style={font=\scriptsize},
-            legend style={at={(0.04,0.96)}, anchor=north west, draw=udcgray!50, font=\tiny},
+            legend style={draw=udcgray!50, font=\tiny, /tikz/every even column/.append style={column sep=6pt}},
+            legend columns=3,
             legend cell align=left,
+            legend to name=bakeLegend,
           ]
+          \addplot[fill=ficblue!85, draw=ficblue!85!black] coordinates {(8,5) (9,17) (10,54)};
+          \addplot[fill=ficblue!50, draw=ficblue!60!black] coordinates {(8,9) (9,44) (10,181)};
+          \addplot[fill=ficblue!20, draw=ficblue!40!black] coordinates {(8,2) (9,8) (10,38)};
           \addplot[fill=udcpink!85, draw=udcpink!85!black] coordinates {(8,145) (9,793) (10,2902)};
+          \addplot[fill=udcpink!45, draw=udcpink!55!black] coordinates {(8,6) (9,38) (10,160)};
+          \addplot[fill=udcgray!75, draw=udcgray!85!black] coordinates {(8,5) (9,33) (10,121)};
+          \addplot[fill=udcgray!50, draw=udcgray!65!black] coordinates {(8,56) (9,309) (10,1004)};
+          \addplot[fill=udcgray!28, draw=udcgray!45!black] coordinates {(8,14) (9,85) (10,297)};
           \addplot[fill=black!55, draw=black!70] coordinates {(8,110) (9,419) (10,2305)};
-          \addplot[fill=udcgray!50, draw=udcgray!65!black] coordinates {(8,97) (9,534) (10,1855)};
-          \legend{Rasterización, Guardado en disco, Construcción SVO}
+          \legend{RasterizeL1, Calculate L0 codes, Allocate L0, Rasterize Leaves,
+                  BuildUpperLayers, LinkParentAndChildren, FillNeighborLinks, PopulateData, SaveAsset}
         \end{axis}
       \end{tikzpicture}\\[-0.2em]
       {\scriptsize Tiempo de \textit{bake}: 0,35\,s (8) a 7,1\,s (10 capas).}
@@ -798,7 +807,7 @@
       \centering
       \begin{tikzpicture}
         \begin{axis}[
-            ybar, width=\textwidth, height=4.6cm, bar width=22pt,
+            ybar, width=\textwidth, height=4.0cm, bar width=22pt,
             ymin=0, ymax=100, ylabel={Memoria (MB)}, xlabel={Capas del volumen},
             symbolic x coords={8,9,10}, xtick=data, enlarge x limits=0.4,
             nodes near coords, point meta=explicit symbolic,
@@ -812,7 +821,11 @@
       {\scriptsize Ahorro frente a una rejilla densa: \textbf{>96\,\%} (8) y \textbf{>98\,\%} (9--10 capas).}
     \end{column}
   \end{columns}
-  \vspace{0.3em}
+  \vspace{-0.6em}
+  \begin{center}
+    \ref{bakeLegend}
+  \end{center}
+  \vspace{-0.2em}
   \centering La rasterización de hojas y el guardado en disco concentran $\sim$70\,\% del coste de construcción.
 \end{frame}
 
