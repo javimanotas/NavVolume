@@ -186,8 +186,9 @@
 
 \begin{frame}{Introducción: la navegación autónoma}
   \begin{columns}[T]
-    \begin{column}{0.56\textwidth}
+    \begin{column}{0.58\textwidth}
       \begin{itemize}
+        \setlength{\itemsep}{1.2em}
         \item Dotar a los personajes no jugables de inteligencia.
         \item Soluciones basadas sobre la biblioteca Recast.
         \item Malla de navegación \alert{2.5D}.
@@ -205,6 +206,7 @@
   \begin{columns}[T]
     \begin{column}{0.58\textwidth}
       \begin{itemize}
+        \setlength{\itemsep}{1.2em}
         \item Seis grados de libertad.
         \item Volumen de navegación.
         \item Sin soporte oficial.
@@ -274,14 +276,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Metodología y planificación}
 
-\begin{frame}{Metodología de desarrollo}
+\begin{frame}{Metodología y planificación: Metodología de desarrollo}
   \begin{columns}[T]
     \begin{column}{0.55\textwidth}
       \begin{itemize}
-        \item Metodología \alert{iterativa e incremental}: el sistema avanza por incrementos funcionales en lugar de un bloque monolítico.
-        \item Cada iteración recorre cuatro fases: \textbf{análisis}, \textbf{diseño}, \textbf{implementación} y \textbf{validación}.
-        \item Punto de partida: un \textbf{producto mínimo viable} centrado en la viabilidad técnica.
-        \item Código separado en módulos mediante \textit{assemblies} y validación automática con integración continua desde el primer día.
+        \setlength{\itemsep}{1.2em}
+        \item Metodología \alert{iterativa e incremental}.
+        \item Producto mínimo viable.
       \end{itemize}
     \end{column}
     \begin{column}{0.45\textwidth}
@@ -300,7 +301,7 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Planificación inicial}
+\begin{frame}{Metodología y planificación: Planificación inicial}
   \centering
   \vspace{-0.5em}
   \resizebox{0.8\textwidth}{!}{%
@@ -352,7 +353,7 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Seguimiento}
+\begin{frame}{Metodología y planificación: Seguimiento}
   \centering
   \vspace{-0.5em}
   \resizebox{0.8\textwidth}{!}{%
@@ -412,7 +413,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Desarrollo}
 
-\begin{frame}{Iteración 0: arquitectura e integración continua}
+\begin{frame}{Desarrollo: Iteración 0, arquitectura e integración continua}
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
       \footnotesize
@@ -471,7 +472,7 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Iteración 1: estructura de datos volumétrica (SVO)}
+\begin{frame}{Desarrollo: Iteración 1, estructura de datos volumétrica (SVO)}
   \begin{columns}[T]
     \begin{column}{0.56\textwidth}
       \footnotesize
@@ -574,7 +575,7 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Iteración 2: búsqueda A* y postprocesado}
+\begin{frame}{Desarrollo: Iteración 2, búsqueda A* y postprocesado}
   \begin{columns}[T]
     \begin{column}{0.54\textwidth}
       \footnotesize
@@ -622,7 +623,7 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Iteración 3: robustez geométrica y radio del agente}
+\begin{frame}{Desarrollo: Iteración 3, robustez geométrica y radio del agente}
   \begin{columns}[T]
     \begin{column}{0.52\textwidth}
       \footnotesize
@@ -661,7 +662,7 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Iteración 4: integración en Unity}
+\begin{frame}{Desarrollo: Iteración 4, integración en Unity}
   \begin{columns}[T]
     \begin{column}{0.54\textwidth}
       \footnotesize
@@ -680,7 +681,7 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Iteración 5: optimización}
+\begin{frame}{Desarrollo: Iteración 5, optimización}
   \begin{itemize}
     \item Reutilización de \textit{buffers} entre peticiones.
     \item Comprobación de cancelación amortizada.
@@ -689,8 +690,9 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Iteración 6: evasión local (ORCA)}
+\begin{frame}{Desarrollo: Iteración 6, evasión local}
   \begin{itemize}
+    \item ORCA
     \item Evita colisiones entre agentes mediante reciprocidad sobre el espacio de velocidades.
     \item \texttt{stackalloc} + \texttt{Span<T>}: cero presión sobre el recolector de basura.
     \item \textit{Hash} espacial y \textit{jobs} asíncronos (Burst).
@@ -714,7 +716,7 @@
   \end{center}
 \end{frame}
 
-\begin{frame}{Visión global del sistema}
+\begin{frame}{Desarrollo: Visión global del sistema}
   El sistema final es un \textit{pipeline} con dos fases bien diferenciadas:
   \vspace{0.4em}
   \begin{center}
@@ -755,7 +757,7 @@
   El \textbf{preprocesado} asume a propósito el mayor coste (se ejecuta una vez en el editor). La \textbf{ejecución} prioriza el rendimiento con estructuras compactas y paralelización.
 \end{frame}
 
-\begin{frame}{Arquitectura modular}
+\begin{frame}{Desarrollo: Arquitectura modular}
   \begin{columns}[T]
     \begin{column}{0.46\textwidth}
       \footnotesize
@@ -818,7 +820,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Resultados}
 
-\begin{frame}{Rendimiento: construcción y memoria del volumen}
+\begin{frame}{Resultados: rendimiento en la construcción y memoria del volumen}
   \footnotesize
   Escenario más desfavorable (interior de un edificio de varias plantas), media de 30 ejecuciones en un Intel Core i7-12700H.
   \vspace{0.2em}
@@ -877,7 +879,7 @@
   \centering La rasterización de hojas y el guardado en disco concentran $\sim$70\,\% del coste de construcción.
 \end{frame}
 
-\begin{frame}{Rendimiento: búsqueda de rutas y evasión}
+\begin{frame}{Resultados: rendimiento en la búsqueda de rutas y evasión}
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
       \centering
@@ -930,12 +932,21 @@
   \centering\footnotesize El sistema cumple los requisitos de eficiencia sin comprometer la tasa de fotogramas.
 \end{frame}
 
+\section{Demostración interactiva}
+\begin{frame}[plain]
+  \centering
+  \vfill
+  {\color{udcpink}\bfseries\Huge Demostración interactiva}\\[0.5em]
+  {\color{udcpink}\rule{0.7\textwidth}{0.5mm}}\\[1.2em]
+  {\Large Funcionamiento del sistema en tiempo real dentro de Unity.}
+  \vfill
+\end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 6. CONCLUSIONES Y TRABAJOS FUTUROS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusiones y trabajos futuros}
 
-\begin{frame}{Conclusiones}
+\begin{frame}{Conclusiones y trabajos futuros: Conclusiones}
   \begin{block}{Objetivo general alcanzado}
     No es un mero algoritmo de búsqueda, sino un \textbf{sistema completo}: de la geometría de la escena al movimiento final de un agente que esquiva obstáculos estáticos y a otros agentes.
   \end{block}
@@ -961,7 +972,7 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Trabajos futuros}
+\begin{frame}{Conclusiones y trabajos futuros: Trabajos futuros}
   \begin{itemize}
     \item \textbf{Construcción del volumen en la GPU} mediante \textit{compute shaders}: muy paralelizable, aunque de prioridad baja porque el \textit{bake} no es el cuello de botella.
     \item \textbf{Búsqueda y evasión con aprendizaje por refuerzo}: sustituir los enfoques reactivos y deterministas (A* + ORCA) por comportamientos más naturales y eficientes.
