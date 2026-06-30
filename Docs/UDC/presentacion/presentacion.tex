@@ -270,7 +270,47 @@
     \end{column}
     \begin{column}{0.42\textwidth}
       \centering
-      \includegraphics[width=\textwidth]{dodvsoop.png}\\[0.3em]
+      \definecolor{lineBlue}{RGB}{0,114,189}
+      \definecolor{lineGreen}{RGB}{34,139,34}
+      \begin{tikzpicture}
+        \begin{axis}[
+            width=1.05\textwidth,
+            height=4.6cm,
+            xmode=log,
+            log basis x=10,
+            xminorticks=false,
+            xtick={1000,10000,100000,1000000,10000000},
+            xticklabels={$10^{3}$,$10^{4}$,$10^{5}$,$10^{6}$,$10^{7}$},
+            xlabel={Tamaño},
+            ylabel={Tiempo (ms)},
+            ymin=0, ymax=25,
+            ytick={0,5,10,15,20,25},
+            ymajorgrids, grid style={udcgray!25},
+            tick align=outside,
+            every axis plot/.append style={thick, mark size=1.6pt},
+            legend columns=2,
+            legend cell align={left},
+            legend style={
+              at={(0.5,-0.35)}, anchor=north,
+              font=\tiny, draw=udcgray!50,
+              /tikz/every even column/.append style={column sep=4pt},
+            },
+            tick label style={font=\tiny}, label style={font=\scriptsize},
+          ]
+          \addplot[color=lineGreen,   solid,  mark=*]                              coordinates {(1000,6.50) (10000,3.00) (100000,3.00) (1000000,3.20) (10000000,3.00)};
+          \addlegendentry{i5-6267U DOD}
+          \addplot[color=lineGreen, dashed, mark=o,        mark options={solid}] coordinates {(1000,3.50) (10000,5.00) (100000,16.50) (1000000,16.00) (10000000,13.00)};
+          \addlegendentry{i5-6267U OOP}
+          \addplot[color=udcpink,  solid,  mark=square*]                        coordinates {(1000,4.50) (10000,4.00) (100000,2.50) (1000000,2.50) (10000000,2.50)};
+          \addlegendentry{i7-7700HQ DOD}
+          \addplot[color=udcpink,    dashed, mark=square,   mark options={solid}] coordinates {(1000,12.00) (10000,14.50) (100000,12.00) (1000000,5.00) (10000000,5.50)};
+          \addlegendentry{i7-7700HQ OOP}
+          \addplot[color=lineBlue, solid,  mark=triangle*]                      coordinates {(1000,2.50) (10000,2.00) (100000,2.00) (1000000,2.00) (10000000,2.00)};
+          \addlegendentry{i7-8700K DOD}
+          \addplot[color=lineBlue,    dashed, mark=triangle, mark options={solid}] coordinates {(1000,20.00) (10000,3.00) (100000,23.50) (1000000,15.50) (10000000,15.50)};
+          \addlegendentry{i7-8700K OOP}
+        \end{axis}
+      \end{tikzpicture}\\[1.5em]
       {\scriptsize\color{udcgray} El diseño orientado a datos aprovecha mejor la caché que la POO.}
     \end{column}
   \end{columns}
