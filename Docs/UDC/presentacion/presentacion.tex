@@ -783,10 +783,13 @@
             symbolic x coords={8,9,10}, xtick=data, enlarge x limits=0.4,
             ymajorgrids, grid style={udcgray!25},
             tick label style={font=\tiny}, label style={font=\scriptsize},
+            legend style={at={(0.04,0.96)}, anchor=north west, draw=udcgray!50, font=\tiny},
+            legend cell align=left,
           ]
           \addplot[fill=udcpink!85, draw=udcpink!85!black] coordinates {(8,145) (9,793) (10,2902)};
           \addplot[fill=black!55, draw=black!70] coordinates {(8,110) (9,419) (10,2305)};
           \addplot[fill=udcgray!50, draw=udcgray!65!black] coordinates {(8,97) (9,534) (10,1855)};
+          \legend{Rasterización, Guardado en disco, Construcción SVO}
         \end{axis}
       \end{tikzpicture}\\[-0.2em]
       {\scriptsize Tiempo de \textit{bake}: 0,35\,s (8) a 7,1\,s (10 capas).}
@@ -819,7 +822,7 @@
       \centering
       \begin{tikzpicture}
         \begin{axis}[
-            width=\textwidth, height=4.6cm,
+            width=\textwidth, height=4.2cm,
             xlabel={Peso de la heurística $W$}, ylabel={Tiempo ($\mu$s)},
             xtick={1,1.5,2,2.5},
             xticklabel style={/pgf/number format/.cd, use comma, fixed},
@@ -834,21 +837,21 @@
           \addplot[color=ficblue, mark options={fill=ficblue}] coordinates {(1,33) (1.5,25) (2,16) (2.5,14)};
           \legend{Dist. euclídea, Conteo de nodos}
         \end{axis}
-      \end{tikzpicture}\\[-0.2em]
+      \end{tikzpicture}\\[0.2em]
       {\scriptsize Una ruta larga: 65\,$\mu$s a 13\,$\mu$s, muy por debajo de los 16,6\,ms de un fotograma a 60\,FPS.}
     \end{column}
     \begin{column}{0.5\textwidth}
       \centering
       \begin{tikzpicture}
         \begin{axis}[
-            ybar, width=\textwidth, height=4.6cm, bar width=8pt,
+            ybar, width=\textwidth, height=4.2cm, bar width=8pt,
             ymin=0, ylabel={FPS}, xlabel={Número de agentes},
             symbolic x coords={5,10,15,20}, xtick=data, enlarge x limits=0.22,
             nodes near coords,
             every node near coord/.append style={font=\tiny,
               /pgf/number format/.cd, fixed, precision=0},
             ymajorgrids, grid style={udcgray!25},
-            legend style={at={(0.5,-0.28)}, anchor=north, legend columns=2,
+            legend style={at={(0.5,1.08)}, anchor=south, legend columns=2,
                           draw=udcgray!50, font=\tiny},
             legend cell align=left,
             tick label style={font=\tiny}, label style={font=\scriptsize},
@@ -857,7 +860,7 @@
           \addplot[fill=udcpink!70, draw=udcpink!80!black] coordinates {(5,401) (10,397) (15,387) (20,370)};
           \legend{Sin evasión, Con evasión}
         \end{axis}
-      \end{tikzpicture}\\[-0.2em]
+      \end{tikzpicture}\\[1.6em]
       {\scriptsize Con 20 agentes, la evasión añade $\sim$0,18\,ms (menos de 10\,$\mu$s por agente).}
     \end{column}
   \end{columns}
