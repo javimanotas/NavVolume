@@ -281,18 +281,9 @@
     \begin{column}{0.55\textwidth}
       \begin{itemize}
         \setlength{\itemsep}{1.6em}
-        \item \textbf{Representación del espacio con SVO}:
-        \begin{itemize}
-          \item Estructura jerárquica (octree disperso).
-          \item Divide el espacio recursivamente solo donde hay geometría o información.
-          \item Alta compresión de memoria y acceso eficiente.
-        \end{itemize}
-        \item \textbf{Búsqueda de caminos con A*}:
-        \begin{itemize}
-          \item Algoritmo heurístico para encontrar la ruta óptima.
-          \item Se adapta a la resolución heterogénea del SVO.
-          \item Permite avanzar grandes distancias en nodos vacíos con un solo salto.
-        \end{itemize}
+        \item Representación del espacio con SVO.
+        \item Búsqueda de caminos con A*.
+        \item \textit{Path planning}.
       \end{itemize}
     \end{column}
     \begin{column}{0.45\textwidth}
@@ -300,25 +291,28 @@
       \vspace{0.5em}
       \resizebox{0.8\textwidth}{!}{%
       \begin{tikzpicture}[font=\small]
-        % Rellenar celdas ocupadas
-        \fill[ocupado] (0,0) rectangle (2,2);
-        \fill[ocupado] (2,2) rectangle (3,3);
-        \fill[ocupado] (3.5,3.5) rectangle (4,4);
-        
         % Cuadrado principal (Nivel 0)
-        \draw[celda, thick] (0,0) rectangle (4,4);
+        \draw[very thick, draw=black!80] (0,0) rectangle (4,4);
         
         % Primera subdivisión (Nivel 1)
-        \draw[celda] (2,0) -- (2,4);
-        \draw[celda] (0,2) -- (4,2);
+        \draw[thick, draw=black!80] (2,0) -- (2,4);
+        \draw[thick, draw=black!80] (0,2) -- (4,2);
+        
+        % Subdivisión del cuadrante superior izquierdo (Nivel 2)
+        \draw[thick, draw=black!80] (1,2) -- (1,4);
+        \draw[thick, draw=black!80] (0,3) -- (2,3);
+        
+        % Subdivisión del cuadrante inferior derecho (Nivel 2)
+        \draw[thick, draw=black!80] (3,0) -- (3,2);
+        \draw[thick, draw=black!80] (2,1) -- (4,1);
         
         % Subdivisión del cuadrante superior derecho (Nivel 2)
-        \draw[celda] (3,2) -- (3,4);
-        \draw[celda] (2,3) -- (4,3);
+        \draw[thick, draw=black!80] (3,2) -- (3,4);
+        \draw[thick, draw=black!80] (2,3) -- (4,3);
         
         % Subdivisión de uno de los sub-cuadrantes (Nivel 3)
-        \draw[celda] (3.5,3) -- (3.5,4);
-        \draw[celda] (3,3.5) -- (4,3.5);
+        \draw[thick, draw=black!80] (3.5,3) -- (3.5,4);
+        \draw[thick, draw=black!80] (3,3.5) -- (4,3.5);
       \end{tikzpicture}}\\[0.5em]
       {\scriptsize\color{udcgray} Representación 2D de la subdivisión espacial.}
     \end{column}
@@ -411,6 +405,105 @@
 % 4. DESARROLLO
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Desarrollo}
+
+\begin{frame}{Desarrollo: Visión global del sistema}
+  El sistema final es un \textit{pipeline} con dos fases bien diferenciadas:
+  \vspace{0.4em}
+  \begin{center}
+  \resizebox{0.96\textwidth}{!}{%
+  \begin{tikzpicture}[font=\small, node distance=7mm and 9mm,
+      io/.style={align=center, font=\footnotesize\itshape, text=black!70},
+      contA/.style={rounded corners=5pt, draw=ficblue!70, very thick, fill=none, inner sep=8pt},
+      contB/.style={rounded corners=5pt, draw=udcpink!70, very thick, fill=none, inner sep=8pt}]
+    \node[io] (escena) {Escena};
+    \node[paso, right=of escena] (raster) {Rasterización};
+    \node[paso, right=of raster] (capas) {Construcción de\\capas superiores};
+    \node[paso, right=of capas] (enlace) {Enlazado\\de nodos};
+    \node[almacen, right=of enlace] (disco) {Volumen\\en disco};
+    \node[paso, below=16mm of raster] (carga) {Carga del\\volumen};
+    \node[paso, right=of carga] (astar) {Búsqueda A*};
+    \node[paso, right=of astar] (postp) {Post-\\procesado};
+    \node[paso, right=of postp] (evasion) {ORCA};
+    \node[io, right=of evasion] (movim) {Movimiento\\del agente};
+    \draw[flecha] (escena) -- (raster);
+    \draw[flecha] (raster) -- (capas);
+    \draw[flecha] (capas) -- (enlace);
+    \draw[flecha] (enlace) -- (disco);
+    \draw[flecha] (carga) -- (astar);
+    \draw[flecha] (astar) -- (postp);
+    \draw[flecha] (postp) -- (evasion);
+    \draw[flecha] (evasion) -- (movim);
+    \draw[flecha, rounded corners=3pt] (disco.south) -- ++(0,-5mm) -| (carga.north);
+    \node[contA, fit=(raster)(capas)(enlace)(disco)] (cajaA) {};
+    \node[contB, fit=(carga)(astar)(postp)(evasion)] (cajaB) {};
+    \node[font=\footnotesize\itshape, text=ficblue, anchor=south west]
+      at ([yshift=1.5mm]cajaA.north west) {Preprocesado (editor)};
+    \node[font=\footnotesize\itshape, text=udcpink!85!black, anchor=north west]
+      at ([yshift=-1.5mm]cajaB.south west) {Ejecución (tiempo real)};
+  \end{tikzpicture}}
+  \end{center}
+  \vspace{0.2em}
+  \footnotesize
+  El \textbf{preprocesado} asume a propósito el mayor coste (se ejecuta una vez en el editor). La \textbf{ejecución} prioriza el rendimiento con estructuras compactas y paralelización.
+\end{frame}
+
+\begin{frame}{Desarrollo: Arquitectura modular}
+  \begin{columns}[T]
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      \begin{itemize}
+        \item Tres bloques separados físicamente como \textit{assemblies}:
+        \begin{itemize}\footnotesize
+          \item \textbf{Runtime}: lógica de navegación (único en la versión final).
+          \item \textbf{Editor}: herramientas de configuración y visualización.
+          \item \textbf{Tests}: pruebas \textit{EditMode} y \textit{PlayMode}.
+        \end{itemize}
+        \item \textit{Editor} y \textit{Tests} dependen de \textit{Runtime}, nunca a la inversa.
+        \item \textit{Runtime} crece de forma controlada sobre una base común, \texttt{Core}.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.54\textwidth}
+      \centering
+      \resizebox{\textwidth}{!}{%
+      \begin{tikzpicture}[
+          font=\small,
+          nsbox/.style={rounded corners=3pt, draw=udcpink!60!black, fill=white, thick,
+                        align=center, text width=3.3cm, inner sep=5pt, minimum height=1.3cm,
+                        font=\footnotesize},
+          ancho/.style={text width=12.2cm},
+          usedep/.style={-{Stealth[length=2.6mm]}, semithick, draw=ficblue!75!black}]
+        \node[nsbox] (path) {\textbf{Pathfinding}\\[1pt]\scriptsize SVOPathfinder, PathSmoother,\\ SVORaycast (DDA), \textit{Api}};
+        \node[nsbox, left=9mm of path] (builder)
+          {\textbf{Builder}\\[1pt]\scriptsize SVOBuilder, SVORasterizer,\\ SVONeighborLinker,\\ \textit{Jobs}, \textit{Reporting}};
+        \node[nsbox, right=9mm of path] (avoid)
+          {\textbf{Avoidance}\\[1pt]\scriptsize AvoidanceSimulation,\\ \textit{Orca}, \textit{Spatial}};
+        \node[nsbox, ancho, below=10mm of path] (core)
+          {\textbf{Core}\\[1pt]\scriptsize MortonCode, SVO, SVONode, SVOLeaf, SVOLink, NeighborSet};
+        \node[nsbox, ancho, above=10mm of path] (unity)
+          {\textbf{Unity}\\[1pt]\scriptsize NavVolumeSpace, NavVolumeAgent, NavVolumeObstacle, \textit{Hashing}};
+        \draw[usedep] (builder.south) -- (builder.south |- core.north);
+        \draw[usedep] (path.south)    -- (path.south    |- core.north);
+        \draw[usedep] (avoid.south)   -- (avoid.south   |- core.north);
+        \draw[usedep] (path.west)     -- (builder.east);
+        \draw[usedep] (unity.south -| builder.north) -- (builder.north);
+        \draw[usedep] (unity.south -| path.north)    -- (path.north);
+        \draw[usedep] (unity.south -| avoid.north)   -- (avoid.north);
+        \begin{scope}[on background layer]
+          \node[contenedor, fit=(core)(builder)(path)(avoid)(unity),
+                label={[font=\bfseries]above:Runtime}] (runtime) {};
+        \end{scope}
+        \node[modulo, fill=ficblue!15, draw=ficblue,
+              above=14mm of runtime.north west, anchor=south west]
+          (editor) {\textbf{Editor}\\[2pt]\footnotesize Configuración\\y visualización};
+        \node[modulo, fill=udcgray!40, draw=udcgray!80!black,
+              above=14mm of runtime.north east, anchor=south east]
+          (tests) {\textbf{Tests}\\[2pt]\footnotesize Pruebas \textit{EditMode}\\y \textit{PlayMode}};
+        \draw[dep] (editor.south) -- (editor.south |- runtime.north);
+        \draw[dep] (tests.south)  -- (tests.south  |- runtime.north);
+      \end{tikzpicture}}
+    \end{column}
+  \end{columns}
+\end{frame}
 
 \begin{frame}{Desarrollo: Iteración 0, arquitectura e integración continua}
   \begin{columns}[T]
@@ -713,105 +806,6 @@
     \node[font=\tiny, anchor=west] at (1.12,1.66) {$v^{\mathrm{new}}$};
   \end{tikzpicture}
   \end{center}
-\end{frame}
-
-\begin{frame}{Desarrollo: Visión global del sistema}
-  El sistema final es un \textit{pipeline} con dos fases bien diferenciadas:
-  \vspace{0.4em}
-  \begin{center}
-  \resizebox{0.96\textwidth}{!}{%
-  \begin{tikzpicture}[font=\small, node distance=7mm and 9mm,
-      io/.style={align=center, font=\footnotesize\itshape, text=black!70},
-      contA/.style={rounded corners=5pt, draw=ficblue!70, very thick, fill=none, inner sep=8pt},
-      contB/.style={rounded corners=5pt, draw=udcpink!70, very thick, fill=none, inner sep=8pt}]
-    \node[io] (escena) {Escena};
-    \node[paso, right=of escena] (raster) {Rasterización};
-    \node[paso, right=of raster] (capas) {Construcción de\\capas superiores};
-    \node[paso, right=of capas] (enlace) {Enlazado\\de nodos};
-    \node[almacen, right=of enlace] (disco) {Volumen\\en disco};
-    \node[paso, below=16mm of raster] (carga) {Carga del\\volumen};
-    \node[paso, right=of carga] (astar) {Búsqueda A*};
-    \node[paso, right=of astar] (postp) {Post-\\procesado};
-    \node[paso, right=of postp] (evasion) {ORCA};
-    \node[io, right=of evasion] (movim) {Movimiento\\del agente};
-    \draw[flecha] (escena) -- (raster);
-    \draw[flecha] (raster) -- (capas);
-    \draw[flecha] (capas) -- (enlace);
-    \draw[flecha] (enlace) -- (disco);
-    \draw[flecha] (carga) -- (astar);
-    \draw[flecha] (astar) -- (postp);
-    \draw[flecha] (postp) -- (evasion);
-    \draw[flecha] (evasion) -- (movim);
-    \draw[flecha, rounded corners=3pt] (disco.south) -- ++(0,-5mm) -| (carga.north);
-    \node[contA, fit=(raster)(capas)(enlace)(disco)] (cajaA) {};
-    \node[contB, fit=(carga)(astar)(postp)(evasion)] (cajaB) {};
-    \node[font=\footnotesize\itshape, text=ficblue, anchor=south west]
-      at ([yshift=1.5mm]cajaA.north west) {Preprocesado (editor)};
-    \node[font=\footnotesize\itshape, text=udcpink!85!black, anchor=north west]
-      at ([yshift=-1.5mm]cajaB.south west) {Ejecución (tiempo real)};
-  \end{tikzpicture}}
-  \end{center}
-  \vspace{0.2em}
-  \footnotesize
-  El \textbf{preprocesado} asume a propósito el mayor coste (se ejecuta una vez en el editor). La \textbf{ejecución} prioriza el rendimiento con estructuras compactas y paralelización.
-\end{frame}
-
-\begin{frame}{Desarrollo: Arquitectura modular}
-  \begin{columns}[T]
-    \begin{column}{0.46\textwidth}
-      \footnotesize
-      \begin{itemize}
-        \item Tres bloques separados físicamente como \textit{assemblies}:
-        \begin{itemize}\footnotesize
-          \item \textbf{Runtime}: lógica de navegación (único en la versión final).
-          \item \textbf{Editor}: herramientas de configuración y visualización.
-          \item \textbf{Tests}: pruebas \textit{EditMode} y \textit{PlayMode}.
-        \end{itemize}
-        \item \textit{Editor} y \textit{Tests} dependen de \textit{Runtime}, nunca a la inversa.
-        \item \textit{Runtime} crece de forma controlada sobre una base común, \texttt{Core}.
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.54\textwidth}
-      \centering
-      \resizebox{\textwidth}{!}{%
-      \begin{tikzpicture}[
-          font=\small,
-          nsbox/.style={rounded corners=3pt, draw=udcpink!60!black, fill=white, thick,
-                        align=center, text width=3.3cm, inner sep=5pt, minimum height=1.3cm,
-                        font=\footnotesize},
-          ancho/.style={text width=12.2cm},
-          usedep/.style={-{Stealth[length=2.6mm]}, semithick, draw=ficblue!75!black}]
-        \node[nsbox] (path) {\textbf{Pathfinding}\\[1pt]\scriptsize SVOPathfinder, PathSmoother,\\ SVORaycast (DDA), \textit{Api}};
-        \node[nsbox, left=9mm of path] (builder)
-          {\textbf{Builder}\\[1pt]\scriptsize SVOBuilder, SVORasterizer,\\ SVONeighborLinker,\\ \textit{Jobs}, \textit{Reporting}};
-        \node[nsbox, right=9mm of path] (avoid)
-          {\textbf{Avoidance}\\[1pt]\scriptsize AvoidanceSimulation,\\ \textit{Orca}, \textit{Spatial}};
-        \node[nsbox, ancho, below=10mm of path] (core)
-          {\textbf{Core}\\[1pt]\scriptsize MortonCode, SVO, SVONode, SVOLeaf, SVOLink, NeighborSet};
-        \node[nsbox, ancho, above=10mm of path] (unity)
-          {\textbf{Unity}\\[1pt]\scriptsize NavVolumeSpace, NavVolumeAgent, NavVolumeObstacle, \textit{Hashing}};
-        \draw[usedep] (builder.south) -- (builder.south |- core.north);
-        \draw[usedep] (path.south)    -- (path.south    |- core.north);
-        \draw[usedep] (avoid.south)   -- (avoid.south   |- core.north);
-        \draw[usedep] (path.west)     -- (builder.east);
-        \draw[usedep] (unity.south -| builder.north) -- (builder.north);
-        \draw[usedep] (unity.south -| path.north)    -- (path.north);
-        \draw[usedep] (unity.south -| avoid.north)   -- (avoid.north);
-        \begin{scope}[on background layer]
-          \node[contenedor, fit=(core)(builder)(path)(avoid)(unity),
-                label={[font=\bfseries]above:Runtime}] (runtime) {};
-        \end{scope}
-        \node[modulo, fill=ficblue!15, draw=ficblue,
-              above=14mm of runtime.north west, anchor=south west]
-          (editor) {\textbf{Editor}\\[2pt]\footnotesize Configuración\\y visualización};
-        \node[modulo, fill=udcgray!40, draw=udcgray!80!black,
-              above=14mm of runtime.north east, anchor=south east]
-          (tests) {\textbf{Tests}\\[2pt]\footnotesize Pruebas \textit{EditMode}\\y \textit{PlayMode}};
-        \draw[dep] (editor.south) -- (editor.south |- runtime.north);
-        \draw[dep] (tests.south)  -- (tests.south  |- runtime.north);
-      \end{tikzpicture}}
-    \end{column}
-  \end{columns}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
