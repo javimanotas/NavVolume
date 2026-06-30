@@ -1,0 +1,823 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Presentación para la defensa del TFG                                         %
+% Diseño e implementación de un sistema de navegación volumétrica              %
+% para agentes voladores en videojuegos                                       %
+%                                                                              %
+% Reproduce el estilo de la memoria (plantilla TFG GEI FIC - UDC):            %
+% colores institucionales, tipografía Linux Libertine y sello.                %
+% Compilar igual que la memoria, con XeLaTeX (p. ej. desde WSL):              %
+%     latexmk -xelatex presentacion.tex                                        %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[aspectratio=169,11pt,xcolor=table]{beamer}
+% Para proyectores antiguos en formato 4:3, sustituir aspectratio=169 por 43.
+% La opción xcolor=table habilita \rowcolor en las tablas (como en la memoria).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Idioma y tipografía                  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{polyglossia}
+\setdefaultlanguage{spanish}
+\setotherlanguage{english}
+
+\usefonttheme{professionalfonts}
+\usepackage{libertine}      % misma familia tipográfica que la memoria
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{eurosym}        % comando \euro, igual que en la memoria
+\renewcommand{\familydefault}{\rmdefault}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Gráficos y diagramas                 %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{graphicx}
+\graphicspath{{imaxes/}{../memoria/imaxes/}}
+
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, fit, backgrounds, shapes.multipart,
+                shapes.geometric, calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Colores institucionales (de la memoria)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\definecolor{udcpink}{RGB}{177,0,114}
+\definecolor{udcgray}{RGB}{100,100,100}
+\definecolor{ficblue}{RGB}{50,110,118}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Estilos TikZ compartidos             %
+% (reproducen los de la memoria para reutilizar sus diagramas)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\tikzset{
+  >={Stealth[length=3mm]},
+  caja/.style={rounded corners=3pt, draw, thick, align=center, inner sep=6pt},
+  modulo/.style={caja, minimum width=3.4cm, minimum height=1.5cm},
+  contenedor/.style={rounded corners=4pt, draw=udcpink, thick, fill=udcpink!10, inner sep=10pt},
+  ns/.style={rounded corners=2pt, draw=udcpink!60!black, fill=white, align=center,
+             minimum width=2.1cm, minimum height=9mm, font=\footnotesize\ttfamily},
+  paso/.style={caja, fill=ficblue!12, draw=ficblue, minimum width=2.5cm, minimum height=0.95cm, font=\footnotesize},
+  almacen/.style={caja, fill=udcgray!25, draw=udcgray!85!black, minimum width=2.4cm, minimum height=0.95cm, font=\footnotesize},
+  dep/.style={dashed, ->, thick, draw=black!70},
+  flecha/.style={->, thick, draw=black!75},
+  celda/.style={draw=black!55, line width=0.4pt},
+  ocupado/.style={celda, fill=udcpink!75},
+  resaltado/.style={celda, fill=ficblue!30},
+  obstaculo/.style={draw=udcgray!85!black, fill=udcgray!45, thick},
+  agente/.style={draw=ficblue, very thick, fill=ficblue!25},
+  nodo/.style={circle, draw=black!70, thick, minimum size=5mm, inner sep=0pt, font=\scriptsize},
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Tema visual                          %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{navigation symbols}{}   % sin botones de navegación
+
+% Paleta del tema
+\setbeamercolor{structure}{fg=ficblue}
+\setbeamercolor{frametitle}{fg=udcpink, bg=white}
+\setbeamercolor{title}{fg=udcpink}
+\setbeamercolor{subtitle}{fg=udcgray!90!black}
+\setbeamercolor{section in toc}{fg=black}
+\setbeamercolor{item}{fg=ficblue}
+\setbeamercolor{block title}{fg=white, bg=ficblue}
+\setbeamercolor{block body}{fg=black, bg=ficblue!8}
+\setbeamercolor{block title alerted}{fg=white, bg=udcpink}
+\setbeamercolor{block body alerted}{fg=black, bg=udcpink!8}
+\setbeamercolor{alerted text}{fg=udcpink}
+
+\setbeamerfont{frametitle}{series=\bfseries, size=\large}
+\setbeamerfont{title}{series=\bfseries, size=\LARGE}
+\setbeamertemplate{itemize items}[circle]
+\setbeamertemplate{blocks}[rounded][shadow=false]
+
+% Título de diapositiva con la regla rosa característica de la memoria
+\setbeamertemplate{frametitle}{%
+  \nointerlineskip%
+  \vskip0.8ex%
+  \begin{beamercolorbox}[wd=\paperwidth, leftskip=0.9em, rightskip=0.9em, dp=0.6ex]{frametitle}%
+    \usebeamerfont{frametitle}\insertframetitle%
+    \ifx\insertframesubtitle\empty\else%
+      {\\[-0.2ex]\usebeamerfont{framesubtitle}\usebeamercolor[fg]{subtitle}\footnotesize\insertframesubtitle}%
+    \fi%
+  \end{beamercolorbox}%
+  {\color{udcpink}\hrule height 0.5mm}%
+  \vskip0.6ex%
+}
+
+% Pie de página sobrio con autor, título corto y número de diapositiva
+\setbeamercolor{pie}{fg=udcgray!90!black, bg=udcgray!12}
+\newcommand{\tituloCorto}{Navegación volumétrica para agentes voladores}
+\setbeamertemplate{footline}{%
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=.30\paperwidth, ht=2.6ex, dp=1.2ex, leftskip=1em]{pie}%
+      \footnotesize Javier Manotas Ruiz%
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.52\paperwidth, ht=2.6ex, dp=1.2ex, center]{pie}%
+      \footnotesize \tituloCorto%
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.18\paperwidth, ht=2.6ex, dp=1.2ex, rightskip=1em]{pie}%
+      \hfill{\footnotesize\color{udcpink}\insertframenumber\,/\,\inserttotalframenumber}%
+    \end{beamercolorbox}%
+  }%
+  \vskip0pt%
+}
+
+% Índice al comienzo de cada sección, con la sección actual resaltada
+\AtBeginSection[]{%
+  \begin{frame}{Índice}
+    \tableofcontents[currentsection, sectionstyle=show/shaded, subsectionstyle=hide]
+  \end{frame}%
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Metadatos                            %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Diseño e implementación de un sistema de navegación volumétrica para agentes voladores en videojuegos}
+\author{Javier Manotas Ruiz}
+\date{A Coruña, 2026}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Cuerpo                                                                       %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Portada                              %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[plain]
+  \centering
+  \vspace{0.3em}
+  {\color{udcpink}\fontfamily{phv}\selectfont\large Facultade de Informática}\\[0.4em]
+  \includegraphics[height=1.7cm]{udc.png}\\[0.7em]
+
+  {\footnotesize TRABALLO FIN DE GRAO\\
+   GRAO EN ENXEÑARÍA INFORMÁTICA\\
+   MENCIÓN EN COMPUTACIÓN}\\[0.6em]
+
+  \includegraphics[height=1.5cm]{sello_euro_inf.png}\\[0.8em]
+
+  {\color{udcpink}\bfseries\large
+   Diseño e implementación de un sistema de navegación\\
+   volumétrica para agentes voladores en videojuegos\\[0.2em]}
+  {\color{udcpink}\rule{0.7\textwidth}{0.5mm}}\\[0.7em]
+
+  {\small
+  \begin{tabular}{rl}
+    \textbf{Estudante:} & Javier Manotas Ruiz\\
+    \textbf{Dirección:} & Enrique Fernández Blanco\\
+                        & Alejandro Puente Castro\\
+  \end{tabular}}\\[0.5em]
+
+  {\footnotesize\color{udcgray} Defensa do Traballo de Fin de Grao \textbullet{} A Coruña, 2026}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Índice general                       %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Índice}
+  \tableofcontents[hideallsubsections]
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 1. INTRODUCCIÓN
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introducción}
+
+\begin{frame}{El punto de partida: la navegación autónoma}
+  \begin{columns}[T]
+    \begin{column}{0.56\textwidth}
+      \begin{itemize}
+        \item La navegación autónoma es la base de la inteligencia de los personajes no jugables (NPC).
+        \item El \textit{pathfinding} está prácticamente resuelto para agentes \alert{terrestres} en escenarios estáticos.
+        \item Los motores integran soluciones nativas (Unity NavMesh, Unreal, Godot), casi todas sobre la biblioteca Recast.
+        \item Se apoyan en una \alert{malla de navegación 2.5D}: el mundo es 3D, pero las rutas se calculan sobre superficies donde el agente se apoya.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{navmesh25d.png}\\[0.3em]
+      {\scriptsize\color{udcgray} Malla 2.5D sobre un entorno 3D.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Motivación: los agentes voladores}
+  \begin{columns}[T]
+    \begin{column}{0.58\textwidth}
+      \begin{itemize}
+        \item Drones, naves, criaturas o peces no están anclados al suelo: operan con \alert{seis grados de libertad}.
+        \item Un plano transitable es insuficiente. Se necesita un \alert{volumen de navegación} que represente \textbf{todo} el espacio libre.
+        \item Añadir la altura como dimensión libre dispara el coste en tiempo y memoria, salvo con estructuras especializadas (octrees).
+        \item Sin soporte oficial, los estudios recurren a soluciones \textit{ad-hoc}, caras y poco reutilizables.
+      \end{itemize}
+      \vspace{0.4em}
+      \begin{block}{Necesidad}
+        Un sistema \textbf{genérico, optimizado y reutilizable} que resuelva la navegación 3D de forma estructural.
+      \end{block}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \centering
+      \includegraphics[width=0.95\textwidth]{6dof.png}\\[0.3em]
+      {\scriptsize\color{udcgray} Los seis grados de libertad.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Objetivos}
+  \textbf{Objetivo general:} diseño, implementación y validación en Unity de un sistema de navegación volumétrica eficiente y optimizado, con \alert{enfoque de producto}: un paquete modular, de código abierto y listo para producción.
+  \vspace{0.5em}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      \begin{itemize}
+        \item Arquitectura modular y escalable.
+        \item Representación compacta del espacio (estructura de datos espacial).
+        \item Serialización en disco del volumen.
+        \item Búsqueda de rutas heurística en 3D.
+        \item Postprocesado y suavizado de trayectorias.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      \begin{itemize}
+        \item Integración nativa en el editor de Unity.
+        \item Accesibilidad para perfiles técnicos y artistas.
+        \item Análisis cuantitativo del rendimiento.
+        \item Distribución como paquete estándar de Unity.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 2. FUNDAMENTOS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Fundamentos}
+
+\begin{frame}{Fundamentos tecnológicos: Unity y alto rendimiento}
+  \begin{columns}[T]
+    \begin{column}{0.58\textwidth}
+      \begin{itemize}
+        \item \textbf{Unity}: arquitectura de componentes (\texttt{GameObject} + \texttt{MonoBehaviour}) y \textit{game loop}.
+        \item \textbf{Físicas (PhysX)}: la geometría se consulta con \texttt{OverlapBox}, agrupadas en lotes y ejecutadas en paralelo.
+        \item \textbf{DOTS / diseño orientado a datos}: Job System, \textbf{Burst} (LLVM + SIMD), \texttt{Unity.Mathematics} y colecciones nativas.
+        \item \textbf{Bajo nivel en C\#}: \texttt{ref readonly}, \texttt{Span<T>}, \texttt{stackalloc} y manipulación de bits para minimizar el recolector de basura.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{dodvsoop.png}\\[0.3em]
+      {\scriptsize\color{udcgray} El diseño orientado a datos aprovecha mejor la caché que la POO.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Fundamentos teóricos}
+  \begin{columns}[T]
+    \begin{column}{0.6\textwidth}
+      \begin{itemize}
+        \item \textbf{Representación del espacio}: frente a \textit{waypoints} y \textit{flow fields}, se elige el \alert{Sparse Voxel Octree (SVO)}, que solo subdivide donde hay geometría.
+        \item \textbf{Códigos de Morton} (curvas de orden Z): mapean coordenadas 3D a un índice lineal preservando la localidad espacial.
+        \item \textbf{Búsqueda}: de Dijkstra a \alert{A*}, con $f(n) = g(n) + h(n)$.
+        \item \textbf{Postprocesado}: atajo por línea de visión (DDA) y suavizado con \textit{splines} de Catmull-Rom.
+        \item \textbf{Evasión}: ORCA, sobre el espacio de velocidades.
+        \item \textbf{Integridad}: \textit{hash} determinista FNV-1a.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.4\textwidth}
+      \centering
+      \includegraphics[width=0.92\textwidth]{zfold.png}\\[0.2em]
+      {\scriptsize\color{udcgray} Curva de Morton (versión 2D).}\\[0.6em]
+      \includegraphics[width=0.92\textwidth]{catmullrom.png}\\[0.2em]
+      {\scriptsize\color{udcgray} Suavizado con Catmull-Rom.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 3. METODOLOGÍA Y PLANIFICACIÓN
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Metodología y planificación}
+
+\begin{frame}{Metodología de desarrollo}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \begin{itemize}
+        \item Metodología \alert{iterativa e incremental}: el sistema avanza por incrementos funcionales en lugar de un bloque monolítico.
+        \item Cada iteración recorre cuatro fases: \textbf{análisis}, \textbf{diseño}, \textbf{implementación} y \textbf{validación}.
+        \item Punto de partida: un \textbf{producto mínimo viable} centrado en la viabilidad técnica.
+        \item Código separado en módulos mediante \textit{assemblies} y validación automática con integración continua desde el primer día.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \centering
+      \begin{tikzpicture}[font=\scriptsize, node distance=4mm]
+        \node[paso, minimum width=2.6cm] (a) {Análisis};
+        \node[paso, minimum width=2.6cm, below=of a] (d) {Diseño};
+        \node[paso, minimum width=2.6cm, below=of d] (i) {Implementación};
+        \node[paso, minimum width=2.6cm, below=of i] (v) {Validación};
+        \draw[flecha] (a) -- (d);
+        \draw[flecha] (d) -- (i);
+        \draw[flecha] (i) -- (v);
+        \draw[flecha] (v.east) to[out=0, in=0] node[right, font=\tiny, align=center] {siguiente\\incremento} (a.east);
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Planificación y seguimiento}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      \textbf{Planificación inicial}
+      \begin{itemize}\footnotesize
+        \item 360 h (créditos ECTS), 14 semanas (marzo--junio de 2026).
+        \item Fases T1--T7 con cinco hitos (H1--H5).
+      \end{itemize}
+      \vspace{0.2em}
+      \textbf{Seguimiento}
+      \begin{itemize}\footnotesize
+        \item La robustez geométrica (\textit{clipping}) costó más de lo previsto.
+        \item La holgura recuperada permitió añadir la \alert{evasión local} (T8), no prevista.
+        \item Proyecto final: 15 semanas y \textbf{400 h} reales.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \centering
+      {\footnotesize\textbf{Coste estimado del proyecto}}\\[0.4em]
+      \setlength{\arrayrulewidth}{0.3mm}
+      \renewcommand{\arraystretch}{1.1}
+      {\scriptsize
+      \begin{tabular}{l|r}
+        \rowcolor{udcpink!20}
+        \textbf{Concepto} & \textbf{Coste} \\\hline
+        Desarrollo (400 h)      & 4.572,00\,\euro \\
+        Tutorías (30 h)         & 572,10\,\euro \\
+        Amortización equipo     & 87,50\,\euro \\
+        Licencias               & 0,00\,\euro \\
+        Indirectos (5\,\%)      & 232,98\,\euro \\\hline
+        \textbf{Total}          & \textbf{5.464,58\,\euro} \\
+      \end{tabular}}\\[0.5em]
+      {\scriptsize\color{udcgray} Frente a los 4.984,52\,\euro\ estimados al inicio.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 4. DESARROLLO
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Desarrollo}
+
+\begin{frame}{Visión global del sistema}
+  El sistema final es un \textit{pipeline} con dos fases bien diferenciadas:
+  \vspace{0.4em}
+  \begin{center}
+  \resizebox{0.96\textwidth}{!}{%
+  \begin{tikzpicture}[font=\small, node distance=7mm and 9mm,
+      io/.style={align=center, font=\footnotesize\itshape, text=black!70},
+      contA/.style={rounded corners=5pt, draw=ficblue!70, very thick, fill=none, inner sep=8pt},
+      contB/.style={rounded corners=5pt, draw=udcpink!70, very thick, fill=none, inner sep=8pt}]
+    \node[io] (escena) {Escena};
+    \node[paso, right=of escena] (raster) {Rasterización};
+    \node[paso, right=of raster] (capas) {Construcción de\\capas superiores};
+    \node[paso, right=of capas] (enlace) {Enlazado\\de nodos};
+    \node[almacen, right=of enlace] (disco) {Volumen\\en disco};
+    \node[paso, below=16mm of raster] (carga) {Carga del\\volumen};
+    \node[paso, right=of carga] (astar) {Búsqueda A*};
+    \node[paso, right=of astar] (postp) {Post-\\procesado};
+    \node[paso, right=of postp] (evasion) {ORCA};
+    \node[io, right=of evasion] (movim) {Movimiento\\del agente};
+    \draw[flecha] (escena) -- (raster);
+    \draw[flecha] (raster) -- (capas);
+    \draw[flecha] (capas) -- (enlace);
+    \draw[flecha] (enlace) -- (disco);
+    \draw[flecha] (carga) -- (astar);
+    \draw[flecha] (astar) -- (postp);
+    \draw[flecha] (postp) -- (evasion);
+    \draw[flecha] (evasion) -- (movim);
+    \draw[flecha, rounded corners=3pt] (disco.south) -- ++(0,-5mm) -| (carga.north);
+    \node[contA, fit=(raster)(capas)(enlace)(disco)] (cajaA) {};
+    \node[contB, fit=(carga)(astar)(postp)(evasion)] (cajaB) {};
+    \node[font=\footnotesize\itshape, text=ficblue, anchor=south west]
+      at ([yshift=1.5mm]cajaA.north west) {Preprocesado (editor)};
+    \node[font=\footnotesize\itshape, text=udcpink!85!black, anchor=north west]
+      at ([yshift=-1.5mm]cajaB.south west) {Ejecución (tiempo real)};
+  \end{tikzpicture}}
+  \end{center}
+  \vspace{0.2em}
+  \footnotesize
+  El \textbf{preprocesado} asume a propósito el mayor coste (se ejecuta una vez en el editor). La \textbf{ejecución} prioriza el rendimiento con estructuras compactas y paralelización.
+\end{frame}
+
+\begin{frame}{Arquitectura modular}
+  \begin{columns}[T]
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      \begin{itemize}
+        \item Tres bloques separados físicamente como \textit{assemblies}:
+        \begin{itemize}\footnotesize
+          \item \textbf{Runtime}: lógica de navegación (único en la versión final).
+          \item \textbf{Editor}: herramientas de configuración y visualización.
+          \item \textbf{Tests}: pruebas \textit{EditMode} y \textit{PlayMode}.
+        \end{itemize}
+        \item \textit{Editor} y \textit{Tests} dependen de \textit{Runtime}, nunca a la inversa.
+        \item \textit{Runtime} crece de forma controlada sobre una base común, \texttt{Core}.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.54\textwidth}
+      \centering
+      \resizebox{\textwidth}{!}{%
+      \begin{tikzpicture}[
+          font=\small,
+          nsbox/.style={rounded corners=3pt, draw=udcpink!60!black, fill=white, thick,
+                        align=center, text width=3.3cm, inner sep=5pt, minimum height=1.3cm,
+                        font=\footnotesize},
+          ancho/.style={text width=12.2cm},
+          usedep/.style={-{Stealth[length=2.6mm]}, semithick, draw=ficblue!75!black}]
+        \node[nsbox] (path) {\textbf{Pathfinding}\\[1pt]\scriptsize SVOPathfinder, PathSmoother,\\ SVORaycast (DDA), \textit{Api}};
+        \node[nsbox, left=9mm of path] (builder)
+          {\textbf{Builder}\\[1pt]\scriptsize SVOBuilder, SVORasterizer,\\ SVONeighborLinker,\\ \textit{Jobs}, \textit{Reporting}};
+        \node[nsbox, right=9mm of path] (avoid)
+          {\textbf{Avoidance}\\[1pt]\scriptsize AvoidanceSimulation,\\ \textit{Orca}, \textit{Spatial}};
+        \node[nsbox, ancho, below=10mm of path] (core)
+          {\textbf{Core}\\[1pt]\scriptsize MortonCode, SVO, SVONode, SVOLeaf, SVOLink, NeighborSet};
+        \node[nsbox, ancho, above=10mm of path] (unity)
+          {\textbf{Unity}\\[1pt]\scriptsize NavVolumeSpace, NavVolumeAgent, NavVolumeObstacle, \textit{Hashing}};
+        \draw[usedep] (builder.south) -- (builder.south |- core.north);
+        \draw[usedep] (path.south)    -- (path.south    |- core.north);
+        \draw[usedep] (avoid.south)   -- (avoid.south   |- core.north);
+        \draw[usedep] (path.west)     -- (builder.east);
+        \draw[usedep] (unity.south -| builder.north) -- (builder.north);
+        \draw[usedep] (unity.south -| path.north)    -- (path.north);
+        \draw[usedep] (unity.south -| avoid.north)   -- (avoid.north);
+        \begin{scope}[on background layer]
+          \node[contenedor, fit=(core)(builder)(path)(avoid)(unity),
+                label={[font=\bfseries]above:Runtime}] (runtime) {};
+        \end{scope}
+        \node[modulo, fill=ficblue!15, draw=ficblue,
+              above=14mm of runtime.north west, anchor=south west]
+          (editor) {\textbf{Editor}\\[2pt]\footnotesize Configuración\\y visualización};
+        \node[modulo, fill=udcgray!40, draw=udcgray!80!black,
+              above=14mm of runtime.north east, anchor=south east]
+          (tests) {\textbf{Tests}\\[2pt]\footnotesize Pruebas \textit{EditMode}\\y \textit{PlayMode}};
+        \draw[dep] (editor.south) -- (editor.south |- runtime.north);
+        \draw[dep] (tests.south)  -- (tests.south  |- runtime.north);
+      \end{tikzpicture}}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Iteración 1: estructura de datos volumétrica (SVO)}
+  \begin{columns}[T]
+    \begin{column}{0.56\textwidth}
+      \footnotesize
+      \textbf{Representación compacta}
+      \begin{itemize}\footnotesize
+        \item SVO en capas planas, ordenadas por código de Morton (búsqueda binaria).
+        \item Cada hoja es una rejilla $4\times4\times4$ codificada en una \alert{máscara de 64 bits} (8 bytes).
+        \item \textbf{Punteros compactos} de 32 bits para referenciar nodos y vóxeles.
+      \end{itemize}
+      \textbf{Construcción (\textit{bake})}
+      \begin{itemize}\footnotesize
+        \item Muestreo con \texttt{OverlapBox} paralelizado (Job System + Burst).
+        \item Estrategia \alert{de lo grueso a lo fino} y descarte temprano de hojas vacías.
+        \item Serialización en un único \textit{blob} binario + \textit{hash} FNV-1a de integridad.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \centering
+      {\scriptsize Descarte de hojas vacías:}\\[0.3em]
+      \begin{tikzpicture}[font=\scriptsize]
+        \begin{scope}
+          \foreach \c in {0,1,2,3}\foreach \r in {0,1,2,3}
+            \draw[celda] (\c*0.55,-\r*0.55) rectangle ++(0.55,-0.55);
+          \draw[draw=ficblue, very thick, rounded corners=2pt] (-0.1,0.1) rectangle (2.3,-2.3);
+          \node[font=\scriptsize, anchor=north, text width=2.6cm, align=center] at (1.1,-2.5)
+            {Pasada gruesa:\\ \textbf{1} consulta};
+        \end{scope}
+        \draw[flecha] (2.7,-1.1) -- ++(0.9,0);
+        \begin{scope}[xshift=4cm]
+          \foreach \c in {0,1,2,3}\foreach \r in {0,1,2,3} {
+            \draw[celda] (\c*0.55,-\r*0.55) rectangle ++(0.55,-0.55);
+            \draw[draw=ficblue, thick] (\c*0.55+0.06,-\r*0.55-0.06) rectangle ++(0.43,-0.43);
+          }
+          \node[font=\scriptsize, anchor=north, text width=2.7cm, align=center] at (1.1,-2.5)
+            {Pasada fina:\\ \textbf{64} consultas};
+        \end{scope}
+      \end{tikzpicture}\\[0.5em]
+      {\scriptsize\color{udcgray} Reduce las consultas físicas en un factor cercano a 64 en la mayor parte del volumen.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Iteración 2: búsqueda A* y postprocesado}
+  \begin{columns}[T]
+    \begin{column}{0.54\textwidth}
+      \footnotesize
+      \textbf{A* sobre un grafo de resolución heterogénea}
+      \begin{itemize}\footnotesize
+        \item Un solo salto cruza grandes nodos de espacio abierto.
+        \item Cerca de los obstáculos, la búsqueda se ramifica en nodos y vóxeles cada vez más pequeños.
+        \item Dos modos de coste: distancia euclídea o conteo de nodos, con heurística ponderada $f(n) = g(n) + W\,h(n)$.
+      \end{itemize}
+      \textbf{Postprocesado (seguro por construcción)}
+      \begin{itemize}\footnotesize
+        \item Atajo voraz por \textbf{línea de visión} (algoritmo DDA).
+        \item Suavizado con \textit{spline} de Catmull-Rom, que pasa exactamente por los puntos ya verificados como libres.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \centering
+      \resizebox{\textwidth}{!}{%
+      \begin{tikzpicture}[font=\small]
+        \draw[celda, line width=0.7pt] (0,0) rectangle (6.4,-3.6);
+        \draw[celda, line width=0.7pt] (1.8,0) -- (1.8,-3.6);
+        \draw[celda, line width=0.7pt] (3.6,0) -- (3.6,-3.6);
+        \draw[celda, line width=0.7pt] (0,-1.8) -- (3.6,-1.8);
+        \foreach \c in {0,...,3}\foreach \r in {0,...,7}
+          \draw[celda] (3.6+\c*0.7,-\r*0.45) rectangle ++(0.7,-0.45);
+        \fill[obstaculo, rounded corners=2pt] (4.2,-1.0) rectangle (5.6,-2.7);
+        \node[font=\footnotesize, text=white] at (4.9,-1.85) {obstáculo};
+        \node[nodo, fill=ficblue!40] (s) at (0.7,-0.9) {};
+        \node[font=\scriptsize, anchor=south] at (0.7,-0.62) {inicio};
+        \coordinate (a) at (2.7,-0.9);
+        \coordinate (b) at (3.9,-0.7);
+        \coordinate (c) at (5.0,-0.55);
+        \coordinate (d) at (5.95,-1.2);
+        \coordinate (e) at (5.95,-2.6);
+        \coordinate (f) at (5.2,-3.15);
+        \node[nodo, fill=udcpink!75] (g) at (4.4,-3.15) {};
+        \node[font=\scriptsize, anchor=north] at (4.4,-3.35) {meta};
+        \draw[flecha, draw=udcpink, very thick] (s) -- (a) -- (b) -- (c) -- (d) -- (e) -- (f) -- (g);
+        \foreach \p in {a,b,c,d,e,f} \fill[udcpink] (\p) circle (1.7pt);
+        \node[font=\scriptsize, text=udcpink!80!black, anchor=south] at (1.7,-0.85) {salto grande};
+        \node[font=\scriptsize, text=udcpink!80!black, anchor=west] at (6.0,-1.95) {pasos finos};
+      \end{tikzpicture}}\\[0.3em]
+      {\scriptsize\color{udcgray} A* avanza a saltos grandes en el espacio abierto y se afina junto al obstáculo.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Iteración 3: robustez geométrica y radio del agente}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \footnotesize
+      \begin{itemize}
+        \item \textbf{Problema (\textit{clipping})}: las rutas rozaban la geometría porque el agente se trataba como un punto sin volumen.
+        \item \textbf{Solución}: \alert{inflar} los obstáculos por el radio del agente durante la rasterización. Cualquier ruta libre conserva, por construcción, la holgura necesaria.
+        \item Sin fase adicional: basta con expandir las cajas de consulta \texttt{OverlapBox}.
+        \item Esta desviación obligó a una batería de pruebas mayor (\textit{PlayMode} + CI), que destapó defectos sutiles (p. ej.\ un desbordamiento \texttt{1 << 40} corregido con \texttt{1UL << 40}).
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \centering
+      \resizebox{\textwidth}{!}{%
+      \begin{tikzpicture}[font=\small]
+        \begin{scope}
+          \fill[obstaculo, rounded corners=1pt] (1.6,-1.2) rectangle (3.0,-2.6);
+          \node[font=\footnotesize, text=white] at (2.3,-1.9) {obstáculo};
+          \draw[flecha, draw=udcpink, very thick] (0.7,-0.3) -- (3.9,-1.5);
+          \fill[ficblue!25, opacity=0.75] (2.91,-1.128) circle (0.3);
+          \draw[agente] (2.91,-1.128) circle (0.3);
+          \node[font=\footnotesize, anchor=north, text width=3.9cm, align=center] at (1.8,-3.05)
+            {Sin radio: la trayectoria recorta la esquina};
+        \end{scope}
+        \begin{scope}[xshift=5.4cm]
+          \draw[dashed, draw=udcpink, thick, rounded corners=4pt] (1.3,-0.9) rectangle (3.3,-2.9);
+          \fill[obstaculo, rounded corners=1pt] (1.6,-1.2) rectangle (3.0,-2.6);
+          \node[font=\footnotesize, text=white] at (2.3,-1.9) {obstáculo};
+          \draw[flecha, draw=ficblue, very thick] (0,-0.2) -- (1.15,-0.5) -- (3.45,-0.5) -- (3.8,-2.0);
+          \draw[<->, thin, draw=udcpink!80!black] (2.3,-0.5) -- (2.3,-0.9);
+          \node[font=\scriptsize, text=udcpink!80!black, anchor=west] at (2.4,-0.7) {holgura $=$ radio};
+          \node[font=\footnotesize, anchor=north, text width=4.0cm, align=center] at (1.9,-3.25)
+            {Obstáculo inflado: trayectoria con holgura};
+        \end{scope}
+      \end{tikzpicture}}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Iteración 4: integración en Unity}
+  \begin{columns}[T]
+    \begin{column}{0.54\textwidth}
+      \footnotesize
+      \begin{itemize}
+        \item Componente central \texttt{NavVolumeSpace} con tres modos de construcción: \textit{Baked}, \textit{BuildOnAwake} y \textit{Manual}.
+        \item \textbf{API} de navegación y consultas espaciales: comprobar si un punto es navegable, ajustarlo al vóxel libre más cercano o generar posiciones aleatorias válidas.
+        \item Rutas \textbf{síncronas} y \textbf{asíncronas} (reserva de buscadores y cancelación por \textit{token}), sin bloquear el hilo principal.
+        \item \textbf{Gizmos} de depuración visual y panel de estadísticas (memoria estimada y \% de ahorro).
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{svogizmos.png}\\[0.3em]
+      {\scriptsize\color{udcgray} Visualización del SVO con Gizmos: vóxeles, hojas y nodos.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Iteraciones 5 y 6: optimización y evasión local}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      \textbf{Iteración 5: optimización}
+      \begin{itemize}\footnotesize
+        \item Reutilización de \textit{buffers} entre peticiones.
+        \item Comprobación de cancelación amortizada.
+        \item Acceso por referencia (\texttt{ref readonly}) y comparaciones sin \textit{boxing}.
+        \item \textit{Bake} más rápido al evitar reordenar capas innecesariamente.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      \textbf{Iteración 6: evasión local (ORCA)}
+      \begin{itemize}\footnotesize
+        \item Evita colisiones entre agentes mediante reciprocidad sobre el espacio de velocidades.
+        \item \texttt{stackalloc} + \texttt{Span<T>}: cero presión sobre el recolector de basura.
+        \item \textit{Hash} espacial y \textit{jobs} asíncronos (Burst).
+        \item Respeta también la geometría estática del entorno.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \vspace{0.3em}
+  \begin{center}
+  \begin{tikzpicture}[font=\scriptsize, scale=0.85, transform shape]
+    \fill[udcpink!16] (-2.6,0.1) -- (2.4,2.6) -- (2.8,2.8) -- (-2.6,2.8) -- cycle;
+    \draw[->, thick] (-2.7,0) -- (2.9,0) node[right, font=\tiny] {$v_x$};
+    \draw[->, thick] (0,-1.2) -- (0,2.9) node[above, font=\tiny] {$v_y$};
+    \draw[udcpink, thick] (-2.6,0.1) -- (2.4,2.6);
+    \node[font=\tiny, text=udcpink!85!black] at (-1.25,2.15) {velocidades prohibidas};
+    \node[font=\tiny, text=black!65] at (1.6,-0.7) {velocidades permitidas};
+    \draw[->, very thick, draw=ficblue] (0,0) -- (0.9,2.2) node[above, font=\tiny, text=ficblue] {$v^{\mathrm{pref}}$};
+    \draw[dashed, thin, draw=black!55] (0.9,2.2) -- (1.04,1.92);
+    \draw[->, very thick, draw=black] (0,0) -- (1.04,1.92);
+    \fill[black] (1.04,1.92) circle (1.3pt);
+    \node[font=\tiny, anchor=west] at (1.12,1.66) {$v^{\mathrm{new}}$};
+  \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 5. RESULTADOS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Resultados}
+
+\begin{frame}{Rendimiento: construcción y memoria del volumen}
+  \footnotesize
+  Escenario más desfavorable (interior de un edificio de varias plantas); media de 30 ejecuciones en un Intel Core i7-12700H.
+  \vspace{0.2em}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \begin{axis}[
+            ybar stacked, width=\textwidth, height=4.6cm, bar width=18pt,
+            ymin=0, ylabel={Tiempo (ms)}, xlabel={Capas del volumen},
+            symbolic x coords={8,9,10}, xtick=data, enlarge x limits=0.4,
+            ymajorgrids, grid style={udcgray!25},
+            tick label style={font=\tiny}, label style={font=\scriptsize},
+          ]
+          \addplot[fill=udcpink!85, draw=udcpink!85!black] coordinates {(8,145) (9,793) (10,2902)};
+          \addplot[fill=black!55, draw=black!70] coordinates {(8,110) (9,419) (10,2305)};
+          \addplot[fill=udcgray!50, draw=udcgray!65!black] coordinates {(8,97) (9,534) (10,1855)};
+        \end{axis}
+      \end{tikzpicture}\\[-0.2em]
+      {\scriptsize Tiempo de \textit{bake}: 0,35\,s (8) a 7,1\,s (10 capas).}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \begin{axis}[
+            ybar, width=\textwidth, height=4.6cm, bar width=22pt,
+            ymin=0, ymax=100, ylabel={Memoria (MB)}, xlabel={Capas del volumen},
+            symbolic x coords={8,9,10}, xtick=data, enlarge x limits=0.4,
+            nodes near coords, point meta=explicit symbolic,
+            every node near coord/.append style={font=\tiny},
+            ymajorgrids, grid style={udcgray!25},
+            tick label style={font=\tiny}, label style={font=\scriptsize},
+          ]
+          \addplot[fill=ficblue!70, draw=ficblue!85!black] coordinates {(8,3.7)[3,7] (9,17)[17] (10,88)[88]};
+        \end{axis}
+      \end{tikzpicture}\\[-0.2em]
+      {\scriptsize Ahorro frente a una rejilla densa: \textbf{>96\,\%} (8) y \textbf{>98\,\%} (9--10 capas).}
+    \end{column}
+  \end{columns}
+  \vspace{0.3em}
+  \centering La rasterización de hojas y el guardado en disco concentran $\sim$70\,\% del coste de construcción.
+\end{frame}
+
+\begin{frame}{Rendimiento: búsqueda de rutas y evasión}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \begin{axis}[
+            width=\textwidth, height=4.6cm,
+            xlabel={Peso de la heurística $W$}, ylabel={Tiempo ($\mu$s)},
+            xtick={1,1.5,2,2.5},
+            xticklabel style={/pgf/number format/.cd, use comma, fixed},
+            ymin=0, enlarge x limits=0.12,
+            ymajorgrids, grid style={udcgray!25},
+            legend style={at={(0.97,0.97)}, anchor=north east, draw=udcgray!50, font=\tiny},
+            legend cell align=left,
+            tick label style={font=\tiny}, label style={font=\scriptsize},
+            every axis plot/.append style={thick, mark=*, mark size=1.6pt},
+          ]
+          \addplot[color=udcpink, mark options={fill=udcpink}] coordinates {(1,65) (1.5,22) (2,17) (2.5,13)};
+          \addplot[color=ficblue, mark options={fill=ficblue}] coordinates {(1,33) (1.5,25) (2,16) (2.5,14)};
+          \legend{Dist. euclídea, Conteo de nodos}
+        \end{axis}
+      \end{tikzpicture}\\[-0.2em]
+      {\scriptsize Una ruta larga: 65\,$\mu$s a 13\,$\mu$s, muy por debajo de los 16,6\,ms de un fotograma a 60\,FPS.}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \begin{axis}[
+            ybar, width=\textwidth, height=4.6cm, bar width=8pt,
+            ymin=0, ylabel={FPS}, xlabel={Número de agentes},
+            symbolic x coords={5,10,15,20}, xtick=data, enlarge x limits=0.22,
+            nodes near coords,
+            every node near coord/.append style={font=\tiny,
+              /pgf/number format/.cd, fixed, precision=0},
+            ymajorgrids, grid style={udcgray!25},
+            legend style={at={(0.5,-0.28)}, anchor=north, legend columns=2,
+                          draw=udcgray!50, font=\tiny},
+            legend cell align=left,
+            tick label style={font=\tiny}, label style={font=\scriptsize},
+          ]
+          \addplot[fill=udcgray!45, draw=udcgray!70!black] coordinates {(5,410) (10,407) (15,400) (20,396)};
+          \addplot[fill=udcpink!70, draw=udcpink!80!black] coordinates {(5,401) (10,397) (15,387) (20,370)};
+          \legend{Sin evasión, Con evasión}
+        \end{axis}
+      \end{tikzpicture}\\[-0.2em]
+      {\scriptsize Con 20 agentes, la evasión añade $\sim$0,18\,ms (menos de 10\,$\mu$s por agente).}
+    \end{column}
+  \end{columns}
+  \vspace{0.4em}
+  \centering\footnotesize El sistema cumple los requisitos de eficiencia sin comprometer la tasa de fotogramas.
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 6. CONCLUSIONES Y TRABAJOS FUTUROS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusiones y trabajos futuros}
+
+\begin{frame}{Conclusiones}
+  \begin{block}{Objetivo general alcanzado}
+    No es un mero algoritmo de búsqueda, sino un \textbf{sistema completo}: de la geometría de la escena al movimiento final de un agente que esquiva obstáculos estáticos y a otros agentes.
+  \end{block}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      \textbf{Logros}
+      \begin{itemize}\footnotesize
+        \item Todos los objetivos específicos cumplidos.
+        \item Funcionalidad extra no planificada: la evasión local entre agentes.
+        \item Paquete modular listo para producción.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      \textbf{Limitaciones}
+      \begin{itemize}\footnotesize
+        \item En 3D no se garantiza el camino óptimo (se acota con heurística y límite de nodos).
+        \item El volumen se precalcula: no apto para geometría dinámica en tiempo de ejecución.
+        \item Máximo de 10 capas (Morton de 32 bits, 1024 celdas por eje).
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Trabajos futuros}
+  \begin{itemize}
+    \item \textbf{Construcción del volumen en la GPU} mediante \textit{compute shaders}: muy paralelizable, aunque de prioridad baja porque el \textit{bake} no es el cuello de botella.
+    \item \textbf{Búsqueda y evasión con aprendizaje por refuerzo}: sustituir los enfoques reactivos y deterministas (A* + ORCA) por comportamientos más naturales y eficientes.
+    \item \textbf{Otras líneas de extensión}:
+    \begin{itemize}
+      \item Geometría dinámica y reconstrucción incremental del SVO.
+      \item Búsqueda jerárquica o de cualquier ángulo (\textit{any-angle}).
+      \item Enlaces entre volúmenes independientes para escenarios de gran tamaño.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Cierre                               %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[plain]
+  \centering
+  \vfill
+  \includegraphics[height=1.3cm]{udc.png}\\[1.2em]
+  {\color{udcpink}\bfseries\LARGE Gracias por su atención}\\[0.6em]
+  {\color{udcpink}\rule{0.45\textwidth}{0.5mm}}\\[1.0em]
+  {\large ¿Preguntas?}\\[1.4em]
+  {\footnotesize\color{udcgray}
+   Javier Manotas Ruiz \textbullet{} Navegación volumétrica para agentes voladores en videojuegos}
+  \vfill
+\end{frame}
+
+\end{document}
