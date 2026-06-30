@@ -369,40 +369,109 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Planificación y seguimiento}
+\begin{frame}{Planificación inicial}
+  \centering
+  \vspace{-0.5em}
+  \resizebox{0.8\textwidth}{!}{%
+    \setlength{\tabcolsep}{1.5pt}%
+    \renewcommand{\arraystretch}{1.0}%
+    \begin{tabular}{|l|*{14}{>{\centering\arraybackslash}p{0.5cm}|}}
+    \hline
+    \rowcolor{udcpink!25}
+    \textbf{Tarea / Fase} & \multicolumn{2}{c|}{\textbf{Marzo}} & \multicolumn{4}{c|}{\textbf{Abril}} & \multicolumn{4}{c|}{\textbf{Mayo}} & \multicolumn{4}{c|}{\textbf{Junio}} \\ \hline
+    \textbf{Semana} & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 14 \\ \hline
+    T1. Estado del arte y estudio previo & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & & \\ \hline
+    T2. Diseño de la arquitectura & & & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & \\ \hline
+    T3. Estructura de datos volumétrica & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & \\ \hline
+    T4. Búsqueda y postprocesado de rutas & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & \\ \hline
+    T5. Integración en Unity & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \\ \hline
+    T6. Evaluación y optimización & & & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \\ \hline
+    T7. Validación y pruebas (CI) & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
+    Redacción de la memoria & & & & & & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
+    \textbf{Hitos} & & & \textbf{H1} & & & & \textbf{H2} & & & \textbf{H3} & & & \textbf{H4} & \textbf{H5} \\ \hline
+    \end{tabular}%
+  }
+  
+  \vspace{0.6em}
   \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
+    \begin{column}{0.48\textwidth}
       \footnotesize
-      \textbf{Planificación inicial}
-      \begin{itemize}\footnotesize
-        \item 360 h (créditos ECTS), 14 semanas (marzo--junio de 2026).
+      \begin{itemize}
+        \item \textbf{360 h} (créditos ECTS), 14 semanas.
         \item Fases T1--T7 con cinco hitos (H1--H5).
       \end{itemize}
-      \vspace{0.2em}
-      \textbf{Seguimiento}
-      \begin{itemize}\footnotesize
-        \item La robustez geométrica (\textit{clipping}) costó más de lo previsto.
-        \item La holgura recuperada permitió añadir la \alert{evasión local} (T8), no prevista.
-        \item Proyecto final: 15 semanas y \textbf{400 h} reales.
-      \end{itemize}
     \end{column}
-    \begin{column}{0.5\textwidth}
+    \begin{column}{0.52\textwidth}
       \centering
-      {\footnotesize\textbf{Coste estimado del proyecto}}\\[0.4em]
+      {\footnotesize\textbf{Coste estimado del proyecto}}\\[0.2em]
       \setlength{\arrayrulewidth}{0.3mm}
       \renewcommand{\arraystretch}{1.1}
       {\scriptsize
       \begin{tabular}{l|r}
         \rowcolor{udcpink!20}
         \textbf{Concepto} & \textbf{Coste} \\\hline
-        Desarrollo (400 h)      & 4.572,00\,\euro \\
-        Tutorías (30 h)         & 572,10\,\euro \\
+        Desarrollo (360\,h)     & 4.114,80\,\euro \\
+        Tutorías (30\,h)        & 572,10\,\euro \\
+        Amortización equipo     & 87,50\,\euro \\
+        Licencias               & 0,00\,\euro \\
+        Indirectos (5\,\%)      & 210,12\,\euro \\\hline
+        \textbf{Total}          & \textbf{4.984,52\,\euro} \\
+      \end{tabular}}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Seguimiento}
+  \centering
+  \vspace{-0.5em}
+  \resizebox{0.8\textwidth}{!}{%
+    \setlength{\tabcolsep}{1.5pt}%
+    \renewcommand{\arraystretch}{1.0}%
+    \begin{tabular}{|l|*{15}{>{\centering\arraybackslash}p{0.5cm}|}}
+    \hline
+    \rowcolor{udcpink!25}
+    \textbf{Tarea / Fase} & \multicolumn{2}{c|}{\textbf{Marzo}} & \multicolumn{4}{c|}{\textbf{Abril}} & \multicolumn{4}{c|}{\textbf{Mayo}} & \multicolumn{4}{c|}{\textbf{Junio}} & \multicolumn{1}{c|}{\textbf{Jul.}} \\ \hline
+    \textbf{Semana} & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 14 & 15 \\ \hline
+    T1. Estado del arte y estudio previo & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & & & \\ \hline
+    T2. Diseño de la arquitectura & & & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & & & & \\ \hline
+    T3. Estructura de datos volumétrica & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & & & & \\ \hline
+    T4. Búsqueda y postprocesado de rutas & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & & & & \\ \hline
+    Extensión T4. Robustez geométrica (\textit{clipping}) & & & & & & & & & \cellcolor{udcgray!60} & \cellcolor{udcgray!60} & \cellcolor{udcgray!60} & & & & \\ \hline
+    T5. Integración en Unity & & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & \cellcolor{udcpink} & & \\ \hline
+    T6. Evaluación y optimización & & & & & & & & & & & & \cellcolor{udcpink} & \cellcolor{udcpink} & & \\ \hline
+    T7. Validación y pruebas (CI) & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
+    T8 (extra). Evasión local & & & & & & & & & & & & & \cellcolor{udcgray!60} & \cellcolor{udcgray!60} & \\ \hline
+    Redacción de la memoria & & & & & & & & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} & \cellcolor{ficblue!60} \\ \hline
+    \textbf{Hitos} & & & \textbf{H1} & & & & \textbf{H2} & & & & & \textbf{H3} & & \textbf{H4} & \textbf{H5} \\ \hline
+    \end{tabular}%
+  }
+  
+  \vspace{0.4em}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \footnotesize
+      \begin{itemize}
+        \item La robustez geométrica (\textit{clipping}) alargó la fase T4.
+        \item La holgura permitió añadir evasión local (T8).
+        \item Proyecto final: 15 semanas y \textbf{400 h} reales.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.52\textwidth}
+      \centering
+      {\footnotesize\textbf{Coste final del proyecto}}\\[0.2em]
+      \setlength{\arrayrulewidth}{0.3mm}
+      \renewcommand{\arraystretch}{1.1}
+      {\scriptsize
+      \begin{tabular}{l|r}
+        \rowcolor{udcpink!20}
+        \textbf{Concepto} & \textbf{Coste} \\\hline
+        Desarrollo (400\,h)     & 4.572,00\,\euro \\
+        Tutorías (30\,h)        & 572,10\,\euro \\
         Amortización equipo     & 87,50\,\euro \\
         Licencias               & 0,00\,\euro \\
         Indirectos (5\,\%)      & 232,98\,\euro \\\hline
         \textbf{Total}          & \textbf{5.464,58\,\euro} \\
-      \end{tabular}}\\[0.5em]
-      {\scriptsize\color{udcgray} Frente a los 4.984,52\,\euro\ estimados al inicio.}
+      \end{tabular}}
     \end{column}
   \end{columns}
 \end{frame}
