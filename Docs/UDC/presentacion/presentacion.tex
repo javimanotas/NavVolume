@@ -481,6 +481,64 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Desarrollo}
 
+\begin{frame}{Iteración 0: arquitectura e integración continua}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      \begin{itemize}
+        \item \textbf{Arquitectura inicial sólida}: antes de implementar funcionalidades, se establece un esqueleto robusto.
+        \item Tres \textit{assemblies} separados: \textbf{Runtime} (lógica central), \textbf{Editor} (herramientas) y \textbf{Tests}.
+        \item \textbf{Regla de dependencias}: \textit{Editor} y \textit{Tests} dependen de \textit{Runtime}, pero nunca a la inversa.
+        \item \textbf{Integración continua (CI)}: barrera de calidad desde el primer día. Validaciones automáticas en cada contribución:
+        \begin{itemize}\footnotesize
+          \item Verificación de formato (Csharpier).
+          \item Batería de pruebas (\textit{EditMode} y \textit{PlayMode}).
+        \end{itemize}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \centering
+      \vspace{1.5em}
+      \resizebox{\textwidth}{!}{%
+      \begin{tikzpicture}[
+          font=\small,
+          modulo/.style={rounded corners=3pt, draw, thick, align=center,
+                         inner sep=8pt, minimum width=3.4cm, minimum height=1.5cm},
+          contenedor/.style={rounded corners=4pt, draw=udcpink, thick, fill=udcpink!10,
+                             inner sep=10pt},
+          ns/.style={rounded corners=2pt, draw=udcpink!60!black, fill=white, align=center,
+                     minimum width=2.1cm, minimum height=9mm, font=\footnotesize\ttfamily},
+          dep/.style={dashed, -{Stealth[length=3mm]}, thick, draw=black!70}
+        ]
+
+        % Espacios de nombres internos del modulo Runtime
+        \node[ns] (core) {Core};
+        \node[ns, right=3mm of core]    (builder) {Builder};
+        \node[ns, right=3mm of builder] (path)    {Pathfinding};
+        \node[ns, right=3mm of path]    (unity)   {Unity};
+
+        % Contenedor Runtime
+        \begin{scope}[on background layer]
+          \node[contenedor, fit=(core)(builder)(path)(unity),
+                label={[font=\bfseries]above:Runtime}] (runtime) {};
+        \end{scope}
+
+        % Modulos Editor y Tests
+        \node[modulo, fill=ficblue!15, draw=ficblue,
+              above=16mm of runtime.north west, anchor=south west]
+          (editor) {\textbf{Editor}\\[2pt]\footnotesize Herramientas de\\configuración};
+        \node[modulo, fill=udcgray!40, draw=udcgray!80!black,
+              above=16mm of runtime.north east, anchor=south east]
+          (tests) {\textbf{Tests}\\[2pt]\footnotesize Pruebas automatizadas};
+
+        % Dependencias
+        \draw[dep] (editor.south) -- (editor.south |- runtime.north);
+        \draw[dep] (tests.south)  -- (tests.south  |- runtime.north);
+
+      \end{tikzpicture}}
+    \end{column}
+  \end{columns}
+\end{frame}
 
 \begin{frame}{Iteración 1: estructura de datos volumétrica (SVO)}
   \begin{columns}[T]
@@ -501,26 +559,86 @@
     \end{column}
     \begin{column}{0.44\textwidth}
       \centering
-      {\scriptsize Descarte de hojas vacías:}\\[0.3em]
-      \begin{tikzpicture}[font=\scriptsize]
-        \begin{scope}
-          \foreach \c in {0,1,2,3}\foreach \r in {0,1,2,3}
-            \draw[celda] (\c*0.55,-\r*0.55) rectangle ++(0.55,-0.55);
-          \draw[draw=ficblue, very thick, rounded corners=2pt] (-0.1,0.1) rectangle (2.3,-2.3);
-          \node[font=\scriptsize, anchor=north, text width=2.6cm, align=center] at (1.1,-2.5)
-            {Pasada gruesa:\\ \textbf{1} consulta};
+      \resizebox{\textwidth}{!}{%
+      \begin{tikzpicture}[font=\small]
+        % ===== Pila de 4 capas 4x4 (hoja 4x4x4) en proyeccion oblicua =====
+        % Parametros de la proyeccion: ancho de celda 0.52; profundidad (0.26,0.20).
+        % Las capas se separan 1.1 en vertical: z=0 abajo, z=3 arriba.
+
+        % Pilares que unen las cuatro capas en una sola estructura apilada.
+        \foreach \px/\pyb/\pyt in {0/0/3.3, 2.08/0/3.3, 3.12/0.8/4.1, 1.04/0.8/4.1}
+          \draw[draw=black!35, dashed, line width=0.4pt] (\px,\pyb) -- (\px,\pyt);
+
+        % Voxeles ocupados (en rosa) de cada capa.
+        \foreach \c/\r/\by in {0/0/0, 1/0/0, 3/3/0, 1/2/0,
+                               1/1/1.1, 2/1/1.1, 2/2/1.1,
+                               0/2/2.2, 3/1/2.2,
+                               1/3/3.3, 2/3/3.3, 3/3/3.3}
+          \fill[ocupado]
+            ({0.52*\c+0.26*\r},{\by+0.20*\r}) --
+            ({0.52*\c+0.52+0.26*\r},{\by+0.20*\r}) --
+            ({0.52*\c+0.78+0.26*\r},{\by+0.20+0.20*\r}) --
+            ({0.52*\c+0.26+0.26*\r},{\by+0.20+0.20*\r}) -- cycle;
+
+        % Rejilla 4x4 de cada capa.
+        \foreach \by in {0,1.1,2.2,3.3}{
+          \foreach \r in {0,1,2,3,4}
+            \draw[celda] ({0.26*\r},{\by+0.20*\r}) -- ({2.08+0.26*\r},{\by+0.20*\r});
+          \foreach \c in {0,1,2,3,4}
+            \draw[celda] ({0.52*\c},{\by}) -- ({0.52*\c+1.04},{\by+0.8});
+        }
+
+        % Etiquetas de capa.
+        \foreach \by/\zl in {0/0,1.1/1,2.2/2,3.3/3}
+          \node[anchor=east, font=\scriptsize] at ({-0.12},{\by+0.1}) {$z{=}\zl$};
+        \node[anchor=south, align=center, font=\footnotesize] at (1.7,4.55)
+          {Hoja $4{\times}4{\times}4$\\(4 capas apiladas)};
+
+        % ===== Flecha de codificacion =====
+        \draw[flecha] (3.5,2.05) -- (5.85,2.05)
+          node[midway, above, font=\scriptsize] {1 bit/vóxel};
+
+        % ===== Mascara de 64 bits: 4 filas de 16 (una fila por capa) =====
+        \begin{scope}[xshift=6.6cm, yshift=2.65cm]
+          \foreach \c/\r in {0/0,1/0,6/0,12/0, 3/1,8/1,14/1, 5/2,11/2, 2/3,9/3,15/3}
+            \fill[ocupado] (\c*0.30,-\r*0.30) rectangle ++(0.30,-0.30);
+          \foreach \c in {0,...,15}
+            \foreach \r in {0,1,2,3}
+              \draw[celda] (\c*0.30,-\r*0.30) rectangle ++(0.30,-0.30);
+          \foreach \r/\zl in {0/0,1/1,2/2,3/3}
+            \node[anchor=east, font=\scriptsize] at ({-0.1},{-0.30*\r-0.15}) {$z{=}\zl$};
+          \node[anchor=south, font=\footnotesize] at (2.4,0.12)
+            {Máscara de 64 bits (\texttt{ulong})};
+          \node[anchor=north, font=\scriptsize, text=black!60] at (2.4,-1.28)
+            {cada fila $=$ una capa (16 vóxeles)};
+          % Leyenda: en la mascara cada cuadrado es un bit, no un volumen de espacio.
+          \fill[ocupado] (0.7,-2.12) rectangle ++(0.26,-0.26); % Antes: -1.62
+          \node[anchor=west, font=\scriptsize] at (1.02,-2.25) {$=$ bit a 1 (vóxel ocupado)}; % Antes: -1.75
+          \draw[celda] (0.7,-2.50) rectangle ++(0.26,-0.26); % Antes: -2.0
+          \node[anchor=west, font=\scriptsize] at (1.02,-2.63) {$=$ bit a 0 (vóxel libre)}; % Antes: -2.13
         \end{scope}
-        \draw[flecha] (2.7,-1.1) -- ++(0.9,0);
-        \begin{scope}[xshift=4cm]
-          \foreach \c in {0,1,2,3}\foreach \r in {0,1,2,3} {
-            \draw[celda] (\c*0.55,-\r*0.55) rectangle ++(0.55,-0.55);
-            \draw[draw=ficblue, thick] (\c*0.55+0.06,-\r*0.55-0.06) rectangle ++(0.43,-0.43);
-          }
-          \node[font=\scriptsize, anchor=north, text width=2.7cm, align=center] at (1.1,-2.5)
-            {Pasada fina:\\ \textbf{64} consultas};
+      \end{tikzpicture}}\\[1.5em]
+      
+      \resizebox{0.85\textwidth}{!}{%
+      \begin{tikzpicture}[font=\small]
+        % Vecino grande (nivel del padre)
+        \draw[celda, very thick, fill=ficblue!12] (0,0) rectangle (2.6,-2.6);
+        \node[font=\footnotesize, align=center] at (1.3,-1.85) {Vecino de\\mayor tamaño};
+        % Nodo a enlazar, subdividido
+        \begin{scope}[xshift=2.6cm]
+          \draw[celda, very thick] (0,0) rectangle (2.6,-2.6);
+          \draw[celda] (1.3,0) -- (1.3,-2.6);
+          \draw[celda] (0,-1.3) -- (2.6,-1.3);
+          \foreach \sc in {0,1}\foreach \sr in {0,1}
+            \draw[celda] (\sc*0.65,-\sr*0.65) rectangle ++(0.65,-0.65);
+          \fill[udcpink!65] (0,0) rectangle (0.65,-0.65);
+          \draw[celda] (0,0) rectangle (0.65,-0.65);
         \end{scope}
-      \end{tikzpicture}\\[0.5em]
-      {\scriptsize\color{udcgray} Reduce las consultas físicas en un factor cercano a 64 en la mayor parte del volumen.}
+        \node[font=\scriptsize, anchor=west] at (3.4,-0.32) {nodo pequeño};
+        % Enlace heredado del padre
+        \draw[flecha, draw=udcpink, very thick] (2.6,-0.32) to[out=180, in=0] (1.6,-0.78);
+        \node[font=\scriptsize, text=udcpink!80!black, anchor=north] at (1.5,-1.0) {vecino heredado};
+      \end{tikzpicture}}
     \end{column}
   \end{columns}
 \end{frame}
