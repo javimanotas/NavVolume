@@ -272,6 +272,60 @@
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FUNDAMENTOS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Fundamentos}
+
+\begin{frame}{Fundamentos}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \begin{itemize}
+        \setlength{\itemsep}{1.6em}
+        \item \textbf{Representación del espacio con SVO}:
+        \begin{itemize}
+          \item Estructura jerárquica (octree disperso).
+          \item Divide el espacio recursivamente solo donde hay geometría o información.
+          \item Alta compresión de memoria y acceso eficiente.
+        \end{itemize}
+        \item \textbf{Búsqueda de caminos con A*}:
+        \begin{itemize}
+          \item Algoritmo heurístico para encontrar la ruta óptima.
+          \item Se adapta a la resolución heterogénea del SVO.
+          \item Permite avanzar grandes distancias en nodos vacíos con un solo salto.
+        \end{itemize}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \centering
+      \vspace{0.5em}
+      \resizebox{0.8\textwidth}{!}{%
+      \begin{tikzpicture}[font=\small]
+        % Rellenar celdas ocupadas
+        \fill[ocupado] (0,0) rectangle (2,2);
+        \fill[ocupado] (2,2) rectangle (3,3);
+        \fill[ocupado] (3.5,3.5) rectangle (4,4);
+        
+        % Cuadrado principal (Nivel 0)
+        \draw[celda, thick] (0,0) rectangle (4,4);
+        
+        % Primera subdivisión (Nivel 1)
+        \draw[celda] (2,0) -- (2,4);
+        \draw[celda] (0,2) -- (4,2);
+        
+        % Subdivisión del cuadrante superior derecho (Nivel 2)
+        \draw[celda] (3,2) -- (3,4);
+        \draw[celda] (2,3) -- (4,3);
+        
+        % Subdivisión de uno de los sub-cuadrantes (Nivel 3)
+        \draw[celda] (3.5,3) -- (3.5,4);
+        \draw[celda] (3,3.5) -- (4,3.5);
+      \end{tikzpicture}}\\[0.5em]
+      {\scriptsize\color{udcgray} Representación 2D de la subdivisión espacial.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 3. METODOLOGÍA Y PLANIFICACIÓN
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Metodología y planificación}
