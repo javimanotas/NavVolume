@@ -209,10 +209,6 @@
         \item Volumen de navegación.
         \item Sin soporte oficial.
       \end{itemize}
-      \vspace{0.4em}
-      \begin{block}{Necesidad}
-        Un sistema \textbf{genérico, optimizado y reutilizable} que resuelva la navegación volumétrica.
-      \end{block}
     \end{column}
     \begin{column}{0.42\textwidth}
       \centering
@@ -222,118 +218,55 @@
   \end{columns}
 \end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ESTUDIO DE MERCADO
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Estudio de mercado}
 
+\begin{frame}{Estudio de mercado: Alternativas comerciales}
+  \centering
+  \vspace{1em}
+  
+  \begingroup
+  \rowcolors{2}{white}{udcgray!25}
+  \resizebox{0.9\textwidth}{!}{%
+  \begin{tabular}{c|c|c|c}
+  \rowcolor{udcpink!25}
+  \textbf{Herramienta} & \textbf{Plataforma} & \textbf{Enfoque} & \textbf{Precio} \\\hline
+  Mercuna & Multiplataforma & Multiparadigma & \pounds\,15,000 + \\
+  \begin{tabular}{@{}c@{}}Nav3D \\ (Softbrix Studio)\end{tabular} & Unity & Volumétrica & 64,39\,\euro \\
+  Nav3D (m6io) & Unity & Volumétrica & 59,80\,\euro \\
+  HyperNav & Unity & \begin{tabular}{@{}c@{}}Volumétrica + \\ Superficies\end{tabular} & 82,80\,\euro \\
+  Spatial Pathfinding & Unity & Volumétrica & 27,59\,\euro \\
+  \end{tabular}}
+  \endgroup
+\end{frame}
 
-\begin{frame}{Objetivos}
-  \textbf{Objetivo general:} diseño, implementación y validación en Unity de un sistema de navegación volumétrica eficiente y optimizado, con \alert{enfoque de producto}.
+\begin{frame}{Estudio de mercado: Análisis DAFO}
+  \centering
   \vspace{0.5em}
-  \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \footnotesize
-      \begin{itemize}
-        \item Arquitectura modular y escalable.
-        \item Representación compacta del espacio (estructura de datos espacial).
-        \item Serialización en disco del volumen.
-        \item Búsqueda de rutas heurística en 3D.
-        \item Postprocesado y suavizado de trayectorias.
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \footnotesize
-      \begin{itemize}
-        \item Integración nativa en el editor de Unity.
-        \item Accesibilidad para perfiles técnicos y artistas.
-        \item Análisis cuantitativo del rendimiento.
-        \item Distribución como paquete estándar de Unity.
-      \end{itemize}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 2. FUNDAMENTOS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Fundamentos}
-
-\begin{frame}{Fundamentos tecnológicos: Unity y alto rendimiento}
-  \begin{columns}[T]
-    \begin{column}{0.58\textwidth}
-      \begin{itemize}
-        \item \textbf{Unity}: arquitectura de componentes (\texttt{GameObject} + \texttt{MonoBehaviour}) y \textit{game loop}.
-        \item \textbf{Editor}: atributos y ventanas personalizables.
-        \item \textbf{Físicas (PhysX)}: la geometría se consulta con \texttt{OverlapBox}. Se puede paralelizar.
-        \item \textbf{DOTS / diseño orientado a datos}: Job System, \textbf{Burst} (LLVM + SIMD), \texttt{Unity.Mathematics} y colecciones nativas.
-        \item \textbf{Bajo nivel en C\#}: \texttt{ref readonly}, \texttt{Span<T>}, \texttt{stackalloc} y manipulación de bits.
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.42\textwidth}
-      \centering
-      \definecolor{lineBlue}{RGB}{0,114,189}
-      \definecolor{lineGreen}{RGB}{34,139,34}
-      \begin{tikzpicture}
-        \begin{axis}[
-            width=1.05\textwidth,
-            height=4.6cm,
-            xmode=log,
-            log basis x=10,
-            xminorticks=false,
-            xtick={1000,10000,100000,1000000,10000000},
-            xticklabels={$10^{3}$,$10^{4}$,$10^{5}$,$10^{6}$,$10^{7}$},
-            xlabel={Tamaño},
-            ylabel={Tiempo (ms)},
-            ymin=0, ymax=25,
-            ytick={0,5,10,15,20,25},
-            ymajorgrids, grid style={udcgray!25},
-            tick align=outside,
-            every axis plot/.append style={thick, mark size=1.6pt},
-            legend columns=2,
-            legend cell align={left},
-            legend style={
-              at={(0.5,-0.35)}, anchor=north,
-              font=\tiny, draw=udcgray!50,
-              /tikz/every even column/.append style={column sep=4pt},
-            },
-            tick label style={font=\tiny}, label style={font=\scriptsize},
-          ]
-          \addplot[color=lineGreen,   solid,  mark=*]                              coordinates {(1000,6.50) (10000,3.00) (100000,3.00) (1000000,3.20) (10000000,3.00)};
-          \addlegendentry{i5-6267U DOD}
-          \addplot[color=lineGreen, dashed, mark=o,        mark options={solid}] coordinates {(1000,3.50) (10000,5.00) (100000,16.50) (1000000,16.00) (10000000,13.00)};
-          \addlegendentry{i5-6267U OOP}
-          \addplot[color=udcpink,  solid,  mark=square*]                        coordinates {(1000,4.50) (10000,4.00) (100000,2.50) (1000000,2.50) (10000000,2.50)};
-          \addlegendentry{i7-7700HQ DOD}
-          \addplot[color=udcpink,    dashed, mark=square,   mark options={solid}] coordinates {(1000,12.00) (10000,14.50) (100000,12.00) (1000000,5.00) (10000000,5.50)};
-          \addlegendentry{i7-7700HQ OOP}
-          \addplot[color=lineBlue, solid,  mark=triangle*]                      coordinates {(1000,2.50) (10000,2.00) (100000,2.00) (1000000,2.00) (10000000,2.00)};
-          \addlegendentry{i7-8700K DOD}
-          \addplot[color=lineBlue,    dashed, mark=triangle, mark options={solid}] coordinates {(1000,20.00) (10000,3.00) (100000,23.50) (1000000,15.50) (10000000,15.50)};
-          \addlegendentry{i7-8700K OOP}
-        \end{axis}
-      \end{tikzpicture}\\[1.5em]
-      {\scriptsize\color{udcgray} El diseño orientado a datos aprovecha mejor la caché que la POO.}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Fundamentos teóricos}
-  \begin{columns}[T]
-    \begin{column}{0.6\textwidth}
-      \begin{itemize}
-        \item \textbf{Representación del espacio}: frente a \textit{waypoints} y \textit{flow fields}, se elige el \alert{Sparse Voxel Octree (SVO)}, que solo subdivide donde hay geometría.
-        \item \textbf{Códigos de Morton} (curvas de orden Z): mapean coordenadas 3D a un índice lineal preservando la localidad espacial.
-        \item \textbf{Búsqueda}: de Dijkstra a \alert{A*}, con $f(n) = g(n) + h(n)$.
-        \item \textbf{Postprocesado}: atajo por línea de visión (DDA) y suavizado con \textit{splines} de Catmull-Rom.
-        \item \textbf{Evasión}: ORCA, sobre el espacio de velocidades.
-        \item \textbf{Integridad}: \textit{hash} determinista FNV-1a.
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.4\textwidth}
-      \centering
-      \includegraphics[width=0.8\textwidth]{zfold.png}\\[0.1em]
-      {\scriptsize\color{udcgray} Curva de Morton (versión 2D).}\\[0.4em]
-      \includegraphics[width=0.8\textwidth]{catmullrom.png}\\[0.1em]
-      {\scriptsize\color{udcgray} Suavizado con Catmull-Rom.}
-    \end{column}
-  \end{columns}
+  \resizebox{0.95\textwidth}{!}{%
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{|p{0.46\textwidth}|p{0.46\textwidth}|}
+  \hline
+  \rowcolor{udcpink!25}
+  \textbf{Fortalezas} & \textbf{Debilidades} \\ \hline
+  \small
+  \textbullet\ Código abierto.\newline
+  \textbullet\ Transparencia total. & 
+  \small
+  \textbullet\ Alternativas consolidadas.\newline
+  \textbullet\ Necesidad de adaptarse.\\ \hline
+  \rowcolor{udcpink!25}
+  \textbf{Oportunidades} & \textbf{Amenazas} \\ \hline
+  \small
+  \textbullet\ Carencia de herramientas integradas.\newline
+  \textbullet\ Gran canal de difusión. & 
+  \small
+  \textbullet\ Sector en constante cambio.\newline
+  \textbullet\ Motores emergentes.\newline
+  \textbullet\ Riesgo de herramienta oficial. \\ \hline
+  \end{tabular}}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
