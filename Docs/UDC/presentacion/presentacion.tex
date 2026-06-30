@@ -190,9 +190,9 @@
   \begin{columns}[T]
     \begin{column}{0.56\textwidth}
       \begin{itemize}
-        \item La navegación autónoma es la base de la inteligencia de los personajes no jugables (NPC).
-        \item El \textit{pathfinding} está prácticamente resuelto para agentes \alert{terrestres} en escenarios estáticos.
-        \item Los motores integran soluciones nativas (Unity NavMesh, Unreal, Godot), casi todas sobre la biblioteca Recast.
+        \item La navegación autónoma es la base de la inteligencia de los personajes no jugables (NPCs).
+        \item El \textit{pathfinding} está prácticamente resuelto para agentes \alert{terrestres}.
+        \item Los motores integran soluciones nativas basadas sobre la biblioteca Recast.
         \item Se apoyan en una \alert{malla de navegación 2.5D}: el mundo es 3D, pero las rutas se calculan sobre superficies donde el agente se apoya.
       \end{itemize}
     \end{column}
@@ -210,12 +210,12 @@
       \begin{itemize}
         \item Drones, naves, criaturas o peces no están anclados al suelo: operan con \alert{seis grados de libertad}.
         \item Un plano transitable es insuficiente. Se necesita un \alert{volumen de navegación} que represente \textbf{todo} el espacio libre.
-        \item Añadir la altura como dimensión libre dispara el coste en tiempo y memoria, salvo con estructuras especializadas (octrees).
-        \item Sin soporte oficial, los estudios recurren a soluciones \textit{ad-hoc}, caras y poco reutilizables.
+        \item Añadir la altura como dimensión libre dispara el coste en tiempo y memoria.
+        \item Sin soporte oficial, los estudios recurren a soluciones \textit{ad-hoc}.
       \end{itemize}
       \vspace{0.4em}
       \begin{block}{Necesidad}
-        Un sistema \textbf{genérico, optimizado y reutilizable} que resuelva la navegación 3D de forma estructural.
+        Un sistema \textbf{genérico, optimizado y reutilizable} que resuelva la navegación volumétrica.
       \end{block}
     \end{column}
     \begin{column}{0.42\textwidth}
@@ -227,7 +227,7 @@
 \end{frame}
 
 \begin{frame}{Objetivos}
-  \textbf{Objetivo general:} diseño, implementación y validación en Unity de un sistema de navegación volumétrica eficiente y optimizado, con \alert{enfoque de producto}: un paquete modular, de código abierto y listo para producción.
+  \textbf{Objetivo general:} diseño, implementación y validación en Unity de un sistema de navegación volumétrica eficiente y optimizado, con \alert{enfoque de producto}.
   \vspace{0.5em}
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
@@ -262,9 +262,10 @@
     \begin{column}{0.58\textwidth}
       \begin{itemize}
         \item \textbf{Unity}: arquitectura de componentes (\texttt{GameObject} + \texttt{MonoBehaviour}) y \textit{game loop}.
-        \item \textbf{Físicas (PhysX)}: la geometría se consulta con \texttt{OverlapBox}, agrupadas en lotes y ejecutadas en paralelo.
+        \item \textbf{Editor}: atributos y ventanas personalizables.
+        \item \textbf{Físicas (PhysX)}: la geometría se consulta con \texttt{OverlapBox}. Se puede paralelizar.
         \item \textbf{DOTS / diseño orientado a datos}: Job System, \textbf{Burst} (LLVM + SIMD), \texttt{Unity.Mathematics} y colecciones nativas.
-        \item \textbf{Bajo nivel en C\#}: \texttt{ref readonly}, \texttt{Span<T>}, \texttt{stackalloc} y manipulación de bits para minimizar el recolector de basura.
+        \item \textbf{Bajo nivel en C\#}: \texttt{ref readonly}, \texttt{Span<T>}, \texttt{stackalloc} y manipulación de bits.
       \end{itemize}
     \end{column}
     \begin{column}{0.42\textwidth}
