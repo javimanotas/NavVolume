@@ -820,6 +820,7 @@
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
       \centering
+      \vspace*{0.85cm}
       \begin{tikzpicture}
         \begin{axis}[
             width=\textwidth, height=4.2cm,
@@ -844,7 +845,7 @@
       \centering
       \begin{tikzpicture}
         \begin{axis}[
-            ybar, width=\textwidth, height=4.2cm, bar width=8pt,
+            ybar, area legend, width=\textwidth, height=4.2cm, bar width=8pt,
             ymin=0, ylabel={FPS}, xlabel={Número de agentes},
             symbolic x coords={5,10,15,20}, xtick=data, enlarge x limits=0.22,
             nodes near coords,
@@ -860,7 +861,7 @@
           \addplot[fill=udcpink!70, draw=udcpink!80!black] coordinates {(5,401) (10,397) (15,387) (20,370)};
           \legend{Sin evasión, Con evasión}
         \end{axis}
-      \end{tikzpicture}\\[1.6em]
+      \end{tikzpicture}\\[0.2em]
       {\scriptsize Con 20 agentes, la evasión añade $\sim$0,18\,ms (menos de 10\,$\mu$s por agente).}
     \end{column}
   \end{columns}
