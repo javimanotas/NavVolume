@@ -151,7 +151,7 @@
   \centering
   \vspace{0.3em}
   {\color{udcpink}\fontfamily{phv}\selectfont\large Facultade de Informática}\\[0.4em]
-  \includegraphics[height=1.5cm]{udc.png}\\[0.7em]
+  \includegraphics[height=1.2cm]{udc.png}\\[0.7em]
 
   {\footnotesize TRABALLO FIN DE GRAO\\
    GRAO EN ENXEÑARÍA INFORMÁTICA\\
@@ -159,7 +159,7 @@
 
   \includegraphics[height=1.5cm]{sello_euro_inf.png}\\[0.8em]
 
-  {\color{udcpink}\bfseries\large
+  {\color{udcpink}\bfseries\Large
    Diseño e implementación de un sistema de navegación\\
    volumétrica para agentes voladores en videojuegos\\[0.2em]}
   {\color{udcpink}\rule{0.7\textwidth}{0.5mm}}\\[0.7em]
@@ -170,8 +170,6 @@
     \textbf{Dirección:} & Enrique Fernández Blanco\\
                         & Alejandro Puente Castro\\
   \end{tabular}}\\[0.5em]
-
-  {\footnotesize\color{udcgray} Defensa do Traballo de Fin de Grao \textbullet{} A Coruña, 2026}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -186,14 +184,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introducción}
 
-\begin{frame}{El punto de partida: la navegación autónoma}
+\begin{frame}{Introducción: la navegación autónoma}
   \begin{columns}[T]
     \begin{column}{0.56\textwidth}
       \begin{itemize}
-        \item La navegación autónoma es la base de la inteligencia de los personajes no jugables (NPCs).
-        \item El \textit{pathfinding} está prácticamente resuelto para agentes \alert{terrestres}.
-        \item Los motores integran soluciones nativas basadas sobre la biblioteca Recast.
-        \item Se apoyan en una \alert{malla de navegación 2.5D}: el mundo es 3D, pero las rutas se calculan sobre superficies donde el agente se apoya.
+        \item Dotar a los personajes no jugables de inteligencia.
+        \item Soluciones basadas sobre la biblioteca Recast.
+        \item Malla de navegación \alert{2.5D}.
       \end{itemize}
     \end{column}
     \begin{column}{0.44\textwidth}
@@ -204,14 +201,13 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}{Motivación: los agentes voladores}
+\begin{frame}{Introducción: los agentes voladores}
   \begin{columns}[T]
     \begin{column}{0.58\textwidth}
       \begin{itemize}
-        \item Drones, naves, criaturas o peces no están anclados al suelo: operan con \alert{seis grados de libertad}.
-        \item Un plano transitable es insuficiente. Se necesita un \alert{volumen de navegación} que represente \textbf{todo} el espacio libre.
-        \item Añadir la altura como dimensión libre dispara el coste en tiempo y memoria.
-        \item Sin soporte oficial, los estudios recurren a soluciones \textit{ad-hoc}.
+        \item Seis grados de libertad.
+        \item Volumen de navegación.
+        \item Sin soporte oficial.
       \end{itemize}
       \vspace{0.4em}
       \begin{block}{Necesidad}
@@ -225,6 +221,8 @@
     \end{column}
   \end{columns}
 \end{frame}
+
+
 
 \begin{frame}{Objetivos}
   \textbf{Objetivo general:} diseño, implementación y validación en Unity de un sistema de navegación volumétrica eficiente y optimizado, con \alert{enfoque de producto}.
@@ -1044,18 +1042,31 @@
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Cierre                               %
+% Portada                              %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}[plain]
   \centering
-  \vfill
-  \includegraphics[height=1.3cm]{udc.png}\\[1.2em]
-  {\color{udcpink}\bfseries\LARGE Gracias por su atención}\\[0.6em]
-  {\color{udcpink}\rule{0.45\textwidth}{0.5mm}}\\[1.0em]
-  {\large ¿Preguntas?}\\[1.4em]
-  {\footnotesize\color{udcgray}
-   Javier Manotas Ruiz \textbullet{} Navegación volumétrica para agentes voladores en videojuegos}
-  \vfill
+  \vspace{0.3em}
+  {\color{udcpink}\fontfamily{phv}\selectfont\large Facultade de Informática}\\[0.4em]
+  \includegraphics[height=1.2cm]{udc.png}\\[0.7em]
+
+  {\footnotesize TRABALLO FIN DE GRAO\\
+   GRAO EN ENXEÑARÍA INFORMÁTICA\\
+   MENCIÓN EN COMPUTACIÓN}\\[0.6em]
+
+  \includegraphics[height=1.5cm]{sello_euro_inf.png}\\[0.8em]
+
+  {\color{udcpink}\bfseries\Large
+   Diseño e implementación de un sistema de navegación\\
+   volumétrica para agentes voladores en videojuegos\\[0.2em]}
+  {\color{udcpink}\rule{0.7\textwidth}{0.5mm}}\\[0.7em]
+
+  {\small
+  \begin{tabular}{rl}
+    \textbf{Estudante:} & Javier Manotas Ruiz\\
+    \textbf{Dirección:} & Enrique Fernández Blanco\\
+                        & Alejandro Puente Castro\\
+  \end{tabular}}\\[0.5em]
 \end{frame}
 
 \end{document}
