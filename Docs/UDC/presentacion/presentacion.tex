@@ -156,7 +156,7 @@
   \centering
   \vspace{0.3em}
   {\color{udcpink}\fontfamily{phv}\selectfont\large Facultade de Informática}\\[0.4em]
-  \includegraphics[height=1.0cm]{udc.png}\\[0.7em]
+  \includegraphics[height=0.9cm]{udc.png}\\[0.7em]
 
   {\footnotesize TRABALLO FIN DE GRAO\\
    GRAO EN ENXEÑARÍA INFORMÁTICA\\
@@ -739,26 +739,24 @@
 \section{Conclusiones y trabajos futuros}
 
 \begin{frame}{Conclusiones y trabajos futuros: Conclusiones}
-  \begin{block}{Objetivo general alcanzado}
-    No es un mero algoritmo de búsqueda, sino un \textbf{sistema completo}: de la geometría de la escena al movimiento final de un agente que esquiva obstáculos estáticos y a otros agentes.
-  \end{block}
+  \vspace{1.5em}
   \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \footnotesize
+    \begin{column}{0.48\textwidth}
       \textbf{Logros}
-      \begin{itemize}\footnotesize
-        \item Todos los objetivos específicos cumplidos.
-        \item Funcionalidad extra no planificada: la evasión local entre agentes.
-        \item Paquete modular listo para producción.
+      \vspace{0.8em}
+      \begin{itemize}
+        \setlength{\itemsep}{1.6em}
+        \item Todos los objetivos cumplidos.
+        \item Funcionalidad extra no planificada.
       \end{itemize}
     \end{column}
-    \begin{column}{0.5\textwidth}
-      \footnotesize
-      \textbf{Limitaciones}
-      \begin{itemize}\footnotesize
-        \item En 3D no se garantiza el camino óptimo (se acota con heurística y límite de nodos).
-        \item El volumen se precalcula: no apto para geometría dinámica en tiempo de ejecución.
-        \item Máximo de 10 capas (Morton de 32 bits, 1024 celdas por eje).
+    \begin{column}{0.52\textwidth}
+      \textbf{Conclusiones personales}
+      \vspace{0.8em}
+      \begin{itemize}
+        \setlength{\itemsep}{1.6em}
+        \item Profundización del conocimiento en distintos ámbitos.
+        \item Aprendizaje de nuevas competencias.
       \end{itemize}
     \end{column}
   \end{columns}
@@ -766,14 +764,12 @@
 
 \begin{frame}{Conclusiones y trabajos futuros: Trabajos futuros}
   \begin{itemize}
-    \item \textbf{Construcción del volumen en la GPU} mediante \textit{compute shaders}: muy paralelizable, aunque de prioridad baja porque el \textit{bake} no es el cuello de botella.
-    \item \textbf{Búsqueda y evasión con aprendizaje por refuerzo}: sustituir los enfoques reactivos y deterministas (A* + ORCA) por comportamientos más naturales y eficientes.
-    \item \textbf{Otras líneas de extensión}:
-    \begin{itemize}
-      \item Geometría dinámica y reconstrucción incremental del SVO.
-      \item Búsqueda jerárquica o de cualquier ángulo (\textit{any-angle}).
-      \item Enlaces entre volúmenes independientes para escenarios de gran tamaño.
-    \end{itemize}
+    \setlength{\itemsep}{1.6em}
+    \item Construcción del volumen en la GPU.
+    \item Búsqueda y evasión con aprendizaje por refuerzo.
+    \item Reconstrucción incremental del SVO.
+    \item Búsqueda jerárquica.
+    \item Enlaces entre volúmenes independientes para escenarios de gran tamaño.
   \end{itemize}
 \end{frame}
 
@@ -784,7 +780,7 @@
   \centering
   \vspace{0.3em}
   {\color{udcpink}\fontfamily{phv}\selectfont\large Facultade de Informática}\\[0.4em]
-  \includegraphics[height=1.2cm]{udc.png}\\[0.7em]
+  \includegraphics[height=0.9cm]{udc.png}\\[0.7em]
 
   {\footnotesize TRABALLO FIN DE GRAO\\
    GRAO EN ENXEÑARÍA INFORMÁTICA\\
