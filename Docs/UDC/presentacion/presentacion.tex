@@ -25,6 +25,10 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{eurosym}        % comando \euro, igual que en la memoria
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd{\beamer@sectionintoc}{\vskip1.5em}{\vskip1.0em}{}{}
+\makeatother
 \renewcommand{\familydefault}{\rmdefault}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -80,6 +84,7 @@
 \setbeamercolor{title}{fg=udcpink}
 \setbeamercolor{subtitle}{fg=udcgray!90!black}
 \setbeamercolor{section in toc}{fg=black}
+\setbeamerfont{section in toc}{size=\small}
 \setbeamercolor{item}{fg=ficblue}
 \setbeamercolor{block title}{fg=white, bg=ficblue}
 \setbeamercolor{block body}{fg=black, bg=ficblue!8}
@@ -127,7 +132,7 @@
 
 % Índice al comienzo de cada sección, con la sección actual resaltada
 \AtBeginSection[]{%
-  \begin{frame}{Índice}
+  \begin{frame}[shrink]{Índice}
     \tableofcontents[currentsection, sectionstyle=show/shaded, subsectionstyle=hide]
   \end{frame}%
 }
@@ -175,7 +180,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Índice general                       %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}{Índice}
+\begin{frame}[shrink]{Índice}
   \tableofcontents[hideallsubsections]
 \end{frame}
 
@@ -189,8 +194,8 @@
     \begin{column}{0.58\textwidth}
       \begin{itemize}
         \setlength{\itemsep}{1.6em}
-        \item Dotar a los personajes no jugables de inteligencia.
-        \item Soluciones basadas sobre la biblioteca Recast.
+        \item \textit{Pathfinding}.
+        \item Biblioteca Recast.
         \item Malla de navegación \alert{2.5D}.
       \end{itemize}
     \end{column}
@@ -407,8 +412,6 @@
 \section{Desarrollo}
 
 \begin{frame}{Desarrollo: Visión global del sistema}
-  El sistema final es un \textit{pipeline} con dos fases bien diferenciadas:
-  \vspace{0.4em}
   \begin{center}
   \resizebox{0.96\textwidth}{!}{%
   \begin{tikzpicture}[font=\small, node distance=7mm and 9mm,
@@ -442,126 +445,48 @@
       at ([yshift=-1.5mm]cajaB.south west) {Ejecución (tiempo real)};
   \end{tikzpicture}}
   \end{center}
-  \vspace{0.2em}
-  \footnotesize
-  El \textbf{preprocesado} asume a propósito el mayor coste (se ejecuta una vez en el editor). La \textbf{ejecución} prioriza el rendimiento con estructuras compactas y paralelización.
 \end{frame}
 
 \begin{frame}{Desarrollo: Arquitectura modular}
-  \begin{columns}[T]
-    \begin{column}{0.46\textwidth}
-      \footnotesize
-      \begin{itemize}
-        \item Tres bloques separados físicamente como \textit{assemblies}:
-        \begin{itemize}\footnotesize
-          \item \textbf{Runtime}: lógica de navegación (único en la versión final).
-          \item \textbf{Editor}: herramientas de configuración y visualización.
-          \item \textbf{Tests}: pruebas \textit{EditMode} y \textit{PlayMode}.
-        \end{itemize}
-        \item \textit{Editor} y \textit{Tests} dependen de \textit{Runtime}, nunca a la inversa.
-        \item \textit{Runtime} crece de forma controlada sobre una base común, \texttt{Core}.
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.54\textwidth}
-      \centering
-      \resizebox{\textwidth}{!}{%
-      \begin{tikzpicture}[
-          font=\small,
-          nsbox/.style={rounded corners=3pt, draw=udcpink!60!black, fill=white, thick,
-                        align=center, text width=3.3cm, inner sep=5pt, minimum height=1.3cm,
-                        font=\footnotesize},
-          ancho/.style={text width=12.2cm},
-          usedep/.style={-{Stealth[length=2.6mm]}, semithick, draw=ficblue!75!black}]
-        \node[nsbox] (path) {\textbf{Pathfinding}\\[1pt]\scriptsize SVOPathfinder, PathSmoother,\\ SVORaycast (DDA), \textit{Api}};
-        \node[nsbox, left=9mm of path] (builder)
-          {\textbf{Builder}\\[1pt]\scriptsize SVOBuilder, SVORasterizer,\\ SVONeighborLinker,\\ \textit{Jobs}, \textit{Reporting}};
-        \node[nsbox, right=9mm of path] (avoid)
-          {\textbf{Avoidance}\\[1pt]\scriptsize AvoidanceSimulation,\\ \textit{Orca}, \textit{Spatial}};
-        \node[nsbox, ancho, below=10mm of path] (core)
-          {\textbf{Core}\\[1pt]\scriptsize MortonCode, SVO, SVONode, SVOLeaf, SVOLink, NeighborSet};
-        \node[nsbox, ancho, above=10mm of path] (unity)
-          {\textbf{Unity}\\[1pt]\scriptsize NavVolumeSpace, NavVolumeAgent, NavVolumeObstacle, \textit{Hashing}};
-        \draw[usedep] (builder.south) -- (builder.south |- core.north);
-        \draw[usedep] (path.south)    -- (path.south    |- core.north);
-        \draw[usedep] (avoid.south)   -- (avoid.south   |- core.north);
-        \draw[usedep] (path.west)     -- (builder.east);
-        \draw[usedep] (unity.south -| builder.north) -- (builder.north);
-        \draw[usedep] (unity.south -| path.north)    -- (path.north);
-        \draw[usedep] (unity.south -| avoid.north)   -- (avoid.north);
-        \begin{scope}[on background layer]
-          \node[contenedor, fit=(core)(builder)(path)(avoid)(unity),
-                label={[font=\bfseries]above:Runtime}] (runtime) {};
-        \end{scope}
-        \node[modulo, fill=ficblue!15, draw=ficblue,
-              above=14mm of runtime.north west, anchor=south west]
-          (editor) {\textbf{Editor}\\[2pt]\footnotesize Configuración\\y visualización};
-        \node[modulo, fill=udcgray!40, draw=udcgray!80!black,
-              above=14mm of runtime.north east, anchor=south east]
-          (tests) {\textbf{Tests}\\[2pt]\footnotesize Pruebas \textit{EditMode}\\y \textit{PlayMode}};
-        \draw[dep] (editor.south) -- (editor.south |- runtime.north);
-        \draw[dep] (tests.south)  -- (tests.south  |- runtime.north);
-      \end{tikzpicture}}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Desarrollo: Iteración 0, arquitectura e integración continua}
-  \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \footnotesize
-      \begin{itemize}
-        \item \textbf{Arquitectura inicial sólida}: antes de implementar funcionalidades, se establece un esqueleto robusto.
-        \item Tres \textit{assemblies} separados: \textbf{Runtime} (lógica central), \textbf{Editor} (herramientas) y \textbf{Tests}.
-        \item \textbf{Regla de dependencias}: \textit{Editor} y \textit{Tests} dependen de \textit{Runtime}, pero nunca a la inversa.
-        \item \textbf{Integración continua (CI)}: barrera de calidad desde el primer día. Validaciones automáticas en cada contribución:
-        \begin{itemize}\footnotesize
-          \item Verificación de formato (Csharpier).
-          \item Batería de pruebas (\textit{EditMode} y \textit{PlayMode}).
-        \end{itemize}
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \centering
-      \vspace{1.5em}
-      \resizebox{\textwidth}{!}{%
-      \begin{tikzpicture}[
-          font=\small,
-          modulo/.style={rounded corners=3pt, draw, thick, align=center,
-                         inner sep=8pt, minimum width=3.4cm, minimum height=1.5cm},
-          contenedor/.style={rounded corners=4pt, draw=udcpink, thick, fill=udcpink!10,
-                             inner sep=10pt},
-          ns/.style={rounded corners=2pt, draw=udcpink!60!black, fill=white, align=center,
-                     minimum width=2.1cm, minimum height=9mm, font=\footnotesize\ttfamily},
-          dep/.style={dashed, -{Stealth[length=3mm]}, thick, draw=black!70}
-        ]
-
-        % Espacios de nombres internos del modulo Runtime
-        \node[ns] (core) {Core};
-        \node[ns, right=3mm of core]    (builder) {Builder};
-        \node[ns, right=3mm of builder] (path)    {Pathfinding};
-        \node[ns, right=3mm of path]    (unity)   {Unity};
-
-        % Contenedor Runtime
-        \begin{scope}[on background layer]
-          \node[contenedor, fit=(core)(builder)(path)(unity),
-                label={[font=\bfseries]above:Runtime}] (runtime) {};
-        \end{scope}
-
-        % Modulos Editor y Tests
-        \node[modulo, fill=ficblue!15, draw=ficblue,
-              above=16mm of runtime.north west, anchor=south west]
-          (editor) {\textbf{Editor}\\[2pt]\footnotesize Herramientas de\\configuración};
-        \node[modulo, fill=udcgray!40, draw=udcgray!80!black,
-              above=16mm of runtime.north east, anchor=south east]
-          (tests) {\textbf{Tests}\\[2pt]\footnotesize Pruebas automatizadas};
-
-        % Dependencias
-        \draw[dep] (editor.south) -- (editor.south |- runtime.north);
-        \draw[dep] (tests.south)  -- (tests.south  |- runtime.north);
-
-      \end{tikzpicture}}
-    \end{column}
-  \end{columns}
+  \begin{center}
+  \resizebox{0.55\textwidth}{!}{%
+  \begin{tikzpicture}[
+      font=\small,
+      nsbox/.style={rounded corners=3pt, draw=udcpink!60!black, fill=white, thick,
+                    align=center, text width=3.3cm, inner sep=5pt, minimum height=1.3cm,
+                    font=\footnotesize},
+      ancho/.style={text width=12.2cm},
+      usedep/.style={-{Stealth[length=2.6mm]}, semithick, draw=ficblue!75!black}]
+    \node[nsbox] (path) {\textbf{Pathfinding}\\[1pt]\scriptsize SVOPathfinder, PathSmoother,\\ SVORaycast (DDA), \textit{Api}};
+    \node[nsbox, left=9mm of path] (builder)
+      {\textbf{Builder}\\[1pt]\scriptsize SVOBuilder, SVORasterizer,\\ SVONeighborLinker,\\ \textit{Jobs}, \textit{Reporting}};
+    \node[nsbox, right=9mm of path] (avoid)
+      {\textbf{Avoidance}\\[1pt]\scriptsize AvoidanceSimulation,\\ \textit{Orca}, \textit{Spatial}};
+    \node[nsbox, ancho, below=10mm of path] (core)
+      {\textbf{Core}\\[1pt]\scriptsize MortonCode, SVO, SVONode, SVOLeaf, SVOLink, NeighborSet};
+    \node[nsbox, ancho, above=10mm of path] (unity)
+      {\textbf{Unity}\\[1pt]\scriptsize NavVolumeSpace, NavVolumeAgent, NavVolumeObstacle, \textit{Hashing}};
+    \draw[usedep] (builder.south) -- (builder.south |- core.north);
+    \draw[usedep] (path.south)    -- (path.south    |- core.north);
+    \draw[usedep] (avoid.south)   -- (avoid.south   |- core.north);
+    \draw[usedep] (path.west)     -- (builder.east);
+    \draw[usedep] (unity.south -| builder.north) -- (builder.north);
+    \draw[usedep] (unity.south -| path.north)    -- (path.north);
+    \draw[usedep] (unity.south -| avoid.north)   -- (avoid.north);
+    \begin{scope}[on background layer]
+      \node[contenedor, fit=(core)(builder)(path)(avoid)(unity),
+            label={[font=\bfseries]above:Runtime}] (runtime) {};
+    \end{scope}
+    \node[modulo, fill=ficblue!15, draw=ficblue,
+          above=14mm of runtime.north west, anchor=south west]
+      (editor) {\textbf{Editor}\\[2pt]\footnotesize Configuración\\y visualización};
+    \node[modulo, fill=udcgray!40, draw=udcgray!80!black,
+          above=14mm of runtime.north east, anchor=south east]
+      (tests) {\textbf{Tests}\\[2pt]\footnotesize Pruebas \textit{EditMode}\\y \textit{PlayMode}};
+    \draw[dep] (editor.south) -- (editor.south |- runtime.north);
+    \draw[dep] (tests.south)  -- (tests.south  |- runtime.north);
+  \end{tikzpicture}}
+  \end{center}
 \end{frame}
 
 \begin{frame}{Desarrollo: Iteración 1, estructura de datos volumétrica (SVO)}
@@ -670,17 +595,11 @@
 \begin{frame}{Desarrollo: Iteración 2, búsqueda A* y postprocesado}
   \begin{columns}[T]
     \begin{column}{0.54\textwidth}
-      \footnotesize
-      \textbf{A* sobre un grafo de resolución heterogénea}
-      \begin{itemize}\footnotesize
-        \item Un solo salto cruza grandes nodos de espacio abierto.
-        \item Cerca de los obstáculos, la búsqueda se ramifica en nodos y vóxeles cada vez más pequeños.
-        \item Dos modos de coste: distancia euclídea o conteo de nodos, con heurística ponderada $f(n) = g(n) + W\,h(n)$.
-      \end{itemize}
-      \textbf{Postprocesado (seguro por construcción)}
-      \begin{itemize}\footnotesize
-        \item Atajo voraz por \textbf{línea de visión} (algoritmo DDA).
-        \item Suavizado con \textit{spline} de Catmull-Rom, que pasa exactamente por los puntos ya verificados como libres.
+      \begin{itemize}
+        \setlength{\itemsep}{1.6em}
+        \item Grafo de resolución heterogénea.
+        \item $f(n) = g(n) + W\,h(n)$
+        \item Postprocesado en dos fases.
       \end{itemize}
     \end{column}
     \begin{column}{0.46\textwidth}
