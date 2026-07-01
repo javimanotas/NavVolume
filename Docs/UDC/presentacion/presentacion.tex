@@ -156,7 +156,7 @@
   \centering
   \vspace{0.3em}
   {\color{udcpink}\fontfamily{phv}\selectfont\large Facultade de Informática}\\[0.4em]
-  \includegraphics[height=1.2cm]{udc.png}\\[0.7em]
+  \includegraphics[height=1.0cm]{udc.png}\\[0.7em]
 
   {\footnotesize TRABALLO FIN DE GRAO\\
    GRAO EN ENXEÑARÍA INFORMÁTICA\\
@@ -247,33 +247,6 @@
   Spatial Pathfinding & Unity & Volumétrica & 27,59\,\euro \\
   \end{tabular}}
   \endgroup
-\end{frame}
-
-\begin{frame}{Estudio de mercado: Análisis DAFO}
-  \centering
-  \vspace{0.5em}
-  \resizebox{0.95\textwidth}{!}{%
-  \renewcommand{\arraystretch}{1.5}
-  \begin{tabular}{|p{0.46\textwidth}|p{0.46\textwidth}|}
-  \hline
-  \rowcolor{udcpink!25}
-  \textbf{Fortalezas} & \textbf{Debilidades} \\ \hline
-  \small
-  \textbullet\ Código abierto.\newline
-  \textbullet\ Transparencia total. & 
-  \small
-  \textbullet\ Alternativas consolidadas.\newline
-  \textbullet\ Necesidad de adaptarse.\\ \hline
-  \rowcolor{udcpink!25}
-  \textbf{Oportunidades} & \textbf{Amenazas} \\ \hline
-  \small
-  \textbullet\ Carencia de herramientas integradas.\newline
-  \textbullet\ Gran canal de difusión. & 
-  \small
-  \textbullet\ Sector en constante cambio.\newline
-  \textbullet\ Motores emergentes.\newline
-  \textbullet\ Riesgo de herramienta oficial. \\ \hline
-  \end{tabular}}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -447,147 +420,19 @@
   \end{center}
 \end{frame}
 
-\begin{frame}{Desarrollo: Arquitectura modular}
-  \begin{center}
-  \resizebox{0.55\textwidth}{!}{%
-  \begin{tikzpicture}[
-      font=\small,
-      nsbox/.style={rounded corners=3pt, draw=udcpink!60!black, fill=white, thick,
-                    align=center, text width=3.3cm, inner sep=5pt, minimum height=1.3cm,
-                    font=\footnotesize},
-      ancho/.style={text width=12.2cm},
-      usedep/.style={-{Stealth[length=2.6mm]}, semithick, draw=ficblue!75!black}]
-    \node[nsbox] (path) {\textbf{Pathfinding}\\[1pt]\scriptsize SVOPathfinder, PathSmoother,\\ SVORaycast (DDA), \textit{Api}};
-    \node[nsbox, left=9mm of path] (builder)
-      {\textbf{Builder}\\[1pt]\scriptsize SVOBuilder, SVORasterizer,\\ SVONeighborLinker,\\ \textit{Jobs}, \textit{Reporting}};
-    \node[nsbox, right=9mm of path] (avoid)
-      {\textbf{Avoidance}\\[1pt]\scriptsize AvoidanceSimulation,\\ \textit{Orca}, \textit{Spatial}};
-    \node[nsbox, ancho, below=10mm of path] (core)
-      {\textbf{Core}\\[1pt]\scriptsize MortonCode, SVO, SVONode, SVOLeaf, SVOLink, NeighborSet};
-    \node[nsbox, ancho, above=10mm of path] (unity)
-      {\textbf{Unity}\\[1pt]\scriptsize NavVolumeSpace, NavVolumeAgent, NavVolumeObstacle, \textit{Hashing}};
-    \draw[usedep] (builder.south) -- (builder.south |- core.north);
-    \draw[usedep] (path.south)    -- (path.south    |- core.north);
-    \draw[usedep] (avoid.south)   -- (avoid.south   |- core.north);
-    \draw[usedep] (path.west)     -- (builder.east);
-    \draw[usedep] (unity.south -| builder.north) -- (builder.north);
-    \draw[usedep] (unity.south -| path.north)    -- (path.north);
-    \draw[usedep] (unity.south -| avoid.north)   -- (avoid.north);
-    \begin{scope}[on background layer]
-      \node[contenedor, fit=(core)(builder)(path)(avoid)(unity),
-            label={[font=\bfseries]above:Runtime}] (runtime) {};
-    \end{scope}
-    \node[modulo, fill=ficblue!15, draw=ficblue,
-          above=14mm of runtime.north west, anchor=south west]
-      (editor) {\textbf{Editor}\\[2pt]\footnotesize Configuración\\y visualización};
-    \node[modulo, fill=udcgray!40, draw=udcgray!80!black,
-          above=14mm of runtime.north east, anchor=south east]
-      (tests) {\textbf{Tests}\\[2pt]\footnotesize Pruebas \textit{EditMode}\\y \textit{PlayMode}};
-    \draw[dep] (editor.south) -- (editor.south |- runtime.north);
-    \draw[dep] (tests.south)  -- (tests.south  |- runtime.north);
-  \end{tikzpicture}}
-  \end{center}
-\end{frame}
-
 \begin{frame}{Desarrollo: Iteración 1, estructura de datos volumétrica (SVO)}
   \begin{columns}[T]
     \begin{column}{0.56\textwidth}
-      \footnotesize
-      \textbf{Representación compacta}
-      \begin{itemize}\footnotesize
-        \item SVO en capas planas, ordenadas por código de Morton (búsqueda binaria).
-        \item Cada hoja es una rejilla $4\times4\times4$ codificada en una \alert{máscara de 64 bits} (8 bytes).
-        \item \textbf{Punteros compactos} de 32 bits para referenciar nodos y vóxeles.
-      \end{itemize}
-      \textbf{Construcción (\textit{bake})}
-      \begin{itemize}\footnotesize
-        \item Muestreo con \texttt{OverlapBox} paralelizado (Job System + Burst).
-        \item Estrategia \alert{de lo grueso a lo fino} y descarte temprano de hojas vacías.
-        \item Serialización en un único \textit{blob} binario + \textit{hash} FNV-1a de integridad.
+      \begin{itemize}
+        \setlength{\itemsep}{1.6em}
+        \item Representación compacta.
+        \item Códigos de Morton.
+        \item Integridad con \textit{hash}.
       \end{itemize}
     \end{column}
     \begin{column}{0.44\textwidth}
       \centering
-      \resizebox{\textwidth}{!}{%
-      \begin{tikzpicture}[font=\small]
-        % ===== Pila de 4 capas 4x4 (hoja 4x4x4) en proyeccion oblicua =====
-        % Parametros de la proyeccion: ancho de celda 0.52; profundidad (0.26,0.20).
-        % Las capas se separan 1.1 en vertical: z=0 abajo, z=3 arriba.
-
-        % Pilares que unen las cuatro capas en una sola estructura apilada.
-        \foreach \px/\pyb/\pyt in {0/0/3.3, 2.08/0/3.3, 3.12/0.8/4.1, 1.04/0.8/4.1}
-          \draw[draw=black!35, dashed, line width=0.4pt] (\px,\pyb) -- (\px,\pyt);
-
-        % Voxeles ocupados (en rosa) de cada capa.
-        \foreach \c/\r/\by in {0/0/0, 1/0/0, 3/3/0, 1/2/0,
-                               1/1/1.1, 2/1/1.1, 2/2/1.1,
-                               0/2/2.2, 3/1/2.2,
-                               1/3/3.3, 2/3/3.3, 3/3/3.3}
-          \fill[ocupado]
-            ({0.52*\c+0.26*\r},{\by+0.20*\r}) --
-            ({0.52*\c+0.52+0.26*\r},{\by+0.20*\r}) --
-            ({0.52*\c+0.78+0.26*\r},{\by+0.20+0.20*\r}) --
-            ({0.52*\c+0.26+0.26*\r},{\by+0.20+0.20*\r}) -- cycle;
-
-        % Rejilla 4x4 de cada capa.
-        \foreach \by in {0,1.1,2.2,3.3}{
-          \foreach \r in {0,1,2,3,4}
-            \draw[celda] ({0.26*\r},{\by+0.20*\r}) -- ({2.08+0.26*\r},{\by+0.20*\r});
-          \foreach \c in {0,1,2,3,4}
-            \draw[celda] ({0.52*\c},{\by}) -- ({0.52*\c+1.04},{\by+0.8});
-        }
-
-        % Etiquetas de capa.
-        \foreach \by/\zl in {0/0,1.1/1,2.2/2,3.3/3}
-          \node[anchor=east, font=\scriptsize] at ({-0.12},{\by+0.1}) {$z{=}\zl$};
-        \node[anchor=south, align=center, font=\footnotesize] at (1.7,4.55)
-          {Hoja $4{\times}4{\times}4$\\(4 capas apiladas)};
-
-        % ===== Flecha de codificacion =====
-        \draw[flecha] (3.5,2.05) -- (5.85,2.05)
-          node[midway, above, font=\scriptsize] {1 bit/vóxel};
-
-        % ===== Mascara de 64 bits: 4 filas de 16 (una fila por capa) =====
-        \begin{scope}[xshift=6.6cm, yshift=2.65cm]
-          \foreach \c/\r in {0/0,1/0,6/0,12/0, 3/1,8/1,14/1, 5/2,11/2, 2/3,9/3,15/3}
-            \fill[ocupado] (\c*0.30,-\r*0.30) rectangle ++(0.30,-0.30);
-          \foreach \c in {0,...,15}
-            \foreach \r in {0,1,2,3}
-              \draw[celda] (\c*0.30,-\r*0.30) rectangle ++(0.30,-0.30);
-          \foreach \r/\zl in {0/0,1/1,2/2,3/3}
-            \node[anchor=east, font=\scriptsize] at ({-0.1},{-0.30*\r-0.15}) {$z{=}\zl$};
-          \node[anchor=south, font=\footnotesize] at (2.4,0.12)
-            {Máscara de 64 bits (\texttt{ulong})};
-          \node[anchor=north, font=\scriptsize, text=black!60] at (2.4,-1.28)
-            {cada fila $=$ una capa (16 vóxeles)};
-          % Leyenda: en la mascara cada cuadrado es un bit, no un volumen de espacio.
-          \fill[ocupado] (0.7,-2.12) rectangle ++(0.26,-0.26); % Antes: -1.62
-          \node[anchor=west, font=\scriptsize] at (1.02,-2.25) {$=$ bit a 1 (vóxel ocupado)}; % Antes: -1.75
-          \draw[celda] (0.7,-2.50) rectangle ++(0.26,-0.26); % Antes: -2.0
-          \node[anchor=west, font=\scriptsize] at (1.02,-2.63) {$=$ bit a 0 (vóxel libre)}; % Antes: -2.13
-        \end{scope}
-      \end{tikzpicture}}\\[1.5em]
-      
-      \resizebox{0.85\textwidth}{!}{%
-      \begin{tikzpicture}[font=\small]
-        % Vecino grande (nivel del padre)
-        \draw[celda, very thick, fill=ficblue!12] (0,0) rectangle (2.6,-2.6);
-        \node[font=\footnotesize, align=center] at (1.3,-1.85) {Vecino de\\mayor tamaño};
-        % Nodo a enlazar, subdividido
-        \begin{scope}[xshift=2.6cm]
-          \draw[celda, very thick] (0,0) rectangle (2.6,-2.6);
-          \draw[celda] (1.3,0) -- (1.3,-2.6);
-          \draw[celda] (0,-1.3) -- (2.6,-1.3);
-          \foreach \sc in {0,1}\foreach \sr in {0,1}
-            \draw[celda] (\sc*0.65,-\sr*0.65) rectangle ++(0.65,-0.65);
-          \fill[udcpink!65] (0,0) rectangle (0.65,-0.65);
-          \draw[celda] (0,0) rectangle (0.65,-0.65);
-        \end{scope}
-        \node[font=\scriptsize, anchor=west] at (3.4,-0.32) {nodo pequeño};
-        % Enlace heredado del padre
-        \draw[flecha, draw=udcpink, very thick] (2.6,-0.32) to[out=180, in=0] (1.6,-0.78);
-        \node[font=\scriptsize, text=udcpink!80!black, anchor=north] at (1.5,-1.0) {vecino heredado};
-      \end{tikzpicture}}
+      \includegraphics[width=\textwidth]{zfold.png}
     \end{column}
   \end{columns}
 \end{frame}
@@ -721,6 +566,48 @@
     \fill[black] (1.04,1.92) circle (1.3pt);
     \node[font=\tiny, anchor=west] at (1.12,1.66) {$v^{\mathrm{new}}$};
   \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Desarrollo: Arquitectura modular}
+  \begin{center}
+  \resizebox{0.55\textwidth}{!}{%
+  \begin{tikzpicture}[
+      font=\small,
+      nsbox/.style={rounded corners=3pt, draw=udcpink!60!black, fill=white, thick,
+                    align=center, text width=3.3cm, inner sep=5pt, minimum height=1.3cm,
+                    font=\footnotesize},
+      ancho/.style={text width=12.2cm},
+      usedep/.style={-{Stealth[length=2.6mm]}, semithick, draw=ficblue!75!black}]
+    \node[nsbox] (path) {\textbf{Pathfinding}\\[1pt]\scriptsize SVOPathfinder, PathSmoother,\\ SVORaycast (DDA), \textit{Api}};
+    \node[nsbox, left=9mm of path] (builder)
+      {\textbf{Builder}\\[1pt]\scriptsize SVOBuilder, SVORasterizer,\\ SVONeighborLinker,\\ \textit{Jobs}, \textit{Reporting}};
+    \node[nsbox, right=9mm of path] (avoid)
+      {\textbf{Avoidance}\\[1pt]\scriptsize AvoidanceSimulation,\\ \textit{Orca}, \textit{Spatial}};
+    \node[nsbox, ancho, below=10mm of path] (core)
+      {\textbf{Core}\\[1pt]\scriptsize MortonCode, SVO, SVONode, SVOLeaf, SVOLink, NeighborSet};
+    \node[nsbox, ancho, above=10mm of path] (unity)
+      {\textbf{Unity}\\[1pt]\scriptsize NavVolumeSpace, NavVolumeAgent, NavVolumeObstacle, \textit{Hashing}};
+    \draw[usedep] (builder.south) -- (builder.south |- core.north);
+    \draw[usedep] (path.south)    -- (path.south    |- core.north);
+    \draw[usedep] (avoid.south)   -- (avoid.south   |- core.north);
+    \draw[usedep] (path.west)     -- (builder.east);
+    \draw[usedep] (unity.south -| builder.north) -- (builder.north);
+    \draw[usedep] (unity.south -| path.north)    -- (path.north);
+    \draw[usedep] (unity.south -| avoid.north)   -- (avoid.north);
+    \begin{scope}[on background layer]
+      \node[contenedor, fit=(core)(builder)(path)(avoid)(unity),
+            label={[font=\bfseries]above:Runtime}] (runtime) {};
+    \end{scope}
+    \node[modulo, fill=ficblue!15, draw=ficblue,
+          above=14mm of runtime.north west, anchor=south west]
+      (editor) {\textbf{Editor}\\[2pt]\footnotesize Configuración\\y visualización};
+    \node[modulo, fill=udcgray!40, draw=udcgray!80!black,
+          above=14mm of runtime.north east, anchor=south east]
+      (tests) {\textbf{Tests}\\[2pt]\footnotesize Pruebas \textit{EditMode}\\y \textit{PlayMode}};
+    \draw[dep] (editor.south) -- (editor.south |- runtime.north);
+    \draw[dep] (tests.south)  -- (tests.south  |- runtime.north);
+  \end{tikzpicture}}
   \end{center}
 \end{frame}
 
