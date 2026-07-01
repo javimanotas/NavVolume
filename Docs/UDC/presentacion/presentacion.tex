@@ -636,16 +636,15 @@
 
 \begin{frame}{Desarrollo: Iteración 3, robustez geométrica y radio del agente}
   \begin{columns}[T]
-    \begin{column}{0.52\textwidth}
+    \begin{column}{0.35\textwidth}
       \footnotesize
       \begin{itemize}
-        \item \textbf{Problema (\textit{clipping})}: las rutas rozaban la geometría porque el agente se trataba como un punto sin volumen.
-        \item \textbf{Solución}: \alert{inflar} los obstáculos por el radio del agente durante la rasterización. Cualquier ruta libre conserva, por construcción, la holgura necesaria.
-        \item Sin fase adicional: basta con expandir las cajas de consulta \texttt{OverlapBox}.
-        \item Esta desviación obligó a una batería de pruebas mayor (\textit{PlayMode} + CI), que destapó defectos sutiles (p. ej.\ un desbordamiento \texttt{1 << 40} corregido con \texttt{1UL << 40}).
+        \setlength{\itemsep}{1.6em}
+        \item Problema de \textit{clipping}.
+        \item Inflado de obstáculos.
       \end{itemize}
     \end{column}
-    \begin{column}{0.48\textwidth}
+    \begin{column}{0.65\textwidth}
       \centering
       \resizebox{\textwidth}{!}{%
       \begin{tikzpicture}[font=\small]
@@ -676,12 +675,11 @@
 \begin{frame}{Desarrollo: Iteración 4, integración en Unity}
   \begin{columns}[T]
     \begin{column}{0.54\textwidth}
-      \footnotesize
       \begin{itemize}
-        \item Componente central \texttt{NavVolumeSpace} con tres modos de construcción: \textit{Baked}, \textit{BuildOnAwake} y \textit{Manual}.
-        \item \textbf{API} de navegación y consultas espaciales: comprobar si un punto es navegable, ajustarlo al vóxel libre más cercano o generar posiciones aleatorias válidas.
-        \item Rutas \textbf{síncronas} y \textbf{asíncronas} (reserva de buscadores y cancelación por \textit{token}), sin bloquear el hilo principal.
-        \item \textbf{Gizmos} de depuración visual y panel de estadísticas (memoria estimada y \% de ahorro).
+        \setlength{\itemsep}{1.6em}
+        \item Creación de componentes.
+        \item API de consultas espaciales.
+        \item Gizmos.
       \end{itemize}
     \end{column}
     \begin{column}{0.46\textwidth}
@@ -694,19 +692,18 @@
 
 \begin{frame}{Desarrollo: Iteración 5, optimización}
   \begin{itemize}
+    \setlength{\itemsep}{1.6em}
     \item Reutilización de \textit{buffers} entre peticiones.
     \item Comprobación de cancelación amortizada.
-    \item Acceso por referencia (\texttt{ref readonly}) y comparaciones sin \textit{boxing}.
-    \item \textit{Bake} más rápido al evitar reordenar capas innecesariamente.
+    \item Características de bajo nivel.
   \end{itemize}
 \end{frame}
 
 \begin{frame}{Desarrollo: Iteración 6, evasión local}
   \begin{itemize}
+    \setlength{\itemsep}{1.6em}
     \item ORCA
-    \item Evita colisiones entre agentes mediante reciprocidad sobre el espacio de velocidades.
-    \item \texttt{stackalloc} + \texttt{Span<T>}: cero presión sobre el recolector de basura.
-    \item \textit{Hash} espacial y \textit{jobs} asíncronos (Burst).
+    \item Espacio de velocidades.
     \item Respeta también la geometría estática del entorno.
   \end{itemize}
   \vspace{0.8em}
