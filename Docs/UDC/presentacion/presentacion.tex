@@ -113,11 +113,15 @@
 
 % Pie de página sobrio con autor, título corto y número de diapositiva
 \setbeamercolor{pie}{fg=udcgray!90!black, bg=udcgray!12}
+\newcommand{\apartadoMemoria}{}
 \newcommand{\tituloCorto}{Navegación volumétrica para agentes voladores}
 \setbeamertemplate{footline}{%
   \leavevmode%
   \hbox{%
     \begin{beamercolorbox}[wd=.30\paperwidth, ht=2.6ex, dp=1.2ex, leftskip=1em]{pie}%
+      \ifdefempty{\apartadoMemoria}{}{%
+        \rlap{\raisebox{4.5ex}[0pt][0pt]{\small\color{black}Memoria: páginas \apartadoMemoria}}%
+      }%
       \footnotesize Javier Manotas Ruiz%
     \end{beamercolorbox}%
     \begin{beamercolorbox}[wd=.52\paperwidth, ht=2.6ex, dp=1.2ex, center]{pie}%
@@ -132,6 +136,7 @@
 
 % Índice al comienzo de cada sección, con la sección actual resaltada
 \AtBeginSection[]{%
+  \renewcommand{\apartadoMemoria}{}%
   \begin{frame}[shrink]{Índice}
     \tableofcontents[currentsection, sectionstyle=show/shaded, subsectionstyle=hide]
   \end{frame}%
@@ -226,34 +231,11 @@
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ESTUDIO DE MERCADO
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Estudio de mercado}
-
-\begin{frame}{Estudio de mercado: Alternativas comerciales}
-  \centering
-  \vspace{1em}
-  
-  \begingroup
-  \rowcolors{2}{white}{udcgray!25}
-  \resizebox{0.9\textwidth}{!}{%
-  \begin{tabular}{c|c|c|c}
-  \rowcolor{udcpink!25}
-  \textbf{Herramienta} & \textbf{Plataforma} & \textbf{Enfoque} & \textbf{Precio} \\\hline
-  Mercuna & Multiplataforma & Multiparadigma & \pounds\,15,000 + \\
-  \begin{tabular}{@{}c@{}}Nav3D \\ (Softbrix Studio)\end{tabular} & Unity & Volumétrica & 64,39\,\euro \\
-  Nav3D (m6io) & Unity & Volumétrica & 59,80\,\euro \\
-  HyperNav & Unity & \begin{tabular}{@{}c@{}}Volumétrica + \\ Superficies\end{tabular} & 82,80\,\euro \\
-  Spatial Pathfinding & Unity & Volumétrica & 27,59\,\euro \\
-  \end{tabular}}
-  \endgroup
-\end{frame}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FUNDAMENTOS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Fundamentos}
 
+\section{Fundamentos}
+\renewcommand{\apartadoMemoria}{6-16}
 \begin{frame}{Fundamentos}
   \begin{columns}[T]
     \begin{column}{0.55\textwidth}
@@ -296,12 +278,40 @@
     \end{column}
   \end{columns}
 \end{frame}
+\renewcommand{\apartadoMemoria}{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ESTUDIO DE MERCADO
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Estudio de mercado}
+
+\renewcommand{\apartadoMemoria}{17-22}
+\begin{frame}{Estudio de mercado: Alternativas comerciales}
+  \centering
+  \vspace{1em}
+  
+  \begingroup
+  \rowcolors{2}{white}{udcgray!25}
+  \resizebox{0.9\textwidth}{!}{%
+  \begin{tabular}{c|c|c|c}
+  \rowcolor{udcpink!25}
+  \textbf{Herramienta} & \textbf{Plataforma} & \textbf{Enfoque} & \textbf{Precio} \\\hline
+  Mercuna & Multiplataforma & Multiparadigma & \pounds\,15,000 + \\
+  \begin{tabular}{@{}c@{}}Nav3D \\ (Softbrix Studio)\end{tabular} & Unity & Volumétrica & 64,39\,\euro \\
+  Nav3D (m6io) & Unity & Volumétrica & 59,80\,\euro \\
+  HyperNav & Unity & \begin{tabular}{@{}c@{}}Volumétrica + \\ Superficies\end{tabular} & 82,80\,\euro \\
+  Spatial Pathfinding & Unity & Volumétrica & 27,59\,\euro \\
+  \end{tabular}}
+  \endgroup
+\end{frame}
+\renewcommand{\apartadoMemoria}{}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 3. METODOLOGÍA Y PLANIFICACIÓN
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Metodología y planificación}
 
+\renewcommand{\apartadoMemoria}{23}
 \begin{frame}{Metodología y planificación: Metodología de desarrollo}
   \begin{columns}[T]
     \begin{column}{0.55\textwidth}
@@ -326,7 +336,9 @@
     \end{column}
   \end{columns}
 \end{frame}
+\renewcommand{\apartadoMemoria}{}
 
+\renewcommand{\apartadoMemoria}{24-26}
 \begin{frame}{Metodología y planificación: Planificación inicial}
   \centering
   \vfill
@@ -351,7 +363,9 @@
   }
   \vfill
 \end{frame}
+\renewcommand{\apartadoMemoria}{}
 
+\renewcommand{\apartadoMemoria}{26-27}
 \begin{frame}{Metodología y planificación: Seguimiento}
   \centering
   \vfill
@@ -378,12 +392,14 @@
   }
   \vfill
 \end{frame}
+\renewcommand{\apartadoMemoria}{}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 4. DESARROLLO
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Desarrollo}
 
+\renewcommand{\apartadoMemoria}{58}
 \begin{frame}{Desarrollo: Visión global del sistema}
   \begin{center}
   \resizebox{0.96\textwidth}{!}{%
@@ -419,7 +435,9 @@
   \end{tikzpicture}}
   \end{center}
 \end{frame}
+\renewcommand{\apartadoMemoria}{}
 
+\renewcommand{\apartadoMemoria}{30-41}
 \begin{frame}{Desarrollo: Iteración 1, estructura de datos volumétrica (SVO)}
   \begin{columns}[T]
     \begin{column}{0.56\textwidth}
@@ -436,7 +454,9 @@
     \end{column}
   \end{columns}
 \end{frame}
+\renewcommand{\apartadoMemoria}{}
 
+\renewcommand{\apartadoMemoria}{41-46}
 \begin{frame}{Desarrollo: Iteración 2, búsqueda A* y postprocesado}
   \begin{columns}[T]
     \begin{column}{0.54\textwidth}
@@ -478,7 +498,9 @@
     \end{column}
   \end{columns}
 \end{frame}
+\renewcommand{\apartadoMemoria}{}
 
+\renewcommand{\apartadoMemoria}{47-48}
 \begin{frame}{Desarrollo: Iteración 3, robustez geométrica y radio del agente}
   \begin{columns}[T]
     \begin{column}{0.35\textwidth}
@@ -516,7 +538,9 @@
     \end{column}
   \end{columns}
 \end{frame}
+\renewcommand{\apartadoMemoria}{}
 
+\renewcommand{\apartadoMemoria}{48-53}
 \begin{frame}{Desarrollo: Iteración 4, integración en Unity}
   \begin{columns}[T]
     \begin{column}{0.54\textwidth}
@@ -534,7 +558,9 @@
     \end{column}
   \end{columns}
 \end{frame}
+\renewcommand{\apartadoMemoria}{}
 
+\renewcommand{\apartadoMemoria}{54-55}
 \begin{frame}{Desarrollo: Iteración 5, optimización}
   \begin{itemize}
     \setlength{\itemsep}{1.6em}
@@ -543,7 +569,9 @@
     \item Características de bajo nivel.
   \end{itemize}
 \end{frame}
+\renewcommand{\apartadoMemoria}{}
 
+\renewcommand{\apartadoMemoria}{55-58}
 \begin{frame}{Desarrollo: Iteración 6, evasión local}
   \begin{itemize}
     \setlength{\itemsep}{1.6em}
@@ -568,7 +596,9 @@
   \end{tikzpicture}
   \end{center}
 \end{frame}
+\renewcommand{\apartadoMemoria}{}
 
+\renewcommand{\apartadoMemoria}{60}
 \begin{frame}{Desarrollo: Arquitectura modular}
   \begin{center}
   \resizebox{0.55\textwidth}{!}{%
@@ -610,12 +640,14 @@
   \end{tikzpicture}}
   \end{center}
 \end{frame}
+\renewcommand{\apartadoMemoria}{}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 5. RESULTADOS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Resultados}
 
+\renewcommand{\apartadoMemoria}{60-63}
 \begin{frame}{Resultados: rendimiento en la construcción y memoria del volumen}
 
   \begin{columns}[T]
@@ -671,7 +703,9 @@
   {\raggedright \ref{bakeLegend}\par}
 
 \end{frame}
+\renewcommand{\apartadoMemoria}{}
 
+\renewcommand{\apartadoMemoria}{62-65}
 \begin{frame}{Resultados: rendimiento en la búsqueda de rutas y evasión}
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
@@ -723,6 +757,7 @@
   \end{columns}
 
 \end{frame}
+\renewcommand{\apartadoMemoria}{}
 
 \section{Demostración interactiva}
 \begin{frame}[plain]
@@ -738,6 +773,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusiones y trabajos futuros}
 
+
+\renewcommand{\apartadoMemoria}{66-68}
 \begin{frame}{Conclusiones y trabajos futuros: Conclusiones}
   \vspace{1.5em}
   \begin{columns}[T]
@@ -761,7 +798,9 @@
     \end{column}
   \end{columns}
 \end{frame}
+\renewcommand{\apartadoMemoria}{}
 
+\renewcommand{\apartadoMemoria}{69-70}
 \begin{frame}{Conclusiones y trabajos futuros: Trabajos futuros}
   \begin{itemize}
     \setlength{\itemsep}{1.6em}
@@ -772,6 +811,7 @@
     \item Enlaces entre volúmenes independientes para escenarios de gran tamaño.
   \end{itemize}
 \end{frame}
+\renewcommand{\apartadoMemoria}{}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Portada                              %
